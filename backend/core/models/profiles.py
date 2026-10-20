@@ -8,6 +8,8 @@ class ProfileSummary(BaseModel):
     display_name: str
     # True for the signed-in person's own profile; the other profile is view-only.
     is_own: bool
+    # False until the first-sign-in questions have been answered.
+    onboarded: bool
 
 
 class HouseholdProfiles(BaseModel):

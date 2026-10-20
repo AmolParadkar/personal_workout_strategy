@@ -1,6 +1,6 @@
 # Settings / Profile Page
 
-← [Hub: skills.md](../skills.md) · Status: **Defined**
+← [Hub: skills.md](../skills.md) · Status: **Built** (M1)
 
 **Purpose:** each person's details and settings. Opened from the profile dropdown at the top of every page. When viewing the other person's profile, this page is read-only ("view both, change your own").
 
@@ -13,14 +13,29 @@
 
 Not collected up front; each person fills them in here once the app exists.
 
-- **Both:** age, height, weight, goals, injuries / limitations.
+- **Both:** date of birth, sex, height, goals (+ notes), goal metric, injuries / limitations. (Weight comes in M3.)
   - For the [Workout Plan](workout-plan.md): equipment, available days, time per session, training location (home / gym / travel).
   - For the [Nutrition Plan](nutrition-plan.md): diet type (vegetarian / eggetarian / non-vegetarian), cuisine preferences, allergies / dislikes, meals per day, cooking time.
 - **Amol only:** 75 Hard current day (asked on the [75 Hard](75-hard.md) page).
 
+## Layout
+
+Four sections, each with its own **Save** button (saving one never touches unsaved changes in another):
+
+1. **About you:** name, date of birth, sex, height, goals (choose from a list) plus goal notes, the one metric you care about most, injuries or limitations.
+2. **Training:** days you can train, minutes per session, where you train, equipment.
+3. **Food:** diet type, meals per day, cooking time, cuisines, allergies, foods you dislike (comma-separated).
+4. **Summary cards:** switches for weight, calories eaten and calories burned (off by default).
+
+When viewing the other person's profile, every field is disabled and there are no Save buttons.
+
 ## First sign-in
 
-- On first sign-in, the app asks for these details before generating any plans, so the LLM never builds a plan from a blank profile.
+- Until a person has finished the welcome, the app shows a **3-step welcome** instead of the pages: About you → Training → Food, with a progress bar and Back / Next / Finish.
+- Each step is saved as you go, so closing the page halfway loses nothing.
+- **Required** (marked *): date of birth, sex, height, at least one goal, goal metric, at least one training day, minutes per session, location, diet type, meals per day. Everything else is optional.
+- The backend refuses to mark the welcome as done until the required fields are filled.
+- **Body weight is not asked here:** it's recorded as dated measurements from M3 (health data intake).
 
 ## Related pages
 

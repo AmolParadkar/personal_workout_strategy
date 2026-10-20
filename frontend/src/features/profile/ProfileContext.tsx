@@ -1,6 +1,7 @@
 import { createContext, type ReactNode, useContext, useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { OnboardingScreen } from '@/features/settings/OnboardingScreen';
 import { apiGet, type Schemas } from '@/lib/api';
 import { radius, spacing, useTheme } from '@/theme';
 
@@ -12,6 +13,8 @@ type ProfileContextValue = {
   setActiveProfileId: (id: string) => void;
   // False when viewing the other person's profile: pages must hide inputs.
   canEdit: boolean;
+  // Fetches the profiles again in the background (e.g. after a name change).
+  reload: () => void;
 };
 
 // A React "context" lets any screen read the selected profile without
@@ -42,9 +45,10 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
     };
   }, [attempt]);
 
+  const reload = () => setAttempt((n) => n + 1);
   const retry = () => {
     setState({ status: 'loading' });
-    setAttempt((n) => n + 1);
+    reload();
   };
 
   if (state.status !== 'ready' || state.profiles.length === 0) {
@@ -57,12 +61,25 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }
 
   const { profiles } = state;
+
+  // First sign-in: answer the welcome questions before using the app.
+  const own = profiles.find((p) => p.is_own);
+  if (own && !own.onboarded) {
+    return <OnboardingScreen profileId={own.id} onDone={reload} />;
+  }
+
   // The API lists the signed-in person's own profile first.
   const activeProfile = profiles.find((p) => p.id === activeId) ?? profiles[0];
 
   return (
     <ProfileContext.Provider
-      value={{ profiles, activeProfile, setActiveProfileId, canEdit: activeProfile.is_own }}
+      value={{
+        profiles,
+        activeProfile,
+        setActiveProfileId,
+        canEdit: activeProfile.is_own,
+        reload,
+      }}
     >
       {children}
     </ProfileContext.Provider>

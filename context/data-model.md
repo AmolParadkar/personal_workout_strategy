@@ -14,16 +14,17 @@ Status: **Draft.** Tables are listed with their key fields and what they're for.
 
 Used by: [Settings / Profile](pages/settings-profile.md), every page via the profile dropdown.
 
-Status: **Built** (migration `20261020115531_profiles_and_settings.sql`).
+Status: **Built** (migrations `20261020115531_profiles_and_settings.sql`, `20261020121922_goals_list_and_value_checks.sql`).
 
 - A trigger on new logins creates the person's `profiles`, `training_preferences`, `diet_preferences` and `display_settings` rows and puts them in the household (created as "Home" for the first login). The website never inserts or deletes these rows.
 - Signed-in users may only update the listed detail columns; ids, `user_id`, `household_id` and `profile_id` can't be changed, so rows can't be moved to another person or household.
-- Allowed values: `sex` female / male / other; `height_cm` 50–260; `available_days` mon–sun; `location` home / gym / travel; `diet_type` vegetarian / eggetarian / non_vegetarian; `minutes_per_session` 5–300; `meals_per_day` 1–8; `cooking_minutes` 0–240.
+- Allowed values: `goals` lose_fat / build_muscle / get_stronger / endurance / general_health / mobility (plus free-text `goals_notes`, up to 500 characters); `goal_metric` weight / body_fat / vo2_max / resting_hr / hrv / strength / steps / sleep; `equipment` bodyweight / dumbbells / barbell / kettlebell / resistance_bands / pull_up_bar / bench / cable_machine / treadmill / exercise_bike / rowing_machine / full_gym; `sex` female / male / other; `height_cm` 50–260; `available_days` mon–sun; `location` home / gym / travel; `diet_type` vegetarian / eggetarian / non_vegetarian; `minutes_per_session` 5–300; `meals_per_day` 1–8; `cooking_minutes` 0–240. The API checks the same values (`backend/core/models/settings.py`) and also requires an age of 13–100.
+- Body weight is **not** on the profile: it's a dated measurement in `health_samples` (M3).
 
 | Table | Key fields | Purpose |
 |---|---|---|
 | `households` | `name` | Groups the two profiles for the "view both" rule. |
-| `profiles` | `user_id` (Supabase login), `household_id`, `display_name`, `date_of_birth`, `sex`, `height_cm`, `goals`, `goal_metric`, `injuries_notes`, `onboarded_at` | One row per person. `onboarded_at` is empty until the first-sign-in questions are answered. |
+| `profiles` | `user_id` (Supabase login), `household_id`, `display_name`, `date_of_birth`, `sex`, `height_cm`, `goals[]`, `goals_notes`, `goal_metric`, `injuries_notes`, `onboarded_at` | One row per person. `onboarded_at` is empty until the first-sign-in questions are answered. |
 | `training_preferences` | `profile_id`, `equipment[]`, `available_days[]`, `minutes_per_session`, `location` (home / gym / travel) | Inputs to the [Workout Plan](pages/workout-plan.md). |
 | `diet_preferences` | `profile_id`, `diet_type`, `cuisines[]`, `allergies[]`, `dislikes[]`, `meals_per_day`, `cooking_minutes` | Inputs to the [Nutrition Plan](pages/nutrition-plan.md). |
 | `display_settings` | `profile_id`, `show_weight`, `show_calorie_intake`, `show_calories_burned` (all default false) | Opt-in cards on [Summary](pages/summary.md) and [Progress](pages/progress.md). |

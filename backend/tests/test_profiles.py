@@ -1,3 +1,4 @@
+import pytest
 from fastapi.testclient import TestClient
 
 from api.deps import get_supabase
@@ -8,8 +9,18 @@ OWN_USER_ID = "user-amol"
 VALID_TOKEN = "valid-token"
 
 ROWS = [
-    {"id": "profile-spouse", "user_id": "user-spouse", "display_name": "Spouse"},
-    {"id": "profile-amol", "user_id": OWN_USER_ID, "display_name": "Amol"},
+    {
+        "id": "profile-spouse",
+        "user_id": "user-spouse",
+        "display_name": "Spouse",
+        "onboarded_at": None,
+    },
+    {
+        "id": "profile-amol",
+        "user_id": OWN_USER_ID,
+        "display_name": "Amol",
+        "onboarded_at": "2026-10-20T12:00:00Z",
+    },
 ]
 
 
@@ -29,8 +40,15 @@ async def fake_supabase():
     yield FakeSupabase()
 
 
-app.dependency_overrides[get_supabase] = fake_supabase
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def use_fake_supabase():
+    # Only for these tests: integration tests must reach the real Supabase.
+    app.dependency_overrides[get_supabase] = fake_supabase
+    yield
+    app.dependency_overrides.clear()
 
 
 def test_returns_household_profiles_with_own_first():
@@ -39,8 +57,8 @@ def test_returns_household_profiles_with_own_first():
     assert response.status_code == 200
     assert response.json() == {
         "profiles": [
-            {"id": "profile-amol", "display_name": "Amol", "is_own": True},
-            {"id": "profile-spouse", "display_name": "Spouse", "is_own": False},
+            {"id": "profile-amol", "display_name": "Amol", "is_own": True, "onboarded": True},
+            {"id": "profile-spouse", "display_name": "Spouse", "is_own": False, "onboarded": False},
         ]
     }
 

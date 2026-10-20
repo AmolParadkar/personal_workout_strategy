@@ -62,6 +62,18 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 4. To read or change data, the API calls Supabase **with the user's own token** and the publishable key, so the database access rules decide what's allowed. The secret key is only for backend jobs that genuinely need to bypass them.
 5. The website redirects signed-out visitors to `/sign-in`, but that's only convenience: the real protection is steps 3–4.
 
+### API endpoints so far
+
+| Endpoint | Purpose |
+|---|---|
+| `GET /api/health` | Health check |
+| `GET /api/me/profiles` | Household profiles, own first, with `is_own` and `onboarded` |
+| `GET /api/profiles/{id}/settings` | One person's settings (one database call); `can_edit` only for your own |
+| `PATCH /api/me/settings/{profile,training,diet,display}` | Save one section; only fields sent change |
+| `POST /api/me/onboarding/complete` | Finish the welcome; refused (422, with `missing`) until required fields are filled |
+
+Values the database rejects come back as `422`, and an invalid sign-in as `401`.
+
 ### Reading a page (e.g. Summary)
 
 Website → API → database → API returns data shaped for that page → website renders it.

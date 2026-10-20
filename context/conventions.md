@@ -41,6 +41,7 @@ How code and docs are written in this project, so everything reads as if one per
 - API types are **generated** from the backend into `src/lib/api-types.ts`; never hand-written. After any backend model change run `npm run api-types` (and `npm run api-types:check` to confirm it's up to date). The generator runs via `npx openapi-typescript@7.13.0` rather than as a dependency, because it doesn't support TypeScript 6 yet.
 - Call the backend with `apiGet` from `src/lib/api.ts`, which adds the sign-in token. Use `Schemas['ModelName']` for response types.
 - Pages read `canEdit` from `useProfile()` and hide inputs when it's false (viewing the other person's profile).
+- Form controls live in `src/components/form.tsx` (`Field`, `TextField`, `ChipSelect`, `ToggleRow`, `Button`). For selectable controls, set `aria-checked` directly: React Native Web doesn't pass `accessibilityState.checked` on to the browser, so screen readers wouldn't announce the selection.
 - Linting with ESLint (Expo's config); type checking with `tsc`.
 - Commands (run inside `frontend/`):
   - `npm run web`: run the website locally at http://localhost:8081, reloading on save (if changes stop showing, restart with `npx expo start --web --clear`)

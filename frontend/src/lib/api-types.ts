@@ -24,6 +24,114 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profiles/{profile_id}/settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Profile Settings
+         * @description Settings for any profile in the household; `can_edit` is true only for your own.
+         */
+        get: operations["profile_settings_api_profiles__profile_id__settings_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/settings/profile": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Profile */
+        patch: operations["update_profile_api_me_settings_profile_patch"];
+        trace?: never;
+    };
+    "/api/me/settings/training": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Training */
+        patch: operations["update_training_api_me_settings_training_patch"];
+        trace?: never;
+    };
+    "/api/me/settings/diet": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Diet */
+        patch: operations["update_diet_api_me_settings_diet_patch"];
+        trace?: never;
+    };
+    "/api/me/settings/display": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** Update Display */
+        patch: operations["update_display_api_me_settings_display_patch"];
+        trace?: never;
+    };
+    "/api/me/onboarding/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete Onboarding
+         * @description Mark the first-sign-in questions as done; refused until required fields are filled.
+         */
+        post: operations["complete_onboarding_api_me_onboarding_complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -45,6 +153,54 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** DietPreferences */
+        DietPreferences: {
+            /** Diet Type */
+            diet_type: ("vegetarian" | "eggetarian" | "non_vegetarian") | null;
+            /** Cuisines */
+            cuisines: string[];
+            /** Allergies */
+            allergies: string[];
+            /** Dislikes */
+            dislikes: string[];
+            /** Meals Per Day */
+            meals_per_day: number | null;
+            /** Cooking Minutes */
+            cooking_minutes: number | null;
+        };
+        /** DietPreferencesUpdate */
+        DietPreferencesUpdate: {
+            /** Diet Type */
+            diet_type?: ("vegetarian" | "eggetarian" | "non_vegetarian") | null;
+            /** Cuisines */
+            cuisines?: string[] | null;
+            /** Allergies */
+            allergies?: string[] | null;
+            /** Dislikes */
+            dislikes?: string[] | null;
+            /** Meals Per Day */
+            meals_per_day?: number | null;
+            /** Cooking Minutes */
+            cooking_minutes?: number | null;
+        };
+        /** DisplaySettings */
+        DisplaySettings: {
+            /** Show Weight */
+            show_weight: boolean;
+            /** Show Calorie Intake */
+            show_calorie_intake: boolean;
+            /** Show Calories Burned */
+            show_calories_burned: boolean;
+        };
+        /** DisplaySettingsUpdate */
+        DisplaySettingsUpdate: {
+            /** Show Weight */
+            show_weight?: boolean | null;
+            /** Show Calorie Intake */
+            show_calorie_intake?: boolean | null;
+            /** Show Calories Burned */
+            show_calories_burned?: boolean | null;
+        };
         /** HTTPValidationError */
         HTTPValidationError: {
             /** Detail */
@@ -71,6 +227,60 @@ export interface components {
             /** Profiles */
             profiles: components["schemas"]["ProfileSummary"][];
         };
+        /** ProfileDetails */
+        ProfileDetails: {
+            /** Display Name */
+            display_name: string;
+            /** Date Of Birth */
+            date_of_birth: string | null;
+            /** Sex */
+            sex: ("female" | "male" | "other") | null;
+            /** Height Cm */
+            height_cm: number | null;
+            /** Goals */
+            goals: ("lose_fat" | "build_muscle" | "get_stronger" | "endurance" | "general_health" | "mobility")[];
+            /** Goals Notes */
+            goals_notes: string | null;
+            /** Goal Metric */
+            goal_metric: ("weight" | "body_fat" | "vo2_max" | "resting_hr" | "hrv" | "strength" | "steps" | "sleep") | null;
+            /** Injuries Notes */
+            injuries_notes: string | null;
+            /** Onboarded */
+            onboarded: boolean;
+        };
+        /** ProfileDetailsUpdate */
+        ProfileDetailsUpdate: {
+            /** Display Name */
+            display_name?: string | null;
+            /** Date Of Birth */
+            date_of_birth?: string | null;
+            /** Sex */
+            sex?: ("female" | "male" | "other") | null;
+            /** Height Cm */
+            height_cm?: number | null;
+            /** Goals */
+            goals?: ("lose_fat" | "build_muscle" | "get_stronger" | "endurance" | "general_health" | "mobility")[] | null;
+            /** Goals Notes */
+            goals_notes?: string | null;
+            /** Goal Metric */
+            goal_metric?: ("weight" | "body_fat" | "vo2_max" | "resting_hr" | "hrv" | "strength" | "steps" | "sleep") | null;
+            /** Injuries Notes */
+            injuries_notes?: string | null;
+        };
+        /**
+         * ProfileSettings
+         * @description Everything on the Settings / Profile page for one person.
+         */
+        ProfileSettings: {
+            /** Profile Id */
+            profile_id: string;
+            /** Can Edit */
+            can_edit: boolean;
+            profile: components["schemas"]["ProfileDetails"];
+            training: components["schemas"]["TrainingPreferences"];
+            diet: components["schemas"]["DietPreferences"];
+            display: components["schemas"]["DisplaySettings"];
+        };
         /**
          * ProfileSummary
          * @description One person in the household, as shown in the profile dropdown.
@@ -82,6 +292,30 @@ export interface components {
             display_name: string;
             /** Is Own */
             is_own: boolean;
+            /** Onboarded */
+            onboarded: boolean;
+        };
+        /** TrainingPreferences */
+        TrainingPreferences: {
+            /** Equipment */
+            equipment: ("bodyweight" | "dumbbells" | "barbell" | "kettlebell" | "resistance_bands" | "pull_up_bar" | "bench" | "cable_machine" | "treadmill" | "exercise_bike" | "rowing_machine" | "full_gym")[];
+            /** Available Days */
+            available_days: ("mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun")[];
+            /** Minutes Per Session */
+            minutes_per_session: number | null;
+            /** Location */
+            location: ("home" | "gym" | "travel") | null;
+        };
+        /** TrainingPreferencesUpdate */
+        TrainingPreferencesUpdate: {
+            /** Equipment */
+            equipment?: ("bodyweight" | "dumbbells" | "barbell" | "kettlebell" | "resistance_bands" | "pull_up_bar" | "bench" | "cable_machine" | "treadmill" | "exercise_bike" | "rowing_machine" | "full_gym")[] | null;
+            /** Available Days */
+            available_days?: ("mon" | "tue" | "wed" | "thu" | "fri" | "sat" | "sun")[] | null;
+            /** Minutes Per Session */
+            minutes_per_session?: number | null;
+            /** Location */
+            location?: ("home" | "gym" | "travel") | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -123,6 +357,210 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["HouseholdProfiles"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    profile_settings_api_profiles__profile_id__settings_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileSettings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_profile_api_me_settings_profile_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["ProfileDetailsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileSettings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_training_api_me_settings_training_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TrainingPreferencesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileSettings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_diet_api_me_settings_diet_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DietPreferencesUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileSettings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    update_display_api_me_settings_display_patch: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DisplaySettingsUpdate"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileSettings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_onboarding_api_me_onboarding_complete_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ProfileSettings"];
                 };
             };
             /** @description Validation Error */

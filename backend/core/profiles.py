@@ -10,6 +10,7 @@ def to_household_profiles(rows: list[dict[str, Any]], user_id: str) -> Household
             id=row["id"],
             display_name=row["display_name"],
             is_own=row["user_id"] == user_id,
+            onboarded=row["onboarded_at"] is not None,
         )
         for row in rows
     ]

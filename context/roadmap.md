@@ -22,7 +22,7 @@ Build order as milestones. Tick items as they're done; each milestone links to t
 - [ ] Create both real accounts in Supabase (Amol): Authentication → Users → Add user → Create new user, "Auto confirm" ticked
 - [x] `households`, `profiles`, `training_preferences`, `diet_preferences`, `display_settings` tables with access rules (25 access checks passing)
 - [x] Switch off public sign-ups in Supabase (Amol): verified, sign-up attempts are refused
-- [ ] [Settings / Profile](pages/settings-profile.md) page and first sign-in questions
+- [x] [Settings / Profile](pages/settings-profile.md) page and first sign-in questions (3-step welcome)
 - [x] Type generation from API to frontend, with an up-to-date check (`npm run api-types`, `npm run api-types:check`)
 - [ ] Write `setup.md` (accounts, keys, how to run locally)
 
@@ -41,6 +41,7 @@ Quick to build and already in use, so it comes early.
 - [ ] Ingest API endpoint
 - [ ] iOS Shortcut built and documented in `shortcuts/`
 - [ ] Water quick-add (`water_logs`)
+- [ ] Ask for a starting body weight (Settings or Summary prompt), stored in `health_samples`
 
 ## M4 — Job queue and worker
 

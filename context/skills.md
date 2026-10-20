@@ -126,6 +126,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** Settings / Profile page and 3-step first-sign-in welcome built. Goals are now chosen from a list plus notes; body weight moves to M3 as dated measurements.
 - **2026-10-20:** Sign-in built (email and password via Supabase Auth). First API endpoint `GET /api/me/profiles` uses the caller's own token so database access rules apply. Frontend types now generated from the API. The 75 Hard link shows for everyone until M2.
 - **2026-10-20:** First tables built: households, profiles, preferences and display settings, with "view both, change your own" access rules verified by integration tests. Decided: accounts by invitation only (public sign-ups off).
 - **2026-10-20:** Supabase project created and connected; env templates added; one named secret key per component (`backend-api` now, `mac-worker` later).
