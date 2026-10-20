@@ -125,6 +125,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** Development workflow (10 steps per roadmap item) added to [conventions.md](conventions.md#development-workflow).
 - **2026-10-20:** Access decided: "view both, change your own". Both logins can see both profiles; each can only change their own data.
 - **2026-10-20:** Added [architecture.md](architecture.md), [data-model.md](data-model.md) (draft), [conventions.md](conventions.md), [roadmap.md](roadmap.md) and the root `CLAUDE.md`. Technical detail moved from this hub into architecture.md. Found a conflict between per-login privacy and the profile dropdown (open question).
 - **2026-10-20:** Project folder structure created (empty folders with `.gitkeep`) and `.gitignore` added for secrets, Python, Node/Expo, Vercel and macOS files.

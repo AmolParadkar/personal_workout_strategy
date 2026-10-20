@@ -49,6 +49,21 @@ How code and docs are written in this project, so everything reads as if one per
 - LLM calls are mocked in tests.
 - A check that the generated frontend types are up to date.
 
+## Development workflow
+
+Every piece of work (usually one roadmap item) follows the same steps:
+
+1. **Pick** the next item from the [roadmap](roadmap.md) and re-read its page spec and the relevant [data model](data-model.md) / [architecture](architecture.md) sections.
+2. **Clarify** anything unclear or missing in the spec before writing code; record the answer in the docs.
+3. **Branch:** `feature/<short-name>` off `main`.
+4. **Plan:** a short outline of the files and tables to change; agreed before building anything large.
+5. **Build:** database migration first, then backend (models → core logic → API), then frontend.
+6. **Test:** unit tests for the logic, then run it locally and check it works in the browser.
+7. **Update docs:** spec changes, data model, architecture, hub change log; tick the roadmap item.
+8. **Review:** Amol looks at the result; fixes are made on the same branch.
+9. **Commit and merge** to `main` (Claude asks first).
+10. **Deploy:** Vercel deploys `main`; check the live site.
+
 ## Git
 
 - `main` is always deployable. Work happens on short branches named `feature/<short-name>` or `fix/<short-name>`.
