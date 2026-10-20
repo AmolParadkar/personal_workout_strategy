@@ -20,6 +20,7 @@ ROWS = [
         "user_id": OWN_USER_ID,
         "display_name": "Amol",
         "onboarded_at": "2026-10-20T12:00:00Z",
+        "challenges": [{"id": "challenge-1"}],
     },
 ]
 
@@ -57,8 +58,20 @@ def test_returns_household_profiles_with_own_first():
     assert response.status_code == 200
     assert response.json() == {
         "profiles": [
-            {"id": "profile-amol", "display_name": "Amol", "is_own": True, "onboarded": True},
-            {"id": "profile-spouse", "display_name": "Spouse", "is_own": False, "onboarded": False},
+            {
+                "id": "profile-amol",
+                "display_name": "Amol",
+                "is_own": True,
+                "onboarded": True,
+                "doing_75_hard": True,
+            },
+            {
+                "id": "profile-spouse",
+                "display_name": "Spouse",
+                "is_own": False,
+                "onboarded": False,
+                "doing_75_hard": False,
+            },
         ]
     }
 

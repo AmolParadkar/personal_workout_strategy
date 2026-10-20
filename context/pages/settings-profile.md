@@ -16,7 +16,7 @@ Not collected up front; each person fills them in here once the app exists.
 - **Both:** date of birth, sex, height, goals (+ notes), goal metric, injuries / limitations. (Weight comes in M3.)
   - For the [Workout Plan](workout-plan.md): equipment, available days, time per session, training location (home / gym / travel).
   - For the [Nutrition Plan](nutrition-plan.md): diet type (vegetarian / eggetarian / non-vegetarian), cuisine preferences, allergies / dislikes, meals per day, cooking time.
-- **Amol only:** 75 Hard current day (asked on the [75 Hard](75-hard.md) page).
+- **75 Hard:** the current day is asked on the [75 Hard](75-hard.md) page when starting, not here.
 
 ## Layout
 

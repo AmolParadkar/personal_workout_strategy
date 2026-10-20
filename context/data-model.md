@@ -94,10 +94,15 @@ Used by: [Progress](pages/progress.md), [Summary](pages/summary.md).
 
 Used by: [75 Hard](pages/75-hard.md).
 
+Status: **Built** (migration `20261020151423_seventy_five_hard.sql`).
+
 | Table | Key fields | Purpose |
 |---|---|---|
-| `challenges` | `profile_id`, `started_on`, `start_day`, `status` (active / reset / completed) | One row per attempt; a reset ends the row and starts a new one at Day 1. |
-| `challenge_checks` | `challenge_id`, `date`, `item` (diet / workout_1 / workout_2_outdoor / water / reading / photo), `checked_at` | Daily checklist ticks. |
+| `challenges` | `profile_id`, `started_on`, `start_day` (1–75), `timezone`, `stopped_at` | One row per start. At most one running (not stopped) per person. Resets and completion are **not stored**; they're calculated from the ticks. |
+| `challenge_checks` | `profile_id`, `date`, `item` (diet / workout_1 / workout_2_outdoor / water / reading / photo); unique per person, date and item | One row per ticked item per day; unticking deletes the row. Stored per person and date (not per challenge), so ticks never need moving when the count restarts. |
+
+- Access: both household members can read; only the owner can start or stop their challenge and tick or untick their items (insert / delete).
+- The calculation lives in `backend/core/seventy_five_hard.py` (see [75 Hard page](pages/75-hard.md#rules)).
 
 ## Jobs and worker
 

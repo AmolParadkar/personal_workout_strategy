@@ -132,6 +132,80 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profiles/{profile_id}/seventy-five-hard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Seventy Five Hard State
+         * @description The 75 Hard page for any profile in the household; editable only for your own.
+         */
+        get: operations["seventy_five_hard_state_api_profiles__profile_id__seventy_five_hard_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/seventy-five-hard/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Start Challenge */
+        post: operations["start_challenge_api_me_seventy_five_hard_start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/seventy-five-hard/stop": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Stop Challenge */
+        post: operations["stop_challenge_api_me_seventy_five_hard_stop_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/seventy-five-hard/checks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Set Check
+         * @description Tick or untick one item for today (or yesterday, until noon).
+         */
+        put: operations["set_check_api_me_seventy_five_hard_checks_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -153,6 +227,30 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** ChecklistItem */
+        ChecklistItem: {
+            /**
+             * Item
+             * @enum {string}
+             */
+            item: "diet" | "workout_1" | "workout_2_outdoor" | "water" | "reading" | "photo";
+            /** Checked */
+            checked: boolean;
+        };
+        /** DayChecklist */
+        DayChecklist: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Day */
+            day: number;
+            /** Items */
+            items: components["schemas"]["ChecklistItem"][];
+            /** Editable */
+            editable: boolean;
+        };
         /** DietPreferences */
         DietPreferences: {
             /** Diet Type */
@@ -294,6 +392,56 @@ export interface components {
             is_own: boolean;
             /** Onboarded */
             onboarded: boolean;
+            /** Doing 75 Hard */
+            doing_75_hard: boolean;
+        };
+        /** SetCheck */
+        SetCheck: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Item
+             * @enum {string}
+             */
+            item: "diet" | "workout_1" | "workout_2_outdoor" | "water" | "reading" | "photo";
+            /** Checked */
+            checked: boolean;
+        };
+        /**
+         * SeventyFiveHardState
+         * @description Everything the 75 Hard page shows for one person.
+         */
+        SeventyFiveHardState: {
+            /** Can Edit */
+            can_edit: boolean;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "not_started" | "active" | "completed";
+            /**
+             * Total Days
+             * @default 75
+             */
+            total_days: number;
+            /** Day */
+            day?: number | null;
+            today?: components["schemas"]["DayChecklist"] | null;
+            yesterday?: components["schemas"]["DayChecklist"] | null;
+            /** Last Missed On */
+            last_missed_on?: string | null;
+            /** Completed On */
+            completed_on?: string | null;
+        };
+        /** StartChallenge */
+        StartChallenge: {
+            /** Current Day */
+            current_day: number;
+            /** Timezone */
+            timezone: string;
         };
         /** TrainingPreferences */
         TrainingPreferences: {
@@ -561,6 +709,140 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["ProfileSettings"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    seventy_five_hard_state_api_profiles__profile_id__seventy_five_hard_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeventyFiveHardState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_challenge_api_me_seventy_five_hard_start_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartChallenge"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeventyFiveHardState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    stop_challenge_api_me_seventy_five_hard_stop_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeventyFiveHardState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    set_check_api_me_seventy_five_hard_checks_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SetCheck"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SeventyFiveHardState"];
                 };
             };
             /** @description Validation Error */

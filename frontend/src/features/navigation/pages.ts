@@ -22,7 +22,7 @@ export type PageInfo = {
   milestone: string;
   // Hidden from the navigation bar (Settings is reached from the profile dropdown).
   hiddenFromNav?: boolean;
-  // Only shown for profiles doing 75 Hard.
+  // Shown on your own profile, and on the other person's only while they're doing 75 Hard.
   requires75Hard?: boolean;
 };
 

@@ -66,10 +66,49 @@ class SupabaseClient:
         self._check(response)
         return response.json()
 
+    async def insert(
+        self, table: str, values: dict[str, Any], access_token: str
+    ) -> list[dict[str, Any]]:
+        """Add a row the user is allowed to create; returns it."""
+        response = await self._http.post(
+            f"{self._url}/rest/v1/{table}",
+            json=values,
+            headers={**self._headers(access_token), "Prefer": "return=representation"},
+        )
+        self._check(response)
+        return response.json()
+
+    async def upsert(
+        self, table: str, values: dict[str, Any], on_conflict: str, access_token: str
+    ) -> None:
+        """Add a row unless an identical one exists (then do nothing, so repeats are harmless)."""
+        response = await self._http.post(
+            f"{self._url}/rest/v1/{table}",
+            params={"on_conflict": on_conflict},
+            json=values,
+            headers={
+                **self._headers(access_token),
+                "Prefer": "resolution=ignore-duplicates,return=minimal",
+            },
+        )
+        self._check(response)
+
+    async def delete(self, table: str, filters: dict[str, str], access_token: str) -> None:
+        """Delete rows the user is allowed to delete (silently none if not allowed)."""
+        response = await self._http.delete(
+            f"{self._url}/rest/v1/{table}", params=filters, headers=self._headers(access_token)
+        )
+        self._check(response)
+
     async def get_household_profiles(self, access_token: str) -> list[dict[str, Any]]:
-        """Profiles the user is allowed to see (their household), oldest first."""
+        """Profiles the user is allowed to see (their household), oldest first,
+        with any running 75 Hard challenge embedded."""
         return await self.select(
             "profiles",
-            {"select": "id,user_id,display_name,onboarded_at", "order": "created_at"},
+            {
+                "select": "id,user_id,display_name,onboarded_at,challenges(id)",
+                "challenges.stopped_at": "is.null",
+                "order": "created_at",
+            },
             access_token,
         )

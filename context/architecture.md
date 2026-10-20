@@ -70,6 +70,10 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `GET /api/me/profiles` | Household profiles, own first, with `is_own` and `onboarded` |
 | `GET /api/profiles/{id}/settings` | One person's settings (one database call); `can_edit` only for your own |
 | `PATCH /api/me/settings/{profile,training,diet,display}` | Save one section; only fields sent change |
+| `GET /api/profiles/{id}/seventy-five-hard` | 75 Hard page state (day, today's and, until noon, yesterday's checklist); `can_edit` only for your own |
+| `POST /api/me/seventy-five-hard/start` | Start a challenge (`current_day`, browser `timezone`); 409 if one is running |
+| `PUT /api/me/seventy-five-hard/checks` | Tick or untick one item for today, or yesterday until noon (422 for other days) |
+| `POST /api/me/seventy-five-hard/stop` | Stop the running challenge |
 | `POST /api/me/onboarding/complete` | Finish the welcome; refused (422, with `missing`) until required fields are filled |
 
 Values the database rejects come back as `422`, and an invalid sign-in as `401`.

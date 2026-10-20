@@ -36,10 +36,10 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
 | 3 | [Workout Plan](pages/workout-plan.md) | Weekly customised workout plan the person can change | Defined |
 | 4 | [Nutrition Plan](pages/nutrition-plan.md) | Weekly meal plan with macro / micro targets the person can change | Defined |
 | 5 | [Progress](pages/progress.md) | Long-term trends, insights, forecasts, what-if simulator, disruption planning | Defined (1 open question) |
-| 6 | [75 Hard](pages/75-hard.md) (Amol only) | Simple daily 75 Hard checklist and day counter | Defined |
+| 6 | [75 Hard](pages/75-hard.md) | Simple daily 75 Hard checklist and day counter | Built (M2) |
 | 7 | [Exercise Guide](pages/exercise-guide.md) | Diagram, body map, form cues, precautions and best short video for each exercise | Defined |
 | 8 | [Personal Artifacts](pages/personal-artifacts.md) | Upload health documents; confirmed facts adjust the plans | Defined |
-| 9 | [Settings / Profile](pages/settings-profile.md) | Personal details (plan inputs) and opt-in card switches | Defined |
+| 9 | [Settings / Profile](pages/settings-profile.md) | Personal details (plan inputs) and opt-in card switches | Built (M1) |
 
 **Profile switcher:** a simple dropdown at the top of every page switches between profiles and opens [Settings / Profile](pages/settings-profile.md).
 
@@ -49,7 +49,7 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
 - [Workout Plan](pages/workout-plan.md) and [Nutrition Plan](pages/nutrition-plan.md) are the **weekly plans**; [Plan for Today](pages/plan-for-today.md) shows today's slice and is where everything is **logged**.
 - [Exercise Guide](pages/exercise-guide.md) explains every exercise in the plan.
 - [Summary](pages/summary.md) shows **now**; [Progress](pages/progress.md) shows **history and future**.
-- [75 Hard](pages/75-hard.md) stands alone as Amol's checklist.
+- [75 Hard](pages/75-hard.md) stands alone as a personal checklist.
 
 ## Technical decisions
 
@@ -129,6 +129,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** M2 (75 Hard) built: checklist, day counter, restart rule with yesterday open until noon, completion and stop; anyone can start a challenge; the link shows on the other person's profile only while they're doing one. Resets are calculated, not stored, so nothing runs at midnight.
 - **2026-10-20:** M1 (Foundation) complete. Added [setup.md](setup.md).
 - **2026-10-20:** Website and API deployed to Vercel as two projects (root folders `frontend` and `backend`), auto-deploying from `main`. The Supabase secret key is not uploaded (the API doesn't need it yet). The website now refuses an API address without `https://` and explains non-JSON replies.
 - **2026-10-20:** Settings / Profile page and 3-step first-sign-in welcome built. Goals are now chosen from a list plus notes; body weight moves to M3 as dated measurements.

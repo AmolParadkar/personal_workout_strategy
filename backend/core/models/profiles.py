@@ -10,6 +10,8 @@ class ProfileSummary(BaseModel):
     is_own: bool
     # False until the first-sign-in questions have been answered.
     onboarded: bool
+    # True while a 75 Hard challenge is running (shows the 75 Hard link).
+    doing_75_hard: bool
 
 
 class HouseholdProfiles(BaseModel):

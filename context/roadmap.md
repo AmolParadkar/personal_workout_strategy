@@ -26,14 +26,13 @@ Build order as milestones. Tick items as they're done; each milestone links to t
 - [x] Type generation from API to frontend, with an up-to-date check (`npm run api-types`, `npm run api-types:check`)
 - [x] Write [setup.md](setup.md) (accounts, keys, running locally, checks, database changes, deploying, troubleshooting)
 
-## M2 — 75 Hard
-
-- [ ] Show the 75 Hard link only for profiles with an active challenge (shown for everyone until then; `TODO(M2)` in `NavBar.tsx`)
+## M2 — 75 Hard ✅
 
 Quick to build and already in use, so it comes early.
 
-- [ ] `challenges`, `challenge_checks` tables
-- [ ] [75 Hard](pages/75-hard.md) checklist, day counter, "What day are you on?", midnight reset
+- [x] `challenges`, `challenge_checks` tables with access rules
+- [x] [75 Hard](pages/75-hard.md) checklist, day counter, "What day are you on?", reset rule with noon grace, completion, stop
+- [x] 75 Hard link: always on your own profile; on the other person's only while they have a challenge running
 
 ## M3 — Health data intake
 

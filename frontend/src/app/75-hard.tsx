@@ -1,5 +1,5 @@
-import { PagePlaceholder } from '@/components/PagePlaceholder';
+import { SeventyFiveHardScreen } from '@/features/seventy-five-hard/SeventyFiveHardScreen';
 
 export default function Screen() {
-  return <PagePlaceholder page="seventyFiveHard" />;
+  return <SeventyFiveHardScreen />;
 }
