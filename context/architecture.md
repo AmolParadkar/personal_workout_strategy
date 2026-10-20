@@ -128,7 +128,12 @@ See the [Privacy model](skills.md#privacy-model) in the hub. In code, each job t
 
 ## Secrets and configuration
 
-- All keys (Supabase, Qwen provider, YouTube) are environment variables, never committed. A `.env.example` lists the names without values.
+- All keys (Supabase, Qwen provider, YouTube) are environment variables, never committed. `backend/.env.example` and `frontend/.env.example` list the names without values; the real values go in `backend/.env` and `frontend/.env` (ignored by git).
+- Current variables:
+  - `frontend/.env`: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the **default** publishable key; public, protected by the access rules). Only `EXPO_PUBLIC_` variables reach the website, and everything there is visible to visitors.
+  - `backend/.env`: `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (a secret key named **`backend-api`** in Supabase).
+- **One named secret key per component**, so a leaked key can be revoked without breaking the others: `backend-api` now; `mac-worker` for the worker in M4.
+- Secret keys are never pasted into chat or logs.
 - Keys that can read all data (Supabase service key) are only used by the API and worker, never by the website.
 - Details of accounts and setup will go in a `setup.md` when we reach that step (see [Roadmap](roadmap.md)).
 

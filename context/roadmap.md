@@ -14,7 +14,7 @@ Build order as milestones. Tick items as they're done; each milestone links to t
 ## M1 — Foundation
 
 - [x] Decide who can see whose data: view both, change your own ([access rules](data-model.md#access-rules))
-- [ ] Create Supabase project (Amol) and connect it
+- [x] Create Supabase project (Amol) and connect it: keys in `backend/.env` and `frontend/.env`, both verified
 - [x] Backend skeleton: uv project (Python 3.12), FastAPI app with `/api/health`, ruff, pytest
 - [x] Frontend skeleton: Expo Router website (SDK 58) with the 9 empty pages, navigation bar and profile dropdown (placeholder profiles)
 - [ ] Deploy website and API to Vercel
