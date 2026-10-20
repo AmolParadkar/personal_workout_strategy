@@ -2,18 +2,16 @@ import { Link, usePathname } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { navOrder, pages } from '@/features/navigation/pages';
-import { useProfile } from '@/features/profile/ProfileContext';
 import { radius, spacing, useTheme } from '@/theme';
 
 // Links to every page. Scrolls sideways on narrow phone screens.
 export function NavBar() {
   const pathname = usePathname();
-  const { activeProfile } = useProfile();
   const { colors } = useTheme();
 
-  const visiblePages = navOrder
-    .map((key) => pages[key])
-    .filter((page) => !page.requires75Hard || activeProfile.doing75Hard);
+  // TODO(M2): hide pages with requires75Hard for profiles without an active
+  // 75 Hard challenge, once the challenges table exists.
+  const visiblePages = navOrder.map((key) => pages[key]);
 
   return (
     <ScrollView

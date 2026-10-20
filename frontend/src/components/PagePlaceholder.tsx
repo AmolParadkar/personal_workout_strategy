@@ -8,14 +8,14 @@ import { maxContentWidth, radius, spacing, useTheme } from '@/theme';
 // Temporary content for pages that haven't been built yet.
 export function PagePlaceholder({ page, children }: { page: PageKey; children?: ReactNode }) {
   const info = pages[page];
-  const { activeProfile } = useProfile();
+  const { activeProfile, canEdit } = useProfile();
   const { colors } = useTheme();
 
   return (
     <ScrollView contentContainerStyle={styles.scroll}>
       <View style={styles.content}>
         <Text style={[styles.eyebrow, { color: colors.primary }]}>
-          {activeProfile.name.toUpperCase()}
+          {activeProfile.display_name.toUpperCase()}
         </Text>
         <Text style={[styles.title, { color: colors.text }]}>{info.title}</Text>
         <Text style={[styles.description, { color: colors.textMuted }]}>{info.description}</Text>
@@ -26,8 +26,13 @@ export function PagePlaceholder({ page, children }: { page: PageKey; children?: 
             </Text>
           </View>
           <Text style={[styles.cardText, { color: colors.text }]}>
-            Showing {activeProfile.name}’s profile. This page hasn’t been built yet.
+            Showing {activeProfile.display_name}’s profile. This page hasn’t been built yet.
           </Text>
+          {!canEdit && (
+            <Text style={[styles.cardText, { color: colors.textMuted }]}>
+              You’re viewing {activeProfile.display_name}’s profile, so it’s view-only.
+            </Text>
+          )}
           {children}
         </View>
       </View>

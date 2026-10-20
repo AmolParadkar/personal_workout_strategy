@@ -30,3 +30,6 @@ supabase/.branches/
 
 # Editors
 .idea/
+
+# Generated API description (frontend types are generated from it)
+backend/openapi.json

@@ -65,7 +65,7 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
 - **Local worker:** a program on the local Mac that fetches pending jobs (e.g. documents to read) from Supabase, processes them with Ollama, and writes the results back. The Mac is never exposed to the internet, so no tunnel is needed.
 - **Job queue:** all slow or LLM work goes through a job queue in the database. Quick cloud-LLM jobs (e.g. food photos) try on Vercel first and fall back to the queue. No paid cloud worker for now ($0 budget): queued jobs wait for the Mac worker (see [Future enhancements](#future-enhancements)). The Mac worker has safeguards: job statuses with retries, heartbeat and offline notice, auto-restart, offline alert, and a "Process in cloud now" button. Details: [Architecture: Job queue](architecture.md#job-queue-and-worker-safeguards).
 - **Keeping data formats in sync:** one Python codebase for API and worker; Pydantic models as the single source of truth; frontend types generated from the API. Details: [Architecture](architecture.md#keeping-data-formats-in-sync).
-- **Login and access ("view both, change your own"):** each person has their own Supabase login, needed because the site holds health data. Both logins can **view** both profiles (the profile dropdown switches between them), but each person can only **change** their own data. Nobody else can see anything. Details: [Data model: Access rules](data-model.md#access-rules).
+- **Login and access ("view both, change your own"):** each person has their own Supabase login, needed because the site holds health data. Both logins can **view** both profiles (the profile dropdown switches between them), but each person can only **change** their own data. Nobody else can see anything. **Sign-in is by email and password**; accounts are created by Amol in the Supabase dashboard (public sign-ups are off), because Supabase's free email service is too limited for magic links or email invites. Details: [Data model: Access rules](data-model.md#access-rules), [Architecture: Signing in](architecture.md#signing-in-and-calling-the-api).
 - **Health data:**
   - Source is **Apple Health**.
   - Phase 1 (website): an **iOS Shortcuts automation** on each iPhone sends the data to the backend daily.
@@ -126,6 +126,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** Sign-in built (email and password via Supabase Auth). First API endpoint `GET /api/me/profiles` uses the caller's own token so database access rules apply. Frontend types now generated from the API. The 75 Hard link shows for everyone until M2.
 - **2026-10-20:** First tables built: households, profiles, preferences and display settings, with "view both, change your own" access rules verified by integration tests. Decided: accounts by invitation only (public sign-ups off).
 - **2026-10-20:** Supabase project created and connected; env templates added; one named secret key per component (`backend-api` now, `mac-worker` later).
 - **2026-10-20:** Health-app look and feel: dark mode by default with a light mode toggle (saved per device), green accent, colours checked for WCAG AA contrast.

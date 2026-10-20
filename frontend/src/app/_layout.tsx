@@ -1,35 +1,75 @@
-import { Slot } from 'expo-router';
+import { Redirect, Slot, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { NavBar } from '@/components/NavBar';
 import { ProfileSwitcher } from '@/components/ProfileSwitcher';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { AuthProvider, useAuth } from '@/features/auth/AuthContext';
 import { ProfileProvider } from '@/features/profile/ProfileContext';
 import { maxContentWidth, spacing, ThemeProvider, useTheme } from '@/theme';
 
-// Providers wrap the whole app so every screen can read the theme and profile.
+const SIGN_IN_PATH = '/sign-in';
+
+// Providers wrap the whole app so every screen can read the theme and sign-in state.
 export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <ProfileProvider>
-          <AppFrame />
-        </ProfileProvider>
+        <AuthProvider>
+          <AuthGate />
+        </AuthProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );
 }
 
-// The frame around every page: header with the theme toggle and profile
-// dropdown, the navigation bar, then the current page (rendered at <Slot />).
-function AppFrame() {
+// Sends signed-out visitors to the sign-in page, and signed-in people away
+// from it. This only controls what the website shows: the data itself is
+// protected by the database access rules and the API.
+function AuthGate() {
+  const { session, loading } = useAuth();
   const { mode, colors } = useTheme();
+  const pathname = usePathname();
+  const onSignInPage = pathname === SIGN_IN_PATH;
+
+  let content;
+  if (loading) {
+    content = (
+      <View style={styles.centered}>
+        <ActivityIndicator color={colors.primary} />
+      </View>
+    );
+  } else if (!session && !onSignInPage) {
+    content = <Redirect href={SIGN_IN_PATH} />;
+  } else if (session && onSignInPage) {
+    content = <Redirect href="/" />;
+  } else if (!session) {
+    content = <Slot />;
+  } else {
+    content = (
+      <ProfileProvider>
+        <AppFrame />
+      </ProfileProvider>
+    );
+  }
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: colors.background }]} edges={['top']}>
       <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      {content}
+    </SafeAreaView>
+  );
+}
+
+// The frame around every signed-in page: header with the theme toggle and
+// profile dropdown, the navigation bar, then the current page (at <Slot />).
+function AppFrame() {
+  const { colors } = useTheme();
+
+  return (
+    <>
       <View
         style={[
           styles.headerArea,
@@ -53,13 +93,18 @@ function AppFrame() {
       <View style={styles.page}>
         <Slot />
       </View>
-    </SafeAreaView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  centered: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   headerArea: {
     // Keeps the profile dropdown menu above the page content.

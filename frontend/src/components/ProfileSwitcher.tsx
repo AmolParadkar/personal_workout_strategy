@@ -2,6 +2,7 @@ import { Link } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
+import { useAuth } from '@/features/auth/AuthContext';
 import { pages } from '@/features/navigation/pages';
 import { useProfile } from '@/features/profile/ProfileContext';
 import { radius, spacing, useTheme } from '@/theme';
@@ -9,6 +10,7 @@ import { radius, spacing, useTheme } from '@/theme';
 // The dropdown at the top of every page: switch profile, or open Settings.
 export function ProfileSwitcher() {
   const { profiles, activeProfile, setActiveProfileId } = useProfile();
+  const { signOut } = useAuth();
   const { colors } = useTheme();
   const [open, setOpen] = useState(false);
 
@@ -18,16 +20,16 @@ export function ProfileSwitcher() {
     <View style={styles.container}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`Profile: ${activeProfile.name}. Change profile`}
+        accessibilityLabel={`Profile: ${activeProfile.display_name}. Change profile`}
         onPress={() => setOpen((isOpen) => !isOpen)}
         style={[styles.button, { borderColor: colors.border, backgroundColor: colors.surfaceRaised }]}
       >
         <View style={[styles.avatar, { backgroundColor: colors.primarySoft }]}>
           <Text style={[styles.avatarText, { color: colors.primary }]}>
-            {activeProfile.name.charAt(0)}
+            {activeProfile.display_name.charAt(0).toUpperCase()}
           </Text>
         </View>
-        <Text style={[styles.buttonText, { color: colors.text }]}>{activeProfile.name}</Text>
+        <Text style={[styles.buttonText, { color: colors.text }]}>{activeProfile.display_name}</Text>
         <Text style={[styles.chevron, { color: colors.textMuted }]}>▾</Text>
       </Pressable>
 
@@ -55,7 +57,10 @@ export function ProfileSwitcher() {
               <Text style={[styles.check, { color: colors.primary }]}>
                 {profile.id === activeProfile.id ? '✓' : ''}
               </Text>
-              <Text style={[styles.menuText, menuItemText]}>{profile.name}</Text>
+              <Text style={[styles.menuText, menuItemText]}>
+                {profile.display_name}
+                {profile.is_own && <Text style={{ color: colors.textMuted }}> (you)</Text>}
+              </Text>
             </Pressable>
           ))}
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
@@ -69,6 +74,17 @@ export function ProfileSwitcher() {
               <Text style={[styles.menuText, menuItemText]}>{pages.settings.title}</Text>
             </Pressable>
           </Link>
+          <Pressable
+            accessibilityRole="menuitem"
+            onPress={() => {
+              setOpen(false);
+              signOut();
+            }}
+            style={styles.menuItem}
+          >
+            <Text style={styles.check} />
+            <Text style={[styles.menuText, menuItemText]}>Sign out</Text>
+          </Pressable>
         </View>
       )}
     </View>

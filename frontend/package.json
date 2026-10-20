@@ -4,6 +4,7 @@
   "main": "expo-router/entry",
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",
+    "@supabase/supabase-js": "^2.118.0",
     "expo": "~58.0.16",
     "expo-constants": "~58.0.12",
     "expo-linking": "~58.0.13",
@@ -27,7 +28,9 @@
     "web": "expo start --web",
     "build:web": "expo export -p web",
     "typecheck": "tsc --noEmit",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "api-types": "cd ../backend && uv run python -m api.export_openapi openapi.json && cd ../frontend && npx --yes openapi-typescript@7.13.0 ../backend/openapi.json -o src/lib/api-types.ts",
+    "api-types:check": "npm run api-types && git diff --exit-code -- src/lib/api-types.ts"
   },
   "private": true
 }

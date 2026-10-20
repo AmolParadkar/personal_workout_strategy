@@ -54,6 +54,14 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 
 ## Request flows
 
+### Signing in and calling the API
+
+1. The website signs in directly with Supabase Auth (email and password) and keeps the session in browser storage.
+2. Every API call sends the session's access token: `Authorization: Bearer <token>`.
+3. The API checks the token with Supabase (`/auth/v1/user`) to learn who is calling; a missing or invalid token gets `401`.
+4. To read or change data, the API calls Supabase **with the user's own token** and the publishable key, so the database access rules decide what's allowed. The secret key is only for backend jobs that genuinely need to bypass them.
+5. The website redirects signed-out visitors to `/sign-in`, but that's only convenience: the real protection is steps 3–4.
+
 ### Reading a page (e.g. Summary)
 
 Website → API → database → API returns data shaped for that page → website renders it.

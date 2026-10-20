@@ -18,14 +18,17 @@ Build order as milestones. Tick items as they're done; each milestone links to t
 - [x] Backend skeleton: uv project (Python 3.12), FastAPI app with `/api/health`, ruff, pytest
 - [x] Frontend skeleton: Expo Router website (SDK 58) with the 9 empty pages, navigation bar and profile dropdown (placeholder profiles)
 - [ ] Deploy website and API to Vercel
-- [ ] Sign-in with Supabase Auth
+- [x] Sign-in with Supabase Auth: email and password, sign-in page, signed-out visitors redirected, real profiles in the dropdown, sign out
+- [ ] Create both real accounts in Supabase (Amol): Authentication → Users → Add user → Create new user, "Auto confirm" ticked
 - [x] `households`, `profiles`, `training_preferences`, `diet_preferences`, `display_settings` tables with access rules (25 access checks passing)
 - [x] Switch off public sign-ups in Supabase (Amol): verified, sign-up attempts are refused
 - [ ] [Settings / Profile](pages/settings-profile.md) page and first sign-in questions
-- [ ] Type generation from API to frontend, with an up-to-date check
+- [x] Type generation from API to frontend, with an up-to-date check (`npm run api-types`, `npm run api-types:check`)
 - [ ] Write `setup.md` (accounts, keys, how to run locally)
 
 ## M2 — 75 Hard
+
+- [ ] Show the 75 Hard link only for profiles with an active challenge (shown for everyone until then; `TODO(M2)` in `NavBar.tsx`)
 
 Quick to build and already in use, so it comes early.
 
