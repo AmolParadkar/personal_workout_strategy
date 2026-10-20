@@ -12,7 +12,8 @@ class Settings(BaseSettings):
     # Public key, used with a signed-in user's token so Supabase's access rules apply.
     supabase_publishable_key: str
     # Bypasses all access rules; only for backend jobs that genuinely need it.
-    supabase_secret_key: str
+    # Optional: the API doesn't use it yet, so it isn't uploaded to Vercel.
+    supabase_secret_key: str | None = None
     # Comma-separated website addresses allowed to call the API.
     cors_origins: str = "http://localhost:8081"
 
