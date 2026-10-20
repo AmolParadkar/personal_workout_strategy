@@ -24,7 +24,10 @@
 
 ## Water
 
-- **Quick-add buttons** (+250 ml / +500 ml). They live on this page only; the [Summary](summary.md) shows the water card without buttons.
+- **Quick-add buttons** (+250 ml / +500 ml) and **Undo** (removes the last glass). They live on this page only; the [Summary](summary.md) shows the water card without buttons. **Built (M3).**
+- Shows today's total against the person's target (Settings → Water, default 3 L), with a progress bar.
+- For anyone doing [75 Hard](75-hard.md): shows how much is left to a gallon (3.8 L); reaching it **ticks the 75 Hard water item automatically** (only ticks, never unticks).
+- The "day" is the browser's local date. View-only on the other person's profile.
 
 ## Medications
 

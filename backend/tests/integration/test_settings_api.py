@@ -135,3 +135,20 @@ def test_onboarding_needs_required_fields_then_completes(people):
 def test_settings_need_sign_in():
     assert client.get("/api/me/profiles").status_code == 401
     assert client.patch("/api/me/settings/display", json={}).status_code == 401
+
+
+def test_apps_and_devices_are_saved(people):
+    a = people["a"]
+    response = client.patch(
+        "/api/me/settings/profile",
+        json={"data_sources": ["iphone_health", "strava"], "data_sources_other": "Cult.fit"},
+        headers=a["headers"],
+    )
+    assert response.status_code == 200, response.json()
+    profile = response.json()["profile"]
+    assert profile["data_sources"] == ["iphone_health", "strava"]
+    assert profile["data_sources_other"] == "Cult.fit"
+    bad = client.patch(
+        "/api/me/settings/profile", json={"data_sources": ["myspace"]}, headers=a["headers"]
+    )
+    assert bad.status_code == 422

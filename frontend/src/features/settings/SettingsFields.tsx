@@ -1,9 +1,17 @@
-import { StyleSheet, View } from 'react-native';
+import { StyleSheet, Text, View } from 'react-native';
 
 import { ChipSelect, Field, TextField, ToggleRow } from '@/components/form';
-import { spacing } from '@/theme';
+import { spacing, useTheme } from '@/theme';
 
-import type { AboutDraft, DietDraft, DisplayDraft, TrainingDraft } from './drafts';
+import { dataSourceGroups, dataSourceInfo, routeNotes } from './dataSources';
+import type {
+  AboutDraft,
+  DietDraft,
+  DisplayDraft,
+  SourcesDraft,
+  TrainingDraft,
+  WaterDraft,
+} from './drafts';
 import {
   dayOptions,
   dietTypeOptions,
@@ -209,6 +217,73 @@ export function FoodFields({ draft, onChange, disabled }: Props<DietDraft>) {
   );
 }
 
+export function WaterFields({ draft, onChange, disabled }: Props<WaterDraft>) {
+  return (
+    <View style={styles.fields}>
+      <Field label="Daily water target (ml)" hint="3000 ml = 3 litres. The 75 Hard gallon is 3785 ml." required>
+        <TextField
+          label="Daily water target in millilitres"
+          value={draft.water_target_ml}
+          onChange={(water_target_ml) => onChange({ water_target_ml })}
+          inputMode="numeric"
+          disabled={disabled}
+        />
+      </Field>
+    </View>
+  );
+}
+
+export function SourcesFields({ draft, onChange, disabled }: Props<SourcesDraft>) {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.fields}>
+      {dataSourceGroups.map((group) => (
+        <Field key={group.title} label={group.title}>
+          <ChipSelect
+            options={group.options}
+            // Each group shows only its own choices but saves into one shared list.
+            selected={draft.data_sources.filter((s) => group.options.some((o) => o.value === s))}
+            onChange={(selectedInGroup) =>
+              onChange({
+                data_sources: [
+                  ...draft.data_sources.filter((s) => !group.options.some((o) => o.value === s)),
+                  ...selectedInGroup,
+                ],
+              })
+            }
+            multiple
+            disabled={disabled}
+          />
+        </Field>
+      ))}
+      <Field label="Anything else?" hint="Other apps or devices you use.">
+        <TextField
+          label="Other apps or devices"
+          value={draft.data_sources_other}
+          onChange={(data_sources_other) => onChange({ data_sources_other })}
+          placeholder="e.g. Cult.fit"
+          disabled={disabled}
+        />
+      </Field>
+      {draft.data_sources.length > 0 && (
+        <View style={styles.notes}>
+          <Text style={[styles.notesTitle, { color: colors.text }]}>How each one connects</Text>
+          {draft.data_sources.map((source) => {
+            const info = dataSourceInfo.get(source);
+            if (!info) return null;
+            return (
+              <Text key={source} style={[styles.note, { color: colors.textMuted }]}>
+                <Text style={{ color: colors.text, fontWeight: '600' }}>{info.label}: </Text>
+                {routeNotes[info.route]}
+              </Text>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+}
+
 export function DisplayFields({ draft, onChange, disabled }: Props<DisplayDraft>) {
   return (
     <View style={styles.fields}>
@@ -238,5 +313,16 @@ export function DisplayFields({ draft, onChange, disabled }: Props<DisplayDraft>
 const styles = StyleSheet.create({
   fields: {
     gap: spacing.lg,
+  },
+  notes: {
+    gap: spacing.xs + 2,
+  },
+  notesTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  note: {
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

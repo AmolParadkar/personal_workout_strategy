@@ -24,19 +24,25 @@ Status: **Built** (migrations `20261020115531_profiles_and_settings.sql`, `20261
 | Table | Key fields | Purpose |
 |---|---|---|
 | `households` | `name` | Groups the two profiles for the "view both" rule. |
-| `profiles` | `user_id` (Supabase login), `household_id`, `display_name`, `date_of_birth`, `sex`, `height_cm`, `goals[]`, `goals_notes`, `goal_metric`, `injuries_notes`, `onboarded_at` | One row per person. `onboarded_at` is empty until the first-sign-in questions are answered. |
+| `profiles` | `user_id` (Supabase login), `household_id`, `data_sources[]` + `data_sources_other` (apps and devices used, see [data-sources.md](data-sources.md)), `display_name`, `date_of_birth`, `sex`, `height_cm`, `goals[]`, `goals_notes`, `goal_metric`, `injuries_notes`, `onboarded_at` | One row per person. `onboarded_at` is empty until the first-sign-in questions are answered. |
 | `training_preferences` | `profile_id`, `equipment[]`, `available_days[]`, `minutes_per_session`, `location` (home / gym / travel) | Inputs to the [Workout Plan](pages/workout-plan.md). |
 | `diet_preferences` | `profile_id`, `diet_type`, `cuisines[]`, `allergies[]`, `dislikes[]`, `meals_per_day`, `cooking_minutes` | Inputs to the [Nutrition Plan](pages/nutrition-plan.md). |
 | `display_settings` | `profile_id`, `show_weight`, `show_calorie_intake`, `show_calories_burned` (all default false) | Opt-in cards on [Summary](pages/summary.md) and [Progress](pages/progress.md). |
 
 ## Health data
 
-Used by: [Summary](pages/summary.md), [Progress](pages/progress.md). Sources: the iOS Shortcut, manual entry, wearables later.
+Used by: [Summary](pages/summary.md), [Progress](pages/progress.md), [Settings / Profile](pages/settings-profile.md) (body weight). Sources: the iOS Shortcut ([apple-health-shortcut.md](apple-health-shortcut.md)), manual entry, wearables later.
+
+Status: **Built** (migration `20261020162050_health_data_water_and_tokens.sql`).
 
 | Table | Key fields | Purpose |
 |---|---|---|
-| `health_samples` | `profile_id`, `metric` (e.g. steps, weight_kg, sleep_minutes, bedtime, resting_hr, hrv, vo2_max, active_energy_kcal), `value`, `unit`, `recorded_at`, `source` (apple_health / manual / device name) | One generic table for every measured number. New metrics or wearables need no new tables. |
-| `ingest_tokens` | `profile_id`, `token_hash`, `last_used_at` | Per-person secret for the iOS Shortcut to send data. |
+| `health_samples` | `profile_id`, `metric`, `recorded_on` (local day), `value`, `recorded_at` (exact time, for bedtime / wake time / weigh-ins), `source` (apple_health / manual); unique per person, metric, day and source | One generic table for every measurement. **One value per metric per day per source**: re-sending a day replaces it. New metrics or wearables need no new tables. |
+| `ingest_tokens` | `profile_id` (one per person), `token_hash` (SHA-256), `last_used_at` | The iOS Shortcut's connection token. Only the hash is stored; the token is shown once. Private even within the household; the hash column is never readable. |
+
+- **Metrics:** `steps`, `active_energy_kcal`, `walking_running_km`, `sleep_in_bed_minutes`, `sleep_asleep_minutes`, `bedtime`, `wake_time` (time only, in `recorded_at`), `weight_kg`, `resting_hr`, `hrv_ms`, `vo2_max`. Units are fixed per metric (in the name). Allowed ranges are in `backend/core/models/health_data.py`.
+- **For sleep, `recorded_on` is the morning you woke up**; for daily totals it's the day they happened.
+- Access: the household can read measurements; each person can add or correct only their own (manual weigh-ins). Shortcut data goes through the database function `public.ingest_health_samples(token, samples)`, which checks the token hash and saves only for that token's profile, so the API needs no secret key.
 
 Daily and weekly figures (averages, trends, baselines) are calculated from `health_samples`, not stored separately, unless performance later requires it.
 
@@ -66,7 +72,7 @@ Used by: [Nutrition Plan](pages/nutrition-plan.md), [Plan for Today](pages/plan-
 | `food_logs` | `profile_id`, `date`, `slot`, `method` (as_planned / photo / manual), `planned_meal_id`, `name`, `photo_path`, `nutrients` | What was actually eaten. |
 | `food_log_items` | `food_log_id`, `food_id`, `grams` | Ingredient breakdown behind each log (from the photo questions or manual entry). |
 | `favourite_meals` | `profile_id`, `name`, `items` (food_id + grams) | One-tap logging of repeated meals. |
-| `water_logs` | `profile_id`, `ml`, `logged_at` | Quick-add buttons. |
+| `water_logs` | `profile_id`, `ml` (1–2000), `logged_on` (the person's local date, sent by the website), `logged_at` | Quick-add buttons and Undo on Plan for Today. **Built (M3).** The daily target is `profiles.water_target_ml` (default 3000, 500–8000). |
 
 ## Health records
 

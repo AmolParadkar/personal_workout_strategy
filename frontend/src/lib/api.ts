@@ -4,7 +4,7 @@ import { supabase } from './supabase';
 // Types come from api-types.ts, generated from the backend (`npm run api-types`).
 export type Schemas = components['schemas'];
 
-const apiUrl = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
+export const apiUrl = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
 
 // Without "https://" the browser treats the address as a page on this website.
 if (!/^https?:\/\//.test(apiUrl)) {
@@ -64,6 +64,10 @@ export function apiGet<T>(path: string): Promise<T> {
 
 export function apiPatch<T>(path: string, body: unknown): Promise<T> {
   return request<T>('PATCH', path, body);
+}
+
+export function apiDelete<T>(path: string): Promise<T> {
+  return request<T>('DELETE', path);
 }
 
 export function apiPut<T>(path: string, body: unknown): Promise<T> {

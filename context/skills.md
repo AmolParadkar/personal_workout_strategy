@@ -12,6 +12,8 @@ This is the **hub** for the project's context files. It holds the app's structur
 | [data-model.md](data-model.md) | Every database table, grouped by area, with the pages that use it |
 | [conventions.md](conventions.md) | How code and docs are written: Python, TypeScript, database, LLM, testing, git, docs |
 | [roadmap.md](roadmap.md) | Build milestones with checkboxes |
+| [apple-health-shortcut.md](apple-health-shortcut.md) | Step-by-step guide to the iOS Shortcut that sends Apple Health data daily, and the message format |
+| [data-sources.md](data-sources.md) | Which health apps and devices can feed the app, how, and the plan for direct connections |
 | [setup.md](setup.md) | Accounts, keys, first-time setup, running locally, checks, database changes, deploying, troubleshooting |
 | [pages/](pages/) | One spec file per page (table below) |
 | `../CLAUDE.md` | Root file Claude Code reads every session; points here |
@@ -71,11 +73,12 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
 - **Login and access ("view both, change your own"):** each person has their own Supabase login, needed because the site holds health data. Both logins can **view** both profiles (the profile dropdown switches between them), but each person can only **change** their own data. Nobody else can see anything. **Sign-in is by email and password**; accounts are created by Amol in the Supabase dashboard (public sign-ups are off), because Supabase's free email service is too limited for magic links or email invites. Details: [Data model: Access rules](data-model.md#access-rules), [Architecture: Signing in](architecture.md#signing-in-and-calling-the-api).
 - **Health data:**
   - Source is **Apple Health**.
-  - Phase 1 (website): an **iOS Shortcuts automation** on each iPhone sends the data to the backend daily.
+  - Phase 1 (website): an **iOS Shortcuts automation** on each iPhone sends the data to the backend daily ([guide](apple-health-shortcut.md)). It authenticates with a per-person **connection token** created in Settings (only its hash is stored).
   - Phase 2 (app): the app reads Apple Health directly.
   - **Wearables:** none yet. The design must make them easy to add later; most sync into Apple Health, so they'd flow in through the same path.
+  - **Other apps and devices:** each person ticks what they use in Settings; each one is then assessed, and approved services get a direct connection (OAuth "Connect" button, backend-only access key, daily fetch into `health_samples`). See [data-sources.md](data-sources.md).
 - **Languages:** **TypeScript** for the Expo frontend; **Python** for everything else (FastAPI backend on Vercel, worker, scripts). The frontend's data types are generated automatically from the Python API, so the two can't drift apart.
-- **Folder structure:** `frontend/`, `backend/` (`core/`, `api/`, `worker/`, `tests/`), `supabase/migrations/`, `shortcuts/`, `context/`. Details: [Architecture: Folder structure](architecture.md#folder-structure).
+- **Folder structure:** `frontend/`, `backend/` (`core/`, `api/`, `worker/`, `tests/`), `supabase/migrations/`, `context/`. Details: [Architecture: Folder structure](architecture.md#folder-structure).
 - **Look and feel:** modelled on leading health apps (Whoop, Oura). **Dark mode by default**, with a light mode toggle in the header; the choice is remembered per device. Near-black background (not pure black), one green accent for actions and progress, and green / amber / red reserved for health signals. All text colours meet WCAG AA contrast (4.5:1) in both themes. Details: [Conventions: Theme](conventions.md#theme).
 - **External content:** exercise diagrams from a free exercise database (free-exercise-db or wger); muscle body map from an open-source component (e.g. react-native-body-highlighter); videos via the YouTube Data API; nutrients from USDA FoodData Central / Indian Food Composition Tables. Details in [Exercise Guide](pages/exercise-guide.md) and [Plan for Today](pages/plan-for-today.md).
 
@@ -129,6 +132,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** M3 (health data intake) built: `health_samples`, connection tokens and water logs; Shortcut endpoint that skips bad samples instead of rejecting the batch; Shortcut guide; water card with per-person target (a gallon ticks 75 Hard's water item); body weight in Settings; "Apps and devices you use" in Settings, with [data-sources.md](data-sources.md) to assess which services to connect directly. The planned `shortcuts/` folder was dropped: the guide lives in `context/`.
 - **2026-10-20:** M2 (75 Hard) built: checklist, day counter, restart rule with yesterday open until noon, completion and stop; anyone can start a challenge; the link shows on the other person's profile only while they're doing one. Resets are calculated, not stored, so nothing runs at midnight.
 - **2026-10-20:** M1 (Foundation) complete. Added [setup.md](setup.md).
 - **2026-10-20:** Website and API deployed to Vercel as two projects (root folders `frontend` and `backend`), auto-deploying from `main`. The Supabase secret key is not uploaded (the API doesn't need it yet). The website now refuses an API address without `https://` and explains non-JSON replies.

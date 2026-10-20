@@ -114,6 +114,10 @@ Full details: [Architecture: Deployment](architecture.md#deployment).
 - **Forgotten password:** in the same Users list, open the user and set a new password (Supabase's free email service is too limited for reset emails).
 - Signed-in sessions last on each device until the person signs out.
 
+## Apple Health
+
+Each person builds the iOS Shortcut once: [apple-health-shortcut.md](apple-health-shortcut.md). The connection token is created in **Settings → Apple Health**; making a new one stops the old one, so paste the new one into the Shortcut.
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |

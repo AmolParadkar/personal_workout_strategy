@@ -20,12 +20,16 @@ Not collected up front; each person fills them in here once the app exists.
 
 ## Layout
 
-Four sections, each with its own **Save** button (saving one never touches unsaved changes in another):
+Sections, each saved on its own (saving one never touches unsaved changes in another):
 
 1. **About you:** name, date of birth, sex, height, goals (choose from a list) plus goal notes, the one metric you care about most, injuries or limitations.
 2. **Training:** days you can train, minutes per session, where you train, equipment.
 3. **Food:** diet type, meals per day, cooking time, cuisines, allergies, foods you dislike (comma-separated).
-4. **Summary cards:** switches for weight, calories eaten and calories burned (off by default).
+4. **Body weight:** latest weight and date (manual or Apple Health), plus "Today's weight (kg)" to log one. Logging again the same day corrects it.
+5. **Water:** daily target in ml (default 3000; 75 Hard's gallon is 3785).
+6. **Summary cards:** switches for weight, calories eaten and calories burned (off by default).
+7. **Apps and devices you use** (optional): tick the health apps and devices you use, grouped (phone and watch, rings and bands, scales and health devices, apps), plus "Anything else?". Under the ticked ones, a note says how each connects today (through the Shortcut, via Apple Health, or not yet). Used to decide which connections to build: [data-sources.md](../data-sources.md).
+8. **Apple Health** (own profile only): create a connection token for the iOS Shortcut (shown once, with Copy buttons for the token and the address), see when data last arrived, make a new token (stops the old one) or disconnect. Guide: [apple-health-shortcut.md](../apple-health-shortcut.md).
 
 When viewing the other person's profile, every field is disabled and there are no Save buttons.
 
