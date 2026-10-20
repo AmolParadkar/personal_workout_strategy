@@ -29,6 +29,7 @@ import {
 } from './SettingsFields';
 import { SettingsSection } from './SettingsSection';
 import { useProfileSettings } from './useProfileSettings';
+import { WorkerSection } from './WorkerSection';
 
 export function SettingsScreen() {
   const { activeProfile, canEdit, reload } = useProfile();
@@ -121,6 +122,7 @@ export function SettingsScreen() {
             />
             <ConnectionsSection profileId={state.settings.profile_id} />
             {state.settings.can_edit && <AppleHealthSection />}
+            <WorkerSection canEdit={state.settings.can_edit} />
           </View>
         )}
       </View>

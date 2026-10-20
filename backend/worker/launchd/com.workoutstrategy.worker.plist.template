@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- The Mac worker as a background service: starts at login, restarts if it
+     stops. Installed by install.sh, which fills in the paths. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.workoutstrategy.worker</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>__UV__</string>
+    <string>run</string>
+    <string>--no-dev</string>
+    <string>python</string>
+    <string>-m</string>
+    <string>worker</string>
+  </array>
+  <key>WorkingDirectory</key>
+  <string>__BACKEND__</string>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <!-- Wait 30 seconds between restarts if it keeps crashing. -->
+  <key>ThrottleInterval</key>
+  <integer>30</integer>
+  <key>ProcessType</key>
+  <string>Background</string>
+  <key>StandardOutPath</key>
+  <string>__LOGS__/workout-strategy-worker.log</string>
+  <key>StandardErrorPath</key>
+  <string>__LOGS__/workout-strategy-worker.log</string>
+</dict>
+</plist>

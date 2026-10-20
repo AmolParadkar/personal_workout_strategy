@@ -438,6 +438,87 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/jobs/{job_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Job
+         * @description A job's status and, when done, its result (the household's jobs only).
+         */
+        get: operations["get_job_api_jobs__job_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/jobs/{job_id}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Retry Job
+         * @description Put your own failed job back in the queue.
+         */
+        post: operations["retry_job_api_me_jobs__job_id__retry_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/worker-status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Worker Status
+         * @description Whether the Mac worker is online, and how many of the household's jobs wait.
+         */
+        get: operations["worker_status_api_worker_status_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/jobs/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Test Job
+         * @description Send a test job, to check the queue and worker work. With `quick`, it's
+         *     tried on Vercel first and only queued if that's too slow.
+         */
+        post: operations["test_job_api_me_jobs_test_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -615,6 +696,43 @@ export interface components {
             saved: number;
             /** Skipped */
             skipped: components["schemas"]["SkippedSample"][];
+        };
+        /** Job */
+        Job: {
+            /** Id */
+            id: string | null;
+            /** Type */
+            type: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "processing" | "done" | "failed";
+            /** Result */
+            result?: {
+                [key: string]: unknown;
+            } | null;
+            /** Last Error */
+            last_error?: string | null;
+            /**
+             * Attempts
+             * @default 0
+             */
+            attempts: number;
+            /**
+             * Max Attempts
+             * @default 3
+             */
+            max_attempts: number;
+            /**
+             * Local Only
+             * @default false
+             */
+            local_only: boolean;
+            /** Created At */
+            created_at?: string | null;
+            /** Finished At */
+            finished_at?: string | null;
         };
         /** LogWeight */
         LogWeight: {
@@ -848,6 +966,29 @@ export interface components {
             results: components["schemas"]["ServiceSyncResult"][];
             connections: components["schemas"]["Connections"];
         };
+        /** TestJobRequest */
+        TestJobRequest: {
+            /**
+             * Message
+             * @default Hello from the queue
+             */
+            message: string;
+            /**
+             * Quick
+             * @default false
+             */
+            quick: boolean;
+            /**
+             * Delay Seconds
+             * @default 0
+             */
+            delay_seconds: number;
+            /**
+             * Fail Times
+             * @default 0
+             */
+            fail_times: number;
+        };
         /** TrainingPreferences */
         TrainingPreferences: {
             /** Equipment */
@@ -931,6 +1072,19 @@ export interface components {
             latest: components["schemas"]["WeightEntry"] | null;
             /** Can Edit */
             can_edit: boolean;
+        };
+        /** WorkerStatus */
+        WorkerStatus: {
+            /** Online */
+            online: boolean;
+            /** Last Seen At */
+            last_seen_at: string | null;
+            /** Ollama Ok */
+            ollama_ok: boolean | null;
+            /** Waiting Jobs */
+            waiting_jobs: number;
+            /** Oldest Waiting At */
+            oldest_waiting_at: string | null;
         };
     };
     responses: never;
@@ -1773,6 +1927,138 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SyncResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_job_api_jobs__job_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    retry_job_api_me_jobs__job_id__retry_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                job_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    worker_status_api_worker_status_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkerStatus"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    test_job_api_me_jobs_test_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["TestJobRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
                 };
             };
             /** @description Validation Error */

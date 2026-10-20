@@ -10,6 +10,7 @@ import { RefreshButton } from '@/components/RefreshButton';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AuthProvider, useAuth } from '@/features/auth/AuthContext';
 import { ProfileProvider } from '@/features/profile/ProfileContext';
+import { WorkerNotice } from '@/features/jobs/WorkerNotice';
 import { useSyncConnectionsOnOpen } from '@/features/settings/syncOnOpen';
 import { maxContentWidth, spacing, ThemeProvider, useTheme } from '@/theme';
 
@@ -97,7 +98,9 @@ function AppFrame() {
         <View style={styles.header}>
           <View style={styles.brand}>
             <View style={[styles.brandMark, { backgroundColor: colors.primary }]} />
-            <Text style={[styles.appName, { color: colors.text }]}>Workout Strategy</Text>
+            <Text numberOfLines={1} style={[styles.appName, { color: colors.text }]}>
+              Workout Strategy
+            </Text>
           </View>
           <View style={styles.actions}>
             <RefreshButton onDone={refreshed} />
@@ -117,6 +120,7 @@ function AppFrame() {
           {notice.text}
         </Text>
       )}
+      <WorkerNotice key={`worker-${pageKey}`} />
       <View key={pageKey} style={styles.page}>
         <Slot />
       </View>
@@ -153,6 +157,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
+    // On narrow phones the name shortens ("Workout Str…") so the buttons fit.
+    flexShrink: 1,
+    marginRight: spacing.sm,
   },
   brandMark: {
     width: 10,
@@ -160,11 +167,13 @@ const styles = StyleSheet.create({
     borderRadius: 5,
   },
   appName: {
+    flexShrink: 1,
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: -0.3,
   },
   actions: {
+    flexShrink: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,

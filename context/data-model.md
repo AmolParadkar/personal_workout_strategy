@@ -117,10 +117,16 @@ Status: **Built** (migration `20261020151423_seventy_five_hard.sql`).
 
 Used by: every LLM flow; see [Architecture: Job queue](architecture.md#job-queue-and-worker-safeguards).
 
+Status: **Built** (migration `20261020192131_job_queue.sql`).
+
 | Table | Key fields | Purpose |
 |---|---|---|
-| `jobs` | `profile_id`, `type`, `payload`, `result`, `status` (pending / processing / done / failed), `local_only`, `attempts`, `max_attempts`, `run_after`, `locked_by`, `locked_at`, `last_error`, `finished_at` | The queue. |
-| `worker_heartbeats` | `worker_id`, `mode` (local / cloud), `last_seen_at`, `version` | Shows "document reader offline" and drives the offline alert. |
+| `jobs` | `profile_id` (empty for household-wide jobs), `type`, `payload`, `result`, `status` (pending / processing / done / failed), `local_only`, `allow_cloud` ("Process in cloud now"), `attempts`, `max_attempts`, `run_after`, `locked_by`, `locked_at`, `last_error`, `finished_at` | The queue. Job types are a fixed list (the planned ones plus `test_echo`). |
+| `worker_heartbeats` | `worker_id`, `mode` (local / cloud), `version`, `ollama_ok`, `started_at`, `last_seen_at` | Shows "offline since …" and drives the offline alert. |
+| `private.alert_state` | `name`, `last_sent_at` | When the offline alert was last sent (at most every 12 hours). Not reachable through the API. |
+
+- Access: the household can read jobs and anyone signed in can read worker status; each person can add jobs only for themselves, and retry their own failed jobs with `public.retry_job(id)`. Everything else is done by the worker with the `mac-worker` secret key: `public.claim_job(worker_id, mode)` (atomic, `skip locked`; a cloud worker never gets a local-only job unless `allow_cloud`) and `public.requeue_stuck_jobs(interval)`, both for the secret key only.
+- **Offline alert:** `private.check_worker_offline()` runs hourly in Supabase (`pg_cron`) and sends an ntfy push (`pg_net`) when no worker has been seen for 12 hours and jobs have waited 12 hours. The ntfy topic is a Vault secret named `ntfy_topic` ([setup](setup.md#mac-worker)).
 
 ## Access rules
 
@@ -131,7 +137,7 @@ Decided: **"view both, change your own".**
 - **Write (insert / update / delete):** a login can only write rows whose `profile_id` is its own profile.
 - **Files in Storage** follow the same rule: both can view, only the owner can upload or delete.
 - **Shared tables** (`exercises`, `foods`) are readable by any signed-in user and written only by the backend.
-- **Backend-only tables** (`jobs`, `worker_heartbeats`, `ingest_tokens`) aren't accessible from the website; the API and worker use the service key.
+- **Worker-written tables** (`jobs`, `worker_heartbeats`): the website can read status but only the worker (secret key) changes jobs after they're added. `ingest_tokens` and `service_connections` keep their secret columns unreadable.
 - These rules are switched on for every table (see [Conventions: Database](conventions.md#database)).
 - **Accounts by invitation only:** public sign-ups are switched off in Supabase; both accounts are invited from the dashboard, so every account belongs to the one household.
 - Verified by `backend/tests/integration/test_access_rules.py` (see [Conventions: Database](conventions.md#database)).
