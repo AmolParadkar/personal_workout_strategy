@@ -24,6 +24,7 @@ PDF lab reports, photos of reports, and doctor's notes or typed notes (e.g. "kne
   - Documents are read only by **local Ollama** (a Qwen vision model, e.g. Qwen2.5-VL, for photos).
   - Only confirmed facts (e.g. "low haemoglobin") go to the cloud Qwen API when building plans.
   - Uploads made while the local machine is off wait as "pending" and are read when it's next on.
+  - The page shows each document's status (pending / processing / done / failed with a **Retry** button), shows when the document reader is offline, and offers a one-off **"Process in cloud now"** button. See [Mac worker safeguards](../skills.md#technical-decisions).
 - **Storage:** original files in private Supabase Storage, visible only to that person's login. Older reports are kept so [Progress](progress.md) can show trends.
 - **Safety:** the app never diagnoses. Out-of-range values are marked "discuss with your doctor", and suggestions never override treatment a doctor prescribed (e.g. iron supplements).
 

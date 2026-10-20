@@ -1,6 +1,6 @@
 # Settings / Profile Page
 
-← [Hub: skills.md](../skills.md) · Status: **Defined** (one open question)
+← [Hub: skills.md](../skills.md) · Status: **Defined**
 
 **Purpose:** each person's details and settings. Opened from the profile dropdown at the top of every page.
 
@@ -18,9 +18,9 @@ Not collected up front; each person fills them in here once the app exists.
   - For the [Nutrition Plan](nutrition-plan.md): diet type (vegetarian / eggetarian / non-vegetarian), cuisine preferences, allergies / dislikes, meals per day, cooking time.
 - **Amol only:** 75 Hard current day (asked on the [75 Hard](75-hard.md) page).
 
-## Open question
+## First sign-in
 
-- **First sign-in (proposed):** the app asks for these details before generating any plans, so the LLM never builds a plan from a blank profile. Not yet confirmed.
+- On first sign-in, the app asks for these details before generating any plans, so the LLM never builds a plan from a blank profile.
 
 ## Related pages
 

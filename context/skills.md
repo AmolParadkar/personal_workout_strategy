@@ -27,7 +27,7 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
 | 6 | [75 Hard](pages/75-hard.md) (Amol only) | Simple daily 75 Hard checklist and day counter | Defined |
 | 7 | [Exercise Guide](pages/exercise-guide.md) | Diagram, body map, form cues, precautions and best short video for each exercise | Defined |
 | 8 | [Personal Artifacts](pages/personal-artifacts.md) | Upload health documents; confirmed facts adjust the plans | Defined |
-| 9 | [Settings / Profile](pages/settings-profile.md) | Personal details (plan inputs) and opt-in card switches | Defined (1 open question) |
+| 9 | [Settings / Profile](pages/settings-profile.md) | Personal details (plan inputs) and opt-in card switches | Defined |
 
 **Profile switcher:** a simple dropdown at the top of every page switches between profiles and opens [Settings / Profile](pages/settings-profile.md).
 
@@ -50,12 +50,42 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
 - **LLM:**
   - **Qwen** through a free cloud API (e.g. OpenRouter, Groq) for building plans and analysing food photos.
   - **Ollama** on a local machine as a backup, and as the only model that reads health documents (see [Privacy model](#privacy-model)).
+- **Split of responsibilities:** the frontend and the backend / agentic logic (LLM calls, plan generation, photo analysis) are kept separate. **Vercel** hosts the website and the backend API; **Supabase** holds the database, login and file storage.
+- **Local worker:** a program on the local Mac that fetches pending jobs (e.g. documents to read) from Supabase, processes them with Ollama, and writes the results back. The Mac is never exposed to the internet, so no tunnel is needed.
+- **Job queue:** all slow or LLM work goes through a job queue in the database.
+  - **Quick cloud-LLM jobs first try on Vercel** (e.g. food photos via Groq, usually a few seconds). If a job doesn't finish within Vercel's time limit, it falls back to the queue.
+  - **No paid cloud worker for now** ($0 budget): queued jobs are processed by the Mac worker, so slow jobs wait until the Mac is on. See [Future enhancements](#future-enhancements).
+- **Mac worker safeguards** (the Mac is a single point of failure):
+  1. Every job has a status (`pending → processing → done / failed`), an attempt count and the last error. Jobs are claimed so two workers can't take the same one; jobs stuck in "processing" too long return to pending.
+  2. Retries with growing gaps; after the last attempt the job is marked failed, the error is shown in the app, and there's a **Retry** button.
+  3. **Heartbeat:** the worker records that it's alive every minute; if it stops, the app shows e.g. "Document reader offline since 9:40 pm. Your report is queued."
+  4. The worker and Ollama run as macOS background services (launchd): start at login, restart on crash; the worker checks Ollama responds before taking a job.
+  5. **Alert:** one notification (email or a free push service like ntfy) if the worker has been offline for ~12 hours and jobs are waiting.
+  6. **"Process in cloud now"** button per document: an explicit, one-off opt-out of the local-only privacy rule.
+- **Keeping data formats in sync:** one Python codebase for the API and the worker; Pydantic models are the single source of truth; the frontend's TypeScript types are generated from the API and a check fails if they're out of date; the frontend uses only the API (plus Supabase login and file upload).
 - **Login:** Supabase login, because the site holds health data. Each person's data is visible only to their own login.
 - **Health data:**
   - Source is **Apple Health**.
   - Phase 1 (website): an **iOS Shortcuts automation** on each iPhone sends the data to the backend daily.
   - Phase 2 (app): the app reads Apple Health directly.
   - **Wearables:** none yet. The design must make them easy to add later; most sync into Apple Health, so they'd flow in through the same path.
+- **Languages:** **TypeScript** for the Expo frontend; **Python** for everything else (FastAPI backend on Vercel, worker, scripts). The frontend's data types are generated automatically from the Python API, so the two can't drift apart.
+- **Folder structure:**
+
+  ```
+  personal_workout_strategy/
+  ├── context/            # Spec docs (this hub + pages/)
+  ├── frontend/           # Expo website (TypeScript); types generated from the API
+  ├── backend/            # One Python codebase
+  │   ├── core/           # Shared: data models (Pydantic), database access, Qwen/Ollama client, prompts, nutrition lookup, job queue
+  │   ├── api/            # FastAPI on Vercel: quick requests and adding jobs to the queue
+  │   ├── worker/         # Job runner (on the Mac for now; cloud mode later, see Future enhancements)
+  │   └── tests/
+  ├── supabase/
+  │   └── migrations/     # Database tables and access rules
+  └── shortcuts/          # iOS Shortcut instructions + data format
+  ```
+
 - **External content:** exercise diagrams from a free exercise database (free-exercise-db or wger); muscle body map from an open-source component (e.g. react-native-body-highlighter); videos via the YouTube Data API; nutrients from USDA FoodData Central / Indian Food Composition Tables. Details in [Exercise Guide](pages/exercise-guide.md) and [Plan for Today](pages/plan-for-today.md).
 
 ### Privacy model
@@ -95,9 +125,19 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Open questions
 
-- **First sign-in:** should the app ask for profile details before generating any plans? See [Settings / Profile](pages/settings-profile.md#open-question).
 - **Progress photo analysis, local vs cloud** (revisit later). See [Progress](pages/progress.md#open-question-progress-photo-analysis-local-vs-cloud-revisit-later).
+
+## Future enhancements
+
+- **Always-on cloud worker (~$5/month, e.g. a small VPS).**
+  - *What:* run the same Python worker on an always-on host to process queued cloud-LLM jobs (plan generation, food photos, video search, forecasts).
+  - *Why:* Vercel functions have time limits and aren't suited to slow LLM calls, and without a cloud worker those jobs depend on the Mac being on. A cloud worker makes them run promptly regardless of the Mac, with no time limit.
+  - *Why not now:* keeping the budget at $0; slow jobs waiting for the Mac is acceptable for the time being.
+  - *Upgrade path:* no code changes; start the existing worker in cloud mode on the new host.
 
 ## Change log
 
-- **2026-10-20:** Project defined: all 9 pages specified; stack chosen (Expo website, Vercel, Supabase, Qwen + Ollama, iOS Shortcut for Apple Health). Context split into this hub plus one file per page.
+- **2026-10-20:** Project folder structure created (empty folders with `.gitkeep`) and `.gitignore` added for secrets, Python, Node/Expo, Vercel and macOS files.
+- **2026-10-20:** Job queue, Vercel-first quick jobs with Mac fallback, Mac worker safeguards, data-format sync approach, and first sign-in onboarding confirmed.
+- **2026-10-20:** Languages decided (TypeScript frontend, Python everywhere else) and folder structure recorded.
+- **2026-10-20:** Project defined: all 9 pages specified; stack chosen (Expo website, Vercel, Supabase, Qwen + Ollama, iOS Shortcut for Apple Health). Context split into this hub plus one file per page. Frontend and backend kept separate (Vercel for website + backend API, Supabase for data); local worker fetches jobs instead of exposing the Mac. No paid cloud worker for now; recorded as a future enhancement.
