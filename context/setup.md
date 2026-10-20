@@ -24,6 +24,8 @@ Live addresses:
 | Supabase Project URL | No | `backend/.env`, `frontend/.env`, both Vercel projects | |
 | Supabase **publishable** key (`sb_publishable_…`, the default one) | No | `backend/.env`, `frontend/.env`, both Vercel projects | Safe in the website; access rules protect the data |
 | Supabase **secret** key **`backend-api`** (`sb_secret_…`) | **Yes** | `backend/.env` only | Bypasses all access rules. Used by integration tests; **not** on Vercel |
+| Supabase **secret** key **`mac-worker`** (`sb_secret_…`) | **Yes** | `backend/.env` only (`MAC_WORKER_SECRET_KEY`) | Used only by the Mac worker; **not** on Vercel |
+| ntfy topic | Keep private | Supabase Vault (`ntfy_topic`) and the ntfy app | Anyone with the name can read the alerts |
 | Supabase database password | **Yes** | Amol's password manager | Rarely needed; the CLI login covers migrations |
 | `CONNECTOR_ENCRYPTION_KEY` | **Yes** | `backend/.env`, API Vercel project | Encrypts the services' access keys. Make it once (command in `backend/.env.example`). **Changing it means everyone reconnects** |
 | `WITHINGS_` / `OURA_` / `WHOOP_` / `POLAR_` `CLIENT_ID` and `CLIENT_SECRET` | ID no, secret **yes** | `backend/.env`, API Vercel project | From each service's developer app ([how](data-sources.md#setting-up-a-services-developer-app-amol-once)). A service without them shows "Not set up yet" |
@@ -124,6 +126,18 @@ Each person builds the iOS Shortcut once: [apple-health-shortcut.md](apple-healt
 
 Withings, Oura, Whoop and Polar each need a developer app (once, Amol): [data-sources.md](data-sources.md#setting-up-a-services-developer-app-amol-once). Then each person taps **Connect** in Settings → Connected services. New data is fetched when the app opens (at most every 3 hours) or with **Sync now**.
 
+## Mac worker
+
+The worker runs slow and private jobs on this Mac ([architecture](architecture.md#job-queue-and-worker-safeguards)). One-time setup:
+
+1. **Secret key:** Supabase → Project Settings → API Keys → Secret keys → **Add new secret key** named `mac-worker`. Paste it into `backend/.env` as `MAC_WORKER_SECRET_KEY=` (never in chat, never on Vercel).
+2. **Ollama (local AI):** download the Mac app from [ollama.com/download](https://ollama.com/download), move it to Applications and open it once. It starts at login and keeps itself running. (The Qwen vision model is downloaded in M8.)
+3. **Start the worker as a background service:** `sh backend/worker/launchd/install.sh`. It starts now, at every login, and restarts if it stops. Log: `~/Library/Logs/workout-strategy-worker.log`. Remove with `--remove`. Run it again after moving the project folder.
+4. **Offline alert (ntfy):** install the **ntfy** app on your phone and subscribe to a topic with a long random name (e.g. `workout-strategy-` plus random letters; anyone who knows it can read it). Then in Supabase → SQL Editor run `select vault.create_secret('<your topic>', 'ntfy_topic');`. To change it later: `select vault.update_secret((select id from vault.secrets where name = 'ntfy_topic'), '<new topic>');`.
+5. **Check:** Settings → Mac worker shows **Online**; **Send test job** finishes with "done by the Mac worker".
+
+Running it by hand instead (e.g. to watch the log): stop the service (`launchctl bootout gui/$(id -u)/com.workoutstrategy.worker`), then in `backend/` run `uv run python -m worker`. Install the service again afterwards.
+
 ## Troubleshooting
 
 | Symptom | Likely cause | Fix |
@@ -134,6 +148,8 @@ Withings, Oura, Whoop and Polar each need a developer app (once, Amol): [data-so
 | Local website doesn't show code changes | Dev server missed the change | Stop it and run `npx expo start --web --clear` |
 | Everything fails after a quiet week | Supabase free projects **pause after about a week without use** | Supabase dashboard → the project → **Restore** |
 | First API call is slow | Free Vercel functions sleep when unused | Normal; later calls are fast |
+| "Mac worker offline since …" | The Mac is asleep, off or signed out, or the worker stopped | Wake the Mac and sign in; check the log `~/Library/Logs/workout-strategy-worker.log`; reinstall with `sh backend/worker/launchd/install.sh` |
+| Settings shows "Local AI (Ollama): not running" | The Ollama app isn't open | Open Ollama from Applications |
 
 ## Related
 

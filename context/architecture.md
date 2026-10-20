@@ -82,6 +82,10 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `POST /api/me/connections/{service}/complete` | Swap the returned code for keys, save them encrypted, fetch the last 30 days |
 | `POST /api/me/connections/sync` | Fetch new data from your connections (only those not synced for 3 hours, unless `force`; just one with `service`). Called on app open, by the header's Refresh button (`force`) and by Sync now (`force` + `service`) |
 | `DELETE /api/me/connections/{service}` | Cancel access at the service where possible and delete the keys (fetched data stays) |
+| `GET /api/jobs/{id}` | A job's status and result (household's jobs) |
+| `POST /api/me/jobs/{id}/retry` | Put your own failed job back in the queue |
+| `GET /api/worker-status` | Mac worker online (seen in 3 minutes), Ollama running, household jobs waiting |
+| `POST /api/me/jobs/test` | Send a `test_echo` job; with `quick`, tried on Vercel first |
 | `GET /api/profiles/{id}/water?day=` | Water for a local day, with total and target; `can_edit` only for your own |
 | `POST /api/me/water`, `DELETE /api/me/water/{id}?day=` | Log a glass (reaching 3.8 L ticks the 75 Hard water item); undo |
 | `GET /api/profiles/{id}/weight`, `POST /api/me/weight` | Latest body weight; log today's (corrects, not duplicates) |
@@ -146,13 +150,15 @@ All slow or LLM work goes through the `jobs` table (see [Data model: Jobs](data-
 - **No paid cloud worker for now:** queued jobs wait for the Mac worker. See [Future enhancements](skills.md#future-enhancements).
 - **Worker modes:** `--mode local` (the Mac: may take any job, including local-only ones) and `--mode cloud` (future: may not take local-only jobs).
 
+Built in M4: job types in `backend/core/jobs/` (one file each, registered with their rules: local-only, try on Vercel, needs Ollama, attempts, time limit); the queue in `backend/core/jobs/queue.py`; the worker in `backend/worker/` (`uv run python -m worker`). `test_echo` is a job that only echoes, for checking the pipeline (Settings → Mac worker → Send test job).
+
 Safeguards, because the Mac is a single point of failure:
 
 1. **Job status:** `pending → processing → done / failed`, with attempt count and last error. Jobs are claimed atomically so two workers can't take the same one; jobs stuck in `processing` too long go back to `pending`.
-2. **Retries** with growing gaps; after the last attempt the job is `failed`, the error is shown in the app, and there's a **Retry** button.
+2. **Retries** with growing gaps (1, 5, 25 minutes …, at most 6 hours; 3 attempts by default); after the last attempt the job is `failed`, the error is shown in the app, and there's a **Retry** button.
 3. **Heartbeat:** the worker records it's alive every minute; if it stops, the app shows e.g. "Document reader offline since 9:40 pm. Your report is queued."
-4. **Auto-restart:** the worker and Ollama run as macOS background services (launchd), start at login and restart on crash; the worker checks Ollama responds before taking a job.
-5. **Alert:** one notification (email or ntfy) if the worker has been offline ~12 hours and jobs are waiting.
+4. **Auto-restart:** the worker runs as a launchd background service (`backend/worker/launchd/install.sh`) that starts at login and restarts if it stops; Ollama runs from its Mac app, which starts at login. Jobs that need Ollama wait (without using an attempt) while it isn't answering.
+5. **Alert:** one ntfy push if the worker has been offline 12 hours and jobs have waited 12 hours, sent by an hourly check inside Supabase (so it works while the Mac is off); at most one every 12 hours.
 6. **"Process in cloud now":** a per-document, one-off opt-out of the local-only rule.
 
 ## Privacy routing
@@ -189,7 +195,7 @@ Two Vercel projects, both built from the GitHub repo's `main` branch on every pu
   - `frontend/.env`: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the **default** publishable key; public, protected by the access rules). Only `EXPO_PUBLIC_` variables reach the website, and everything there is visible to visitors.
   - `backend/.env`: `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (a secret key named **`backend-api`** in Supabase).
 - Direct connectors (M3b): one OAuth client ID and secret per connected service (`WITHINGS_CLIENT_ID`, `WITHINGS_CLIENT_SECRET`, and the same for `OURA_`, `WHOOP_`, `POLAR_`) and `CONNECTOR_ENCRYPTION_KEY`, in `backend/.env` and the API's Vercel settings. These are not Supabase keys.
-- **One named secret key per component**, so a leaked key can be revoked without breaking the others: `backend-api` now; `mac-worker` for the worker in M4.
+- **One named secret key per component**, so a leaked key can be revoked without breaking the others: `backend-api` (integration tests) and `mac-worker` (`MAC_WORKER_SECRET_KEY`, the worker only; never on Vercel).
 - Secret keys are never pasted into chat or logs.
 - Keys that can read all data (Supabase service key) are only used by the API and worker, never by the website.
 - Accounts, where each key lives, and what to do if one leaks: [setup.md](setup.md#keys-and-where-they-live).

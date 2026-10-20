@@ -47,12 +47,10 @@ Quick to build and already in use, so it comes early.
 - [ ] Both fill in their apps and devices (Amol, spouse)
 - [x] Assess each service in [data-sources.md](data-sources.md): direct connection possible for Withings, Oura, Whoop and Polar
 
-## M3b — Direct connectors
+## M3b — Direct connectors ✅
 
-Design: [data-sources.md](data-sources.md#connectors-design). Build Withings first (simplest, no approval), then Oura, Whoop, Polar.
+Design: [data-sources.md](data-sources.md#connectors-design). Built and deployed; switching the services on is parked until the end: see [After development](#after-development--switch-on-the-integrations).
 
-- [ ] Register developer apps for Withings, Oura, Whoop, Polar; client IDs and secrets in `backend/.env` and Vercel (Amol): [how](data-sources.md#setting-up-a-services-developer-app-amol-once)
-- [ ] Connect each service once with a real account and check its data (the connectors follow each API's docs but haven't met the real services yet)
 - [x] Add Polar, Suunto, Coros, Amazfit and Dexcom to "Apps and devices you use"
 - [x] `service_connections` table (encrypted keys, status readable, keys not) and new metrics (body fat, HRV, readiness, recovery, strain, blood pressure, sleep stages)
 - [x] Connect / Disconnect in Settings, `/connect/<service>` return page, signed `state`
@@ -62,16 +60,15 @@ Design: [data-sources.md](data-sources.md#connectors-design). Build Withings fir
 - [x] Polar connector (steps, activity, sleep, workouts)
 - [x] Sync on app open (over 3 hours since last), **Sync now** per service, and a **Refresh** button (↻) in the header for all services
 - [x] Per-metric source preference when two sources send the same metric (used for body weight; other pages use it as they're built)
-- [ ] Confirm Oura and Whoop terms on AI use; set each source's "AI allowed" flag
-- [ ] Daily sync of both people's connections on the Mac worker (after M4)
 
 ## M4 — Job queue and worker
 
-- [ ] `jobs`, `worker_heartbeats` tables
-- [ ] Worker with claiming, retries, stuck-job recovery, heartbeat
-- [ ] launchd setup for worker and Ollama on the Mac
-- [ ] Offline status in the app and offline alert
-- [ ] "Vercel first, then queue" helper for quick jobs
+- [x] `jobs`, `worker_heartbeats` tables
+- [x] Worker with claiming, retries, stuck-job recovery, heartbeat
+- [x] launchd setup for the worker (`backend/worker/launchd/install.sh`); Ollama runs from its Mac app
+- [x] Offline status in the app (Settings → Mac worker, notice on every page) and offline alert (ntfy, hourly check in Supabase)
+- [x] "Vercel first, then queue" helper for quick jobs
+- [ ] Set up on this Mac (Amol): `mac-worker` secret key, Ollama app, `install.sh`, ntfy topic: [how](setup.md#mac-worker)
 
 ## M5 — Exercise library and Exercise Guide
 
@@ -117,6 +114,16 @@ Design: [data-sources.md](data-sources.md#connectors-design). Build Withings fir
 - [ ] What-if simulator
 - [ ] Disruption planning and travel plan versions
 - [ ] Progress photos (after deciding local vs cloud)
+
+## After development — switch on the integrations
+
+Parked on 2026-10-21 until the main development (M4–M10) is done. The code is live, and the encryption key is set (`CONNECTOR_ENCRYPTION_KEY`); each service shows "Not set up yet" until its developer app's keys are added.
+
+- [x] Make `CONNECTOR_ENCRYPTION_KEY` (in `backend/.env`; also on Vercel)
+- [ ] Register developer apps for Withings, Oura, Whoop, Polar; client IDs and secrets in `backend/.env` and Vercel (Amol): [how](data-sources.md#setting-up-a-services-developer-app-amol-once)
+- [ ] Connect each service once with a real account and check its data (the connectors follow each API's docs but haven't met the real services yet)
+- [ ] Confirm Oura and Whoop terms on AI use; set each source's "AI allowed" flag
+- [ ] Daily sync of both people's connections on the Mac worker (after M4)
 
 ## Later
 
