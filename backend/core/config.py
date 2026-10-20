@@ -17,6 +17,27 @@ class Settings(BaseSettings):
     # Comma-separated website addresses allowed to call the API.
     cors_origins: str = "http://localhost:8081"
 
+    # Direct connectors (context/data-sources.md). A service can only be
+    # connected once its developer app's client ID and secret are set.
+    # Encrypts the services' access keys before they're stored; only the API has it.
+    connector_encryption_key: str | None = None
+    withings_client_id: str | None = None
+    withings_client_secret: str | None = None
+    oura_client_id: str | None = None
+    oura_client_secret: str | None = None
+    whoop_client_id: str | None = None
+    whoop_client_secret: str | None = None
+    polar_client_id: str | None = None
+    polar_client_secret: str | None = None
+
+    def connector_credentials(self, service: str) -> tuple[str, str] | None:
+        """The developer app's client ID and secret, or None if not set up."""
+        client_id = getattr(self, f"{service}_client_id", None)
+        client_secret = getattr(self, f"{service}_client_secret", None)
+        if not (client_id and client_secret and self.connector_encryption_key):
+            return None
+        return client_id, client_secret
+
     @property
     def cors_origin_list(self) -> list[str]:
         return [origin.strip() for origin in self.cors_origins.split(",") if origin.strip()]

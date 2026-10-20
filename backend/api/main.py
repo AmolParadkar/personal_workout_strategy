@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from api.routes import health_data, profiles, settings, seventy_five_hard
+from api.routes import connections, health_data, profiles, settings, seventy_five_hard
 from core import __version__
 from core.config import get_settings
 from core.models.health import HealthResponse
@@ -22,6 +22,7 @@ app.include_router(profiles.router)
 app.include_router(settings.router)
 app.include_router(seventy_five_hard.router)
 app.include_router(health_data.router)
+app.include_router(connections.router)
 
 
 @app.exception_handler(NotSignedInError)

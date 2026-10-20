@@ -44,7 +44,26 @@ Quick to build and already in use, so it comes early.
 - [x] Water quick-add on Plan for Today (+250 / +500 ml, Undo, per-person target; a gallon ticks 75 Hard's water item)
 - [x] Body weight in Settings (latest + log today's), stored in `health_samples`
 - [x] "Apps and devices you use" in Settings (`profiles.data_sources`)
-- [ ] Both fill in their apps and devices (Amol, spouse), then assess each one in [data-sources.md](data-sources.md) and add approved direct connections to the roadmap
+- [ ] Both fill in their apps and devices (Amol, spouse)
+- [x] Assess each service in [data-sources.md](data-sources.md): direct connection possible for Withings, Oura, Whoop and Polar
+
+## M3b — Direct connectors
+
+Design: [data-sources.md](data-sources.md#connectors-design). Build Withings first (simplest, no approval), then Oura, Whoop, Polar.
+
+- [ ] Register developer apps for Withings, Oura, Whoop, Polar; client IDs and secrets in `backend/.env` and Vercel (Amol): [how](data-sources.md#setting-up-a-services-developer-app-amol-once)
+- [ ] Connect each service once with a real account and check its data (the connectors follow each API's docs but haven't met the real services yet)
+- [x] Add Polar, Suunto, Coros, Amazfit and Dexcom to "Apps and devices you use"
+- [x] `service_connections` table (encrypted keys, status readable, keys not) and new metrics (body fat, HRV, readiness, recovery, strain, blood pressure, sleep stages)
+- [x] Connect / Disconnect in Settings, `/connect/<service>` return page, signed `state`
+- [x] Withings connector (weight, body fat, blood pressure, sleep, activity)
+- [x] Oura connector (sleep, readiness, HRV, steps)
+- [x] Whoop connector (recovery, strain, sleep, workouts)
+- [x] Polar connector (steps, activity, sleep, workouts)
+- [x] Sync on app open (over 3 hours since last), **Sync now** per service, and a **Refresh** button (↻) in the header for all services
+- [x] Per-metric source preference when two sources send the same metric (used for body weight; other pages use it as they're built)
+- [ ] Confirm Oura and Whoop terms on AI use; set each source's "AI allowed" flag
+- [ ] Daily sync of both people's connections on the Mac worker (after M4)
 
 ## M4 — Job queue and worker
 

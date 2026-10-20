@@ -54,12 +54,18 @@ class SupabaseClient:
         return response.json()
 
     async def update(
-        self, table: str, filters: dict[str, str], values: dict[str, Any], access_token: str
+        self,
+        table: str,
+        filters: dict[str, str],
+        values: dict[str, Any],
+        access_token: str,
+        returning: str = "*",
     ) -> list[dict[str, Any]]:
-        """Update rows the user may change; returns the updated rows (empty if none allowed)."""
+        """Update rows the user may change; returns the updated rows' `returning` columns
+        (empty if none allowed). Narrow it for tables where some columns are hidden."""
         response = await self._http.patch(
             f"{self._url}/rest/v1/{table}",
-            params=filters,
+            params={**filters, "select": returning},
             json=values,
             headers={**self._headers(access_token), "Prefer": "return=representation"},
         )
@@ -111,7 +117,8 @@ class SupabaseClient:
             f"{self._url}/rest/v1/rpc/{function}", json=args, headers=headers
         )
         self._check(response)
-        return response.json()
+        # Functions that return nothing (void) reply with an empty body.
+        return response.json() if response.content else None
 
     async def get_household_profiles(self, access_token: str) -> list[dict[str, Any]]:
         """Profiles the user is allowed to see (their household), oldest first,

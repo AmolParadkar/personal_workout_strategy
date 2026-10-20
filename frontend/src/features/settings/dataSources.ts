@@ -6,10 +6,11 @@ import type { Schemas } from '@/lib/api';
 
 export type DataSource = Schemas['ProfileDetails']['data_sources'][number];
 
-type Route = 'shortcut' | 'via_apple_health' | 'not_yet';
+type Route = 'shortcut' | 'direct' | 'via_apple_health' | 'not_yet';
 
 export const routeNotes: Record<Route, string> = {
   shortcut: 'Connected through the Apple Health Shortcut.',
+  direct: 'Can be connected directly: use Connect under “Connected services” below.',
   via_apple_health:
     'Can usually share its data with Apple Health (turn that on in its app); the Shortcut then picks up what it reads.',
   not_yet: 'Not connected yet. We’ll look at the options.',
@@ -27,22 +28,27 @@ export const dataSourceGroups: {
       { value: 'garmin', label: 'Garmin', route: 'via_apple_health' },
       { value: 'fitbit', label: 'Fitbit', route: 'not_yet' },
       { value: 'samsung_watch', label: 'Samsung Galaxy Watch', route: 'not_yet' },
+      { value: 'polar', label: 'Polar', route: 'direct' },
+      { value: 'suunto', label: 'Suunto', route: 'via_apple_health' },
+      { value: 'coros', label: 'Coros', route: 'via_apple_health' },
+      { value: 'amazfit', label: 'Amazfit / Zepp', route: 'via_apple_health' },
     ],
   },
   {
     title: 'Rings and bands',
     options: [
-      { value: 'oura', label: 'Oura', route: 'via_apple_health' },
-      { value: 'whoop', label: 'Whoop', route: 'via_apple_health' },
+      { value: 'oura', label: 'Oura', route: 'direct' },
+      { value: 'whoop', label: 'Whoop', route: 'direct' },
     ],
   },
   {
     title: 'Scales and health devices',
     options: [
-      { value: 'withings', label: 'Withings', route: 'via_apple_health' },
+      { value: 'withings', label: 'Withings', route: 'direct' },
       { value: 'other_scale', label: 'Other smart scale', route: 'not_yet' },
       { value: 'bp_monitor', label: 'Blood pressure monitor', route: 'not_yet' },
       { value: 'glucose_monitor', label: 'Glucose monitor', route: 'not_yet' },
+      { value: 'dexcom', label: 'Dexcom', route: 'via_apple_health' },
     ],
   },
   {

@@ -1,13 +1,16 @@
 import { Redirect, Slot, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useRef, useState } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 import { NavBar } from '@/components/NavBar';
 import { ProfileSwitcher } from '@/components/ProfileSwitcher';
+import { RefreshButton } from '@/components/RefreshButton';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { AuthProvider, useAuth } from '@/features/auth/AuthContext';
 import { ProfileProvider } from '@/features/profile/ProfileContext';
+import { useSyncConnectionsOnOpen } from '@/features/settings/syncOnOpen';
 import { maxContentWidth, spacing, ThemeProvider, useTheme } from '@/theme';
 
 const SIGN_IN_PATH = '/sign-in';
@@ -67,6 +70,21 @@ function AuthGate() {
 // profile dropdown, the navigation bar, then the current page (at <Slot />).
 function AppFrame() {
   const { colors } = useTheme();
+  useSyncConnectionsOnOpen();
+  // Bumped by the Refresh button: re-mounting the page makes it load its data again.
+  const [pageKey, setPageKey] = useState(0);
+  const [notice, setNotice] = useState<{ text: string; problem: boolean } | null>(null);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const refreshed = (problem: string | null) => {
+    setPageKey((key) => key + 1);
+    setNotice(
+      problem ? { text: problem, problem: true } : { text: 'Data refreshed.', problem: false },
+    );
+    if (hideTimer.current) clearTimeout(hideTimer.current);
+    // Problems stay until the next refresh; "refreshed" fades after a few seconds.
+    hideTimer.current = problem ? null : setTimeout(() => setNotice(null), 4000);
+  };
 
   return (
     <>
@@ -82,6 +100,7 @@ function AppFrame() {
             <Text style={[styles.appName, { color: colors.text }]}>Workout Strategy</Text>
           </View>
           <View style={styles.actions}>
+            <RefreshButton onDone={refreshed} />
             <ThemeToggle />
             <ProfileSwitcher />
           </View>
@@ -90,7 +109,15 @@ function AppFrame() {
           <NavBar />
         </View>
       </View>
-      <View style={styles.page}>
+      {notice && (
+        <Text
+          accessibilityRole="alert"
+          style={[styles.notice, { color: notice.problem ? colors.caution : colors.good }]}
+        >
+          {notice.text}
+        </Text>
+      )}
+      <View key={pageKey} style={styles.page}>
         <Slot />
       </View>
     </>
@@ -149,5 +176,13 @@ const styles = StyleSheet.create({
   },
   page: {
     flex: 1,
+  },
+  notice: {
+    width: '100%',
+    maxWidth: maxContentWidth,
+    alignSelf: 'center',
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    fontSize: 14,
   },
 });
