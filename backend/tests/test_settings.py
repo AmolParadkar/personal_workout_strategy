@@ -26,6 +26,9 @@ def settings_row(**profile_overrides):
         "goals_notes": None,
         "goal_metric": "body_fat",
         "injuries_notes": None,
+        "water_target_ml": 3000,
+        "data_sources": ["iphone_health"],
+        "data_sources_other": None,
         "onboarded_at": None,
         "training_preferences": {
             "equipment": ["dumbbells"],
@@ -108,3 +111,10 @@ def test_invalid_training_values_are_rejected():
 def test_only_fields_sent_are_changed():
     update = ProfileDetailsUpdate(height_cm=180)
     assert update.model_dump(exclude_unset=True) == {"height_cm": 180}
+
+
+def test_data_sources_are_checked_and_deduplicated():
+    update = ProfileDetailsUpdate(data_sources=["strava", "oura", "strava"])
+    assert update.data_sources == ["strava", "oura"]
+    with pytest.raises(ValidationError):
+        ProfileDetailsUpdate(data_sources=["myspace"])

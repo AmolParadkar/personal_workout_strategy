@@ -38,6 +38,13 @@ export type DietDraft = {
 
 export type DisplayDraft = Schemas['DisplaySettings'];
 
+export type WaterDraft = { water_target_ml: string };
+
+export type SourcesDraft = {
+  data_sources: Profile['data_sources'];
+  data_sources_other: string;
+};
+
 export type Converted<T> = { values: T; problems: string[] };
 
 const text = (value: string | number | null | undefined) => (value == null ? '' : String(value));
@@ -193,5 +200,33 @@ export function dietUpdate(
       meals_per_day: meals,
       cooking_minutes: cooking,
     },
+  };
+}
+
+export function waterDraft(settings: Settings): WaterDraft {
+  return { water_target_ml: text(settings.profile.water_target_ml) };
+}
+
+export function waterUpdate(draft: WaterDraft): Converted<Schemas['ProfileDetailsUpdate']> {
+  const problems: string[] = [];
+  const target = number(draft.water_target_ml, 'Water target', 500, 8000, problems, {
+    required: true,
+  });
+  return { problems, values: target === null ? {} : { water_target_ml: target } };
+}
+
+export function sourcesDraft(settings: Settings): SourcesDraft {
+  return {
+    data_sources: settings.profile.data_sources,
+    data_sources_other: text(settings.profile.data_sources_other),
+  };
+}
+
+export function sourcesUpdate(draft: SourcesDraft): Converted<Schemas['ProfileDetailsUpdate']> {
+  const problems: string[] = [];
+  if (draft.data_sources_other.length > 200) problems.push('“Anything else” is limited to 200 characters.');
+  return {
+    problems,
+    values: { data_sources: draft.data_sources, data_sources_other: orNull(draft.data_sources_other) },
   };
 }

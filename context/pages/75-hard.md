@@ -29,6 +29,7 @@
 - **Midnight and noon** follow the timezone the browser reported when the challenge was started.
 - **No midnight job:** the day, resets and completion are calculated from the start and the ticks each time the page loads (`backend/core/seventy_five_hard.py`, covered by unit tests).
 - The workouts aren't planned here; this page only ticks them off.
+- **Water ticks itself:** logging a gallon (3.8 L) on the [Plan for Today](plan-for-today.md) water card ticks "Drank a gallon of water" (if that day can still be ticked). It never unticks.
 
 ## Related pages
 

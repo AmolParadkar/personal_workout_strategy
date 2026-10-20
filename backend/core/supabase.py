@@ -67,11 +67,13 @@ class SupabaseClient:
         return response.json()
 
     async def insert(
-        self, table: str, values: dict[str, Any], access_token: str
+        self, table: str, values: dict[str, Any], access_token: str, returning: str = "*"
     ) -> list[dict[str, Any]]:
-        """Add a row the user is allowed to create; returns it."""
+        """Add a row the user is allowed to create; returns the `returning` columns
+        (narrow it for tables where some columns are hidden from the user)."""
         response = await self._http.post(
             f"{self._url}/rest/v1/{table}",
+            params={"select": returning},
             json=values,
             headers={**self._headers(access_token), "Prefer": "return=representation"},
         )
@@ -99,6 +101,17 @@ class SupabaseClient:
             f"{self._url}/rest/v1/{table}", params=filters, headers=self._headers(access_token)
         )
         self._check(response)
+
+    async def rpc(
+        self, function: str, args: dict[str, Any], access_token: str | None = None
+    ) -> Any:
+        """Call a database function. Without a token it runs as a signed-out caller."""
+        headers = self._headers(access_token) if access_token else {"apikey": self._key}
+        response = await self._http.post(
+            f"{self._url}/rest/v1/rpc/{function}", json=args, headers=headers
+        )
+        self._check(response)
+        return response.json()
 
     async def get_household_profiles(self, access_token: str) -> list[dict[str, Any]]:
         """Profiles the user is allowed to see (their household), oldest first,

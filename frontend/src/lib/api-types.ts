@@ -206,6 +206,140 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/ingest/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Ingest Health
+         * @description Receives Apple Health data from the iOS Shortcut. Authorised by the person's
+         *     connection token (not a sign-in): `Authorization: Bearer wst_...`.
+         */
+        post: operations["ingest_health_api_ingest_health_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/health-connection": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Health Connection */
+        get: operations["health_connection_api_me_health_connection_get"];
+        put?: never;
+        /**
+         * Create Health Connection
+         * @description Create a connection token for the iOS Shortcut (shown once); cancels any old one.
+         */
+        post: operations["create_health_connection_api_me_health_connection_post"];
+        /** Remove Health Connection */
+        delete: operations["remove_health_connection_api_me_health_connection_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profiles/{profile_id}/water": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Water Day
+         * @description Water logged on one day (`day` is the viewer's local date).
+         */
+        get: operations["water_day_api_profiles__profile_id__water_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/water": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Add Water
+         * @description Log a glass. Reaching a gallon (3.8 L) also ticks the 75 Hard water item.
+         */
+        post: operations["add_water_api_me_water_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/water/{log_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Undo Water */
+        delete: operations["undo_water_api_me_water__log_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/profiles/{profile_id}/weight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Weight */
+        get: operations["weight_api_profiles__profile_id__weight_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/weight": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Log Weight */
+        post: operations["log_weight_api_me_weight_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -227,6 +361,16 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        /** AddWater */
+        AddWater: {
+            /** Ml */
+            ml: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+        };
         /** ChecklistItem */
         ChecklistItem: {
             /**
@@ -305,6 +449,20 @@ export interface components {
             detail?: components["schemas"]["ValidationError"][];
         };
         /**
+         * HealthConnection
+         * @description Whether the person's iOS Shortcut is set up, and when data last arrived.
+         */
+        HealthConnection: {
+            /** Connected */
+            connected: boolean;
+            /** Created At */
+            created_at?: string | null;
+            /** Last Used At */
+            last_used_at?: string | null;
+            /** Latest Data On */
+            latest_data_on?: string | null;
+        };
+        /**
          * HealthResponse
          * @description Response of the health-check endpoint, used to confirm the API is up.
          */
@@ -325,6 +483,40 @@ export interface components {
             /** Profiles */
             profiles: components["schemas"]["ProfileSummary"][];
         };
+        /** IngestRequest */
+        IngestRequest: {
+            /** Samples */
+            samples: {
+                [key: string]: unknown;
+            }[];
+        };
+        /** IngestResult */
+        IngestResult: {
+            /** Saved */
+            saved: number;
+            /** Skipped */
+            skipped: components["schemas"]["SkippedSample"][];
+        };
+        /** LogWeight */
+        LogWeight: {
+            /** Kg */
+            kg: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+        };
+        /** NewHealthConnection */
+        NewHealthConnection: {
+            /** Token */
+            token: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+        };
         /** ProfileDetails */
         ProfileDetails: {
             /** Display Name */
@@ -343,6 +535,12 @@ export interface components {
             goal_metric: ("weight" | "body_fat" | "vo2_max" | "resting_hr" | "hrv" | "strength" | "steps" | "sleep") | null;
             /** Injuries Notes */
             injuries_notes: string | null;
+            /** Water Target Ml */
+            water_target_ml: number;
+            /** Data Sources */
+            data_sources: ("iphone_health" | "apple_watch" | "garmin" | "fitbit" | "samsung_watch" | "oura" | "whoop" | "withings" | "other_scale" | "bp_monitor" | "glucose_monitor" | "strava" | "nike_run_club" | "myfitnesspal" | "cronometer" | "healthifyme")[];
+            /** Data Sources Other */
+            data_sources_other: string | null;
             /** Onboarded */
             onboarded: boolean;
         };
@@ -364,6 +562,12 @@ export interface components {
             goal_metric?: ("weight" | "body_fat" | "vo2_max" | "resting_hr" | "hrv" | "strength" | "steps" | "sleep") | null;
             /** Injuries Notes */
             injuries_notes?: string | null;
+            /** Water Target Ml */
+            water_target_ml?: number | null;
+            /** Data Sources */
+            data_sources?: ("iphone_health" | "apple_watch" | "garmin" | "fitbit" | "samsung_watch" | "oura" | "whoop" | "withings" | "other_scale" | "bp_monitor" | "glucose_monitor" | "strava" | "nike_run_club" | "myfitnesspal" | "cronometer" | "healthifyme")[] | null;
+            /** Data Sources Other */
+            data_sources_other?: string | null;
         };
         /**
          * ProfileSettings
@@ -436,6 +640,15 @@ export interface components {
             /** Completed On */
             completed_on?: string | null;
         };
+        /** SkippedSample */
+        SkippedSample: {
+            /** Index */
+            index: number;
+            /** Metric */
+            metric: string | null;
+            /** Reason */
+            reason: string;
+        };
         /** StartChallenge */
         StartChallenge: {
             /** Current Day */
@@ -477,6 +690,55 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** WaterDay */
+        WaterDay: {
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /** Total Ml */
+            total_ml: number;
+            /** Target Ml */
+            target_ml: number;
+            /** Logs */
+            logs: components["schemas"]["WaterLog"][];
+            /** Can Edit */
+            can_edit: boolean;
+        };
+        /** WaterLog */
+        WaterLog: {
+            /** Id */
+            id: string;
+            /** Ml */
+            ml: number;
+            /**
+             * Logged At
+             * Format: date-time
+             */
+            logged_at: string;
+        };
+        /** WeightEntry */
+        WeightEntry: {
+            /** Kg */
+            kg: number;
+            /**
+             * Date
+             * Format: date
+             */
+            date: string;
+            /**
+             * Source
+             * @enum {string}
+             */
+            source: "apple_health" | "manual";
+        };
+        /** WeightSummary */
+        WeightSummary: {
+            latest: components["schemas"]["WeightEntry"] | null;
+            /** Can Edit */
+            can_edit: boolean;
         };
     };
     responses: never;
@@ -843,6 +1105,307 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["SeventyFiveHardState"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ingest_health_api_ingest_health_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["IngestRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngestResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    health_connection_api_me_health_connection_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthConnection"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    create_health_connection_api_me_health_connection_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["NewHealthConnection"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_health_connection_api_me_health_connection_delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthConnection"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    water_day_api_profiles__profile_id__water_get: {
+        parameters: {
+            query: {
+                day: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaterDay"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    add_water_api_me_water_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["AddWater"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaterDay"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_water_api_me_water__log_id__delete: {
+        parameters: {
+            query: {
+                day: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                log_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WaterDay"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    weight_api_profiles__profile_id__weight_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeightSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    log_weight_api_me_weight_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogWeight"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeightSummary"];
                 };
             };
             /** @description Validation Error */

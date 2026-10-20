@@ -36,11 +36,15 @@ Quick to build and already in use, so it comes early.
 
 ## M3 — Health data intake
 
-- [ ] `health_samples`, `ingest_tokens` tables
-- [ ] Ingest API endpoint
-- [ ] iOS Shortcut built and documented in `shortcuts/`
-- [ ] Water quick-add (`water_logs`)
-- [ ] Ask for a starting body weight (Settings or Summary prompt), stored in `health_samples`
+- [x] `health_samples`, `ingest_tokens`, `water_logs` tables with access rules
+- [x] Ingest API endpoint (connection token, per-sample checks, re-sends replace)
+- [x] Connection token in Settings → Apple Health (shown once, copy buttons, status)
+- [x] iOS Shortcut documented: [apple-health-shortcut.md](apple-health-shortcut.md)
+- [ ] Shortcut built on both iPhones and first real data received (Amol, spouse)
+- [x] Water quick-add on Plan for Today (+250 / +500 ml, Undo, per-person target; a gallon ticks 75 Hard's water item)
+- [x] Body weight in Settings (latest + log today's), stored in `health_samples`
+- [x] "Apps and devices you use" in Settings (`profiles.data_sources`)
+- [ ] Both fill in their apps and devices (Amol, spouse), then assess each one in [data-sources.md](data-sources.md) and add approved direct connections to the roadmap
 
 ## M4 — Job queue and worker
 

@@ -4,8 +4,28 @@ import { pages } from '@/features/navigation/pages';
 import { useProfile } from '@/features/profile/ProfileContext';
 import { spacing, useTheme } from '@/theme';
 
-import { aboutDraft, aboutUpdate, dietDraft, dietUpdate, trainingDraft, trainingUpdate } from './drafts';
-import { AboutYouFields, DisplayFields, FoodFields, TrainingFields } from './SettingsFields';
+import { AppleHealthSection } from './AppleHealthSection';
+import { BodyWeightSection } from './BodyWeightSection';
+import {
+  aboutDraft,
+  aboutUpdate,
+  dietDraft,
+  dietUpdate,
+  sourcesDraft,
+  sourcesUpdate,
+  trainingDraft,
+  trainingUpdate,
+  waterDraft,
+  waterUpdate,
+} from './drafts';
+import {
+  AboutYouFields,
+  DisplayFields,
+  FoodFields,
+  SourcesFields,
+  TrainingFields,
+  WaterFields,
+} from './SettingsFields';
 import { SettingsSection } from './SettingsSection';
 import { useProfileSettings } from './useProfileSettings';
 
@@ -47,6 +67,7 @@ export function SettingsScreen() {
                 reload();
               }}
             />
+            <BodyWeightSection profileId={state.settings.profile_id} />
             <SettingsSection
               title="Training"
               description="Used to build your weekly workout plan."
@@ -68,6 +89,16 @@ export function SettingsScreen() {
               onSaved={setSettings}
             />
             <SettingsSection
+              title="Water"
+              description="Your daily target on the Plan for Today water card."
+              settings={state.settings}
+              path="profile"
+              toDraft={waterDraft}
+              toUpdate={waterUpdate}
+              Fields={WaterFields}
+              onSaved={setSettings}
+            />
+            <SettingsSection
               title="Summary cards"
               description="Weight and calorie cards are off by default. Turn them on only if seeing these numbers helps you."
               settings={state.settings}
@@ -77,6 +108,17 @@ export function SettingsScreen() {
               Fields={DisplayFields}
               onSaved={setSettings}
             />
+            <SettingsSection
+              title="Apps and devices you use"
+              description="Tell us what you use, so we can connect the right ones and give you the right tips. Optional."
+              settings={state.settings}
+              path="profile"
+              toDraft={sourcesDraft}
+              toUpdate={sourcesUpdate}
+              Fields={SourcesFields}
+              onSaved={setSettings}
+            />
+            {state.settings.can_edit && <AppleHealthSection />}
           </View>
         )}
       </View>

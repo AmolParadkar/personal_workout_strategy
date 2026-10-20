@@ -31,6 +31,25 @@ Equipment = Literal[
     "full_gym",
 ]
 DietType = Literal["vegetarian", "eggetarian", "non_vegetarian"]
+# Health apps and devices a person uses ("Apps and devices you use" in Settings).
+DataSource = Literal[
+    "iphone_health",
+    "apple_watch",
+    "garmin",
+    "fitbit",
+    "samsung_watch",
+    "oura",
+    "whoop",
+    "withings",
+    "other_scale",
+    "bp_monitor",
+    "glucose_monitor",
+    "strava",
+    "nike_run_club",
+    "myfitnesspal",
+    "cronometer",
+    "healthifyme",
+]
 
 DAY_ORDER: list[str] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
@@ -56,6 +75,9 @@ class ProfileDetails(BaseModel):
     goals_notes: str | None
     goal_metric: GoalMetric | None
     injuries_notes: str | None
+    water_target_ml: int
+    data_sources: list[DataSource]
+    data_sources_other: str | None
     onboarded: bool
 
 
@@ -105,6 +127,9 @@ class ProfileDetailsUpdate(BaseModel):
     goals_notes: Annotated[str, Field(max_length=500)] | None = None
     goal_metric: GoalMetric | None = None
     injuries_notes: Annotated[str, Field(max_length=1000)] | None = None
+    water_target_ml: Annotated[int, Field(ge=500, le=8000)] | None = None
+    data_sources: list[DataSource] | None = None
+    data_sources_other: Annotated[str, Field(max_length=200)] | None = None
 
     @field_validator("date_of_birth")
     @classmethod
@@ -117,9 +142,9 @@ class ProfileDetailsUpdate(BaseModel):
             raise ValueError("age must be between 13 and 100")
         return value
 
-    @field_validator("goals")
+    @field_validator("goals", "data_sources")
     @classmethod
-    def unique_goals(cls, value: list[str] | None) -> list[str] | None:
+    def unique_choices(cls, value: list[str] | None) -> list[str] | None:
         return _unique(value) if value is not None else value
 
 

@@ -17,7 +17,7 @@ from core.supabase import SupabaseClient
 # One request fetches the profile and its three one-to-one settings rows.
 SETTINGS_SELECT = (
     "id,user_id,display_name,date_of_birth,sex,height_cm,goals,goals_notes,goal_metric,"
-    "injuries_notes,onboarded_at,"
+    "injuries_notes,water_target_ml,data_sources,data_sources_other,onboarded_at,"
     "training_preferences(equipment,available_days,minutes_per_session,location),"
     "diet_preferences(diet_type,cuisines,allergies,dislikes,meals_per_day,cooking_minutes),"
     "display_settings(show_weight,show_calorie_intake,show_calories_burned)"

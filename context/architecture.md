@@ -41,7 +41,7 @@ exercise database (imported once), nutrition databases (imported once).
 | Shared core | `backend/core/` | Imported by API and worker | Data models, database access, LLM clients, prompts, nutrition lookup, job queue logic. |
 | Worker | `backend/worker/` | Mac (now); cloud host later | Processes queued jobs, including all local-only (private) jobs. |
 | Database, auth, storage | `supabase/migrations/` | Supabase | Source of all data; access rules per login. |
-| Health data intake | `shortcuts/` | Each iPhone | Sends Apple Health data to the API daily. |
+| Health data intake | iOS Shortcut ([guide](apple-health-shortcut.md)) | Each iPhone | Sends Apple Health data to the API daily. |
 
 ## What the frontend may talk to
 
@@ -74,6 +74,11 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `POST /api/me/seventy-five-hard/start` | Start a challenge (`current_day`, browser `timezone`); 409 if one is running |
 | `PUT /api/me/seventy-five-hard/checks` | Tick or untick one item for today, or yesterday until noon (422 for other days) |
 | `POST /api/me/seventy-five-hard/stop` | Stop the running challenge |
+| `POST /api/ingest/health` | Apple Health data from the iOS Shortcut (connection token, not sign-in); replies `saved` and `skipped` |
+| `GET` / `POST` / `DELETE /api/me/health-connection` | Connection status; create a token (shown once, replaces the old one); disconnect |
+| `GET /api/profiles/{id}/water?day=` | Water for a local day, with total and target; `can_edit` only for your own |
+| `POST /api/me/water`, `DELETE /api/me/water/{id}?day=` | Log a glass (reaching 3.8 L ticks the 75 Hard water item); undo |
+| `GET /api/profiles/{id}/weight`, `POST /api/me/weight` | Latest body weight; log today's (corrects, not duplicates) |
 | `POST /api/me/onboarding/complete` | Finish the welcome; refused (422, with `missing`) until required fields are filled |
 
 Values the database rejects come back as `422`, and an invalid sign-in as `401`.
@@ -105,7 +110,10 @@ Website → API → database → API returns data shaped for that page → websi
 
 ### Daily health data
 
-The iOS Shortcut sends a batch of readings to an API endpoint with a per-person secret token. The API validates and stores them as health samples.
+1. Each morning the iOS Shortcut sends yesterday's totals and last night's sleep to `POST /api/ingest/health`, with the person's **connection token** (`Authorization: Bearer wst_…`), not a sign-in. Build guide: [apple-health-shortcut.md](apple-health-shortcut.md).
+2. The API checks each sample on its own (allowed metric, sensible range; numbers like `"8,421"` or `"78.4 kg"` are accepted). Bad or missing ones are **skipped with a reason**, so they don't lose the rest of the day.
+3. The API passes the valid samples to the database function `public.ingest_health_samples`, which looks up the token's **hash**, saves the samples for that person only (replacing any already sent for the same day), and records when the token was last used. The API needs no secret key for this.
+4. The reply lists `saved` and `skipped`; a wrong or replaced token gets `401`.
 
 ## Job types
 
@@ -191,7 +199,6 @@ personal_workout_strategy/
 │   └── tests/
 ├── supabase/
 │   └── migrations/     # Database tables and access rules
-└── shortcuts/          # iOS Shortcut instructions + data format
 ```
 
 ## Related
