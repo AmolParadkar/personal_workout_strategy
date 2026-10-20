@@ -3,12 +3,13 @@ import { Pressable, ScrollView, StyleSheet, Text } from 'react-native';
 
 import { navOrder, pages } from '@/features/navigation/pages';
 import { useProfile } from '@/features/profile/ProfileContext';
-import { colors, radius, spacing } from '@/theme';
+import { radius, spacing, useTheme } from '@/theme';
 
 // Links to every page. Scrolls sideways on narrow phone screens.
 export function NavBar() {
   const pathname = usePathname();
   const { activeProfile } = useProfile();
+  const { colors } = useTheme();
 
   const visiblePages = navOrder
     .map((key) => pages[key])
@@ -27,8 +28,21 @@ export function NavBar() {
         return (
           <Link key={href} href={page.href} asChild>
             {/* Link's asChild needs one style object, not a list, so the styles are merged. */}
-            <Pressable style={StyleSheet.flatten([styles.link, active && styles.linkActive])}>
-              <Text style={[styles.linkText, active && styles.linkTextActive]}>{page.title}</Text>
+            <Pressable
+              style={StyleSheet.flatten([
+                styles.link,
+                active && { backgroundColor: colors.primarySoft },
+              ])}
+            >
+              <Text
+                style={[
+                  styles.linkText,
+                  { color: active ? colors.primary : colors.textMuted },
+                  active && styles.linkTextActive,
+                ]}
+              >
+                {page.title}
+              </Text>
             </Pressable>
           </Link>
         );
@@ -46,17 +60,13 @@ const styles = StyleSheet.create({
   link: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
-    borderRadius: radius.md,
-  },
-  linkActive: {
-    backgroundColor: colors.primarySoft,
+    borderRadius: radius.pill,
   },
   linkText: {
     fontSize: 14,
-    color: colors.textMuted,
+    fontWeight: '500',
   },
   linkTextActive: {
-    color: colors.primary,
-    fontWeight: '600',
+    fontWeight: '700',
   },
 });

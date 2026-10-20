@@ -73,6 +73,7 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
   - **Wearables:** none yet. The design must make them easy to add later; most sync into Apple Health, so they'd flow in through the same path.
 - **Languages:** **TypeScript** for the Expo frontend; **Python** for everything else (FastAPI backend on Vercel, worker, scripts). The frontend's data types are generated automatically from the Python API, so the two can't drift apart.
 - **Folder structure:** `frontend/`, `backend/` (`core/`, `api/`, `worker/`, `tests/`), `supabase/migrations/`, `shortcuts/`, `context/`. Details: [Architecture: Folder structure](architecture.md#folder-structure).
+- **Look and feel:** modelled on leading health apps (Whoop, Oura). **Dark mode by default**, with a light mode toggle in the header; the choice is remembered per device. Near-black background (not pure black), one green accent for actions and progress, and green / amber / red reserved for health signals. All text colours meet WCAG AA contrast (4.5:1) in both themes. Details: [Conventions: Theme](conventions.md#theme).
 - **External content:** exercise diagrams from a free exercise database (free-exercise-db or wger); muscle body map from an open-source component (e.g. react-native-body-highlighter); videos via the YouTube Data API; nutrients from USDA FoodData Central / Indian Food Composition Tables. Details in [Exercise Guide](pages/exercise-guide.md) and [Plan for Today](pages/plan-for-today.md).
 
 ### Privacy model
@@ -125,6 +126,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** Health-app look and feel: dark mode by default with a light mode toggle (saved per device), green accent, colours checked for WCAG AA contrast.
 - **2026-10-20:** Frontend skeleton built: Expo SDK 58 website with Expo Router, 9 placeholder pages, navigation bar (75 Hard shown only for Amol) and profile dropdown with placeholder profiles; `vercel.json` for deployment. Routes live in `frontend/src/app/` (Expo's current default).
 - **2026-10-20:** Backend skeleton built: uv project on Python 3.12, FastAPI with a `/api/health` endpoint, ruff and pytest.
 - **2026-10-20:** Development workflow (10 steps per roadmap item) added to [conventions.md](conventions.md#development-workflow).

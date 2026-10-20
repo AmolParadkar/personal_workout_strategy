@@ -1,13 +1,6 @@
-// Shared design values so every screen uses the same colours and spacing.
-export const colors = {
-  background: '#F7F7F5',
-  surface: '#FFFFFF',
-  text: '#1C1C1E',
-  textMuted: '#6B6B70',
-  border: '#E3E3E0',
-  primary: '#2F6F4E',
-  primarySoft: '#E4F0E9',
-};
+// Shared spacing and sizes, plus re-exports so screens import everything from '@/theme'.
+export { darkColors, lightColors, type ThemeColors } from './colors';
+export { ThemeProvider, type ThemeMode, useTheme } from './ThemeContext';
 
 export const spacing = {
   xs: 4,
@@ -18,8 +11,9 @@ export const spacing = {
 };
 
 export const radius = {
-  sm: 6,
-  md: 10,
+  sm: 8,
+  md: 14,
+  pill: 999,
 };
 
 // Content never stretches wider than this on large screens.

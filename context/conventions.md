@@ -46,6 +46,14 @@ How code and docs are written in this project, so everything reads as if one per
   - `npm run build:web`: build the production site into `dist/` (what Vercel runs)
   - `npx expo-doctor`: check dependency and config problems
 
+## Theme
+
+- Colours live in `frontend/src/theme/colors.ts` (`darkColors`, `lightColors`); components read them with `useTheme()`. **Never hard-code a colour in a component**, or it will break in one of the two modes.
+- Dark is the default; the header toggle switches mode and the choice is saved per device.
+- `primary` (green) is for actions, active states and progress. `good` / `caution` / `alert` are for health signals only (e.g. a recovery score), never decoration.
+- Any new text colour must pass WCAG AA contrast (4.5:1) on `background` and `surface` in both themes; check it before adding.
+- Styles that don't depend on the theme stay in `StyleSheet.create`; theme colours are added inline (`[styles.title, { color: colors.text }]`).
+
 ## Database
 
 - Tables `snake_case` and plural (`food_logs`); columns `snake_case`.
