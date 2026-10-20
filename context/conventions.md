@@ -61,6 +61,12 @@ How code and docs are written in this project, so everything reads as if one per
 - **Access rules (row level security) are switched on for every table**, with no exceptions.
 - Every change is a new migration in `supabase/migrations/`, named `YYYYMMDDHHMMSS_short_description.sql`. Never edit a migration that's already been applied.
 - [Data model](data-model.md) is updated in the same change as the migration.
+- Signed-out visitors (`anon`) get no access to app tables (`revoke all ... from anon`). Signed-in users get `select` plus `update` on named columns only; rows are created by triggers or the backend unless a feature needs website inserts.
+- Functions used by access rules go in the `private` schema (not exposed through the API), are `security definer` with `set search_path = ''`, and are granted only to `authenticated`.
+- Commands (run at the project root):
+  - `npx supabase migration new <short_description>`: create a migration file
+  - `npx supabase db push --dry-run`, then `npx supabase db push`: apply migrations to the Supabase project
+- **After every migration**, run the access-rule tests against the real project (inside `backend/`): `RUN_SUPABASE_TESTS=1 uv run pytest tests/integration -v`. They create and delete temporary users.
 
 ## LLM usage
 

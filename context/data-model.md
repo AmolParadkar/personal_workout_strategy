@@ -14,6 +14,12 @@ Status: **Draft.** Tables are listed with their key fields and what they're for.
 
 Used by: [Settings / Profile](pages/settings-profile.md), every page via the profile dropdown.
 
+Status: **Built** (migration `20261020115531_profiles_and_settings.sql`).
+
+- A trigger on new logins creates the person's `profiles`, `training_preferences`, `diet_preferences` and `display_settings` rows and puts them in the household (created as "Home" for the first login). The website never inserts or deletes these rows.
+- Signed-in users may only update the listed detail columns; ids, `user_id`, `household_id` and `profile_id` can't be changed, so rows can't be moved to another person or household.
+- Allowed values: `sex` female / male / other; `height_cm` 50–260; `available_days` mon–sun; `location` home / gym / travel; `diet_type` vegetarian / eggetarian / non_vegetarian; `minutes_per_session` 5–300; `meals_per_day` 1–8; `cooking_minutes` 0–240.
+
 | Table | Key fields | Purpose |
 |---|---|---|
 | `households` | `name` | Groups the two profiles for the "view both" rule. |
@@ -112,6 +118,8 @@ Decided: **"view both, change your own".**
 - **Shared tables** (`exercises`, `foods`) are readable by any signed-in user and written only by the backend.
 - **Backend-only tables** (`jobs`, `worker_heartbeats`, `ingest_tokens`) aren't accessible from the website; the API and worker use the service key.
 - These rules are switched on for every table (see [Conventions: Database](conventions.md#database)).
+- **Accounts by invitation only:** public sign-ups are switched off in Supabase; both accounts are invited from the dashboard, so every account belongs to the one household.
+- Verified by `backend/tests/integration/test_access_rules.py` (see [Conventions: Database](conventions.md#database)).
 
 ## Related
 

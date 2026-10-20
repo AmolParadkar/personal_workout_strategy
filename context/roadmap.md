@@ -19,7 +19,8 @@ Build order as milestones. Tick items as they're done; each milestone links to t
 - [x] Frontend skeleton: Expo Router website (SDK 58) with the 9 empty pages, navigation bar and profile dropdown (placeholder profiles)
 - [ ] Deploy website and API to Vercel
 - [ ] Sign-in with Supabase Auth
-- [ ] `households`, `profiles`, `training_preferences`, `diet_preferences`, `display_settings` tables with access rules
+- [x] `households`, `profiles`, `training_preferences`, `diet_preferences`, `display_settings` tables with access rules (25 access checks passing)
+- [x] Switch off public sign-ups in Supabase (Amol): verified, sign-up attempts are refused
 - [ ] [Settings / Profile](pages/settings-profile.md) page and first sign-in questions
 - [ ] Type generation from API to frontend, with an up-to-date check
 - [ ] Write `setup.md` (accounts, keys, how to run locally)

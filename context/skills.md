@@ -126,6 +126,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** First tables built: households, profiles, preferences and display settings, with "view both, change your own" access rules verified by integration tests. Decided: accounts by invitation only (public sign-ups off).
 - **2026-10-20:** Supabase project created and connected; env templates added; one named secret key per component (`backend-api` now, `mac-worker` later).
 - **2026-10-20:** Health-app look and feel: dark mode by default with a light mode toggle (saved per device), green accent, colours checked for WCAG AA contrast.
 - **2026-10-20:** Frontend skeleton built: Expo SDK 58 website with Expo Router, 9 placeholder pages, navigation bar (75 Hard shown only for Amol) and profile dropdown with placeholder profiles; `vercel.json` for deployment. Routes live in `frontend/src/app/` (Expo's current default).
