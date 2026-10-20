@@ -146,6 +146,22 @@ See the [Privacy model](skills.md#privacy-model) in the hub. In code, each job t
 - **Frontend types are generated** from the API's OpenAPI description into `frontend/`; a check fails if the generated file is out of date.
 - **Database schema** lives only in `supabase/migrations/`; the Python database layer is written against it and covered by tests.
 
+## Deployment
+
+Two Vercel projects, both built from the GitHub repo's `main` branch on every push:
+
+| Project | Root folder | Address | Environment variables |
+|---|---|---|---|
+| API (`personal-workout-strategy`) | `backend` | https://personal-workout-strategy.vercel.app | `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `CORS_ORIGINS` |
+| Website (`personalworkoutstrategy-frontend`) | `frontend` | https://personalworkoutstrategy-frontend.vercel.app | `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `EXPO_PUBLIC_API_URL` |
+
+- **API:** Vercel's FastAPI preset runs `api/main.py` (`[tool.vercel] entrypoint = "api.main:app"` in `pyproject.toml`) as one function; with the preset detected, files in `api/` don't become separate functions. `backend/vercel.json` keeps tests out of the bundle.
+- **Website:** `frontend/vercel.json` runs `expo export -p web` and serves `dist/`, sending every path to the app (single-page app).
+- **`CORS_ORIGINS`** on the API lists the websites allowed to call it: `https://personalworkoutstrategy-frontend.vercel.app,http://localhost:8081`.
+- **`EXPO_PUBLIC_API_URL` must include `https://`** (the website refuses to start otherwise). `EXPO_PUBLIC_` values are built into the website's code, so the website must be **redeployed** after changing them, and in Vercel they must have type **Config**, not Secret (they're public by design).
+- Any environment variable change needs a **Redeploy** (Deployments → ⋯ → Redeploy) to take effect.
+- The Supabase **secret key is not on Vercel**: the API doesn't use it yet.
+
 ## Secrets and configuration
 
 - All keys (Supabase, Qwen provider, YouTube) are environment variables, never committed. `backend/.env.example` and `frontend/.env.example` list the names without values; the real values go in `backend/.env` and `frontend/.env` (ignored by git).

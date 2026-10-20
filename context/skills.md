@@ -56,7 +56,9 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
 - **Framework:** Expo, published as a website, so the same code later builds the iPhone app.
 - **Code layout:** app logic (plan generation, LLM calls, data storage) lives in the backend, not the screens, so moving to the app later mostly reuses code.
 - **Hosting (all free tiers):**
-  - Website on **Vercel**.
+  - Website on **Vercel**: https://personalworkoutstrategy-frontend.vercel.app
+  - API on **Vercel**: https://personal-workout-strategy.vercel.app
+  - Both redeploy automatically on every push to `main`. Details: [Architecture: Deployment](architecture.md#deployment).
   - Database, login and file storage on **Supabase** (free plan; it pauses after about a week without use).
 - **LLM:**
   - **Qwen** through a free cloud API (e.g. OpenRouter, Groq) for building plans and analysing food photos.
@@ -126,6 +128,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** Website and API deployed to Vercel as two projects (root folders `frontend` and `backend`), auto-deploying from `main`. The Supabase secret key is not uploaded (the API doesn't need it yet). The website now refuses an API address without `https://` and explains non-JSON replies.
 - **2026-10-20:** Settings / Profile page and 3-step first-sign-in welcome built. Goals are now chosen from a list plus notes; body weight moves to M3 as dated measurements.
 - **2026-10-20:** Sign-in built (email and password via Supabase Auth). First API endpoint `GET /api/me/profiles` uses the caller's own token so database access rules apply. Frontend types now generated from the API. The 75 Hard link shows for everyone until M2.
 - **2026-10-20:** First tables built: households, profiles, preferences and display settings, with "view both, change your own" access rules verified by integration tests. Decided: accounts by invitation only (public sign-ups off).

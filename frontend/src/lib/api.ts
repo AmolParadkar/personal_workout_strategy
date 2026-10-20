@@ -4,7 +4,14 @@ import { supabase } from './supabase';
 // Types come from api-types.ts, generated from the backend (`npm run api-types`).
 export type Schemas = components['schemas'];
 
-const apiUrl = process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000';
+const apiUrl = (process.env.EXPO_PUBLIC_API_URL ?? 'http://localhost:8000').replace(/\/+$/, '');
+
+// Without "https://" the browser treats the address as a page on this website.
+if (!/^https?:\/\//.test(apiUrl)) {
+  throw new Error(
+    `EXPO_PUBLIC_API_URL must start with http:// or https:// (got "${apiUrl}"). Fix it in frontend/.env or the Vercel project settings.`,
+  );
+}
 
 export class ApiError extends Error {
   constructor(
@@ -42,7 +49,12 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       response.status === 422 ? 'Some values aren’t valid.' : `Request failed (${response.status})`;
     throw new ApiError(response.status, message, detail);
   }
-  return (await response.json()) as T;
+  try {
+    return (await response.json()) as T;
+  } catch {
+    // e.g. the address points at a website instead of the API, which answers with HTML.
+    throw new ApiError(response.status, 'The server sent an unexpected reply. Check the API address.');
+  }
 }
 
 // Calls our backend API as the signed-in person.

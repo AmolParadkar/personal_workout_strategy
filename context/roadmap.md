@@ -17,7 +17,7 @@ Build order as milestones. Tick items as they're done; each milestone links to t
 - [x] Create Supabase project (Amol) and connect it: keys in `backend/.env` and `frontend/.env`, both verified
 - [x] Backend skeleton: uv project (Python 3.12), FastAPI app with `/api/health`, ruff, pytest
 - [x] Frontend skeleton: Expo Router website (SDK 58) with the 9 empty pages, navigation bar and profile dropdown (placeholder profiles)
-- [ ] Deploy website and API to Vercel
+- [x] Deploy website and API to Vercel: two projects, auto-deploy on push to `main`, tested live end to end
 - [x] Sign-in with Supabase Auth: email and password, sign-in page, signed-out visitors redirected, real profiles in the dropdown, sign out
 - [ ] Create both real accounts in Supabase (Amol): Authentication → Users → Add user → Create new user, "Auto confirm" ticked
 - [x] `households`, `profiles`, `training_preferences`, `diet_preferences`, `display_settings` tables with access rules (25 access checks passing)
