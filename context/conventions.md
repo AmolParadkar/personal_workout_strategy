@@ -118,3 +118,4 @@ Every piece of work (usually one roadmap item) follows the same steps:
 - [Architecture](architecture.md): where each kind of code lives.
 - [Data model](data-model.md): the tables these rules apply to.
 - [Roadmap](roadmap.md): what's being built next.
+- [Setup](setup.md): the commands for running, checking and deploying.

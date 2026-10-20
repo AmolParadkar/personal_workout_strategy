@@ -12,6 +12,7 @@ This is the **hub** for the project's context files. It holds the app's structur
 | [data-model.md](data-model.md) | Every database table, grouped by area, with the pages that use it |
 | [conventions.md](conventions.md) | How code and docs are written: Python, TypeScript, database, LLM, testing, git, docs |
 | [roadmap.md](roadmap.md) | Build milestones with checkboxes |
+| [setup.md](setup.md) | Accounts, keys, first-time setup, running locally, checks, database changes, deploying, troubleshooting |
 | [pages/](pages/) | One spec file per page (table below) |
 | `../CLAUDE.md` | Root file Claude Code reads every session; points here |
 
@@ -128,6 +129,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** M1 (Foundation) complete. Added [setup.md](setup.md).
 - **2026-10-20:** Website and API deployed to Vercel as two projects (root folders `frontend` and `backend`), auto-deploying from `main`. The Supabase secret key is not uploaded (the API doesn't need it yet). The website now refuses an API address without `https://` and explains non-JSON replies.
 - **2026-10-20:** Settings / Profile page and 3-step first-sign-in welcome built. Goals are now chosen from a list plus notes; body weight moves to M3 as dated measurements.
 - **2026-10-20:** Sign-in built (email and password via Supabase Auth). First API endpoint `GET /api/me/profiles` uses the caller's own token so database access rules apply. Frontend types now generated from the API. The 75 Hard link shows for everyone until M2.

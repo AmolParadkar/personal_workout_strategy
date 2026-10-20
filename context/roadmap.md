@@ -11,7 +11,7 @@ Build order as milestones. Tick items as they're done; each milestone links to t
 - [x] Project folders and `.gitignore` created
 - [x] Context docs: hub, pages, architecture, data model, conventions, roadmap, root `CLAUDE.md`
 
-## M1 — Foundation
+## M1 — Foundation ✅
 
 - [x] Decide who can see whose data: view both, change your own ([access rules](data-model.md#access-rules))
 - [x] Create Supabase project (Amol) and connect it: keys in `backend/.env` and `frontend/.env`, both verified
@@ -19,12 +19,12 @@ Build order as milestones. Tick items as they're done; each milestone links to t
 - [x] Frontend skeleton: Expo Router website (SDK 58) with the 9 empty pages, navigation bar and profile dropdown (placeholder profiles)
 - [x] Deploy website and API to Vercel: two projects, auto-deploy on push to `main`, tested live end to end
 - [x] Sign-in with Supabase Auth: email and password, sign-in page, signed-out visitors redirected, real profiles in the dropdown, sign out
-- [ ] Create both real accounts in Supabase (Amol): Authentication → Users → Add user → Create new user, "Auto confirm" ticked
+- [x] Create both real accounts in Supabase (Amol)
 - [x] `households`, `profiles`, `training_preferences`, `diet_preferences`, `display_settings` tables with access rules (25 access checks passing)
 - [x] Switch off public sign-ups in Supabase (Amol): verified, sign-up attempts are refused
 - [x] [Settings / Profile](pages/settings-profile.md) page and first sign-in questions (3-step welcome)
 - [x] Type generation from API to frontend, with an up-to-date check (`npm run api-types`, `npm run api-types:check`)
-- [ ] Write `setup.md` (accounts, keys, how to run locally)
+- [x] Write [setup.md](setup.md) (accounts, keys, running locally, checks, database changes, deploying, troubleshooting)
 
 ## M2 — 75 Hard
 

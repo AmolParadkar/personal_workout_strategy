@@ -171,7 +171,7 @@ Two Vercel projects, both built from the GitHub repo's `main` branch on every pu
 - **One named secret key per component**, so a leaked key can be revoked without breaking the others: `backend-api` now; `mac-worker` for the worker in M4.
 - Secret keys are never pasted into chat or logs.
 - Keys that can read all data (Supabase service key) are only used by the API and worker, never by the website.
-- Details of accounts and setup will go in a `setup.md` when we reach that step (see [Roadmap](roadmap.md)).
+- Accounts, where each key lives, and what to do if one leaks: [setup.md](setup.md#keys-and-where-they-live).
 
 ## Folder structure
 
@@ -196,3 +196,4 @@ personal_workout_strategy/
 - [Data model](data-model.md): tables behind every flow above.
 - [Conventions](conventions.md): how code in each folder is written.
 - [Roadmap](roadmap.md): the order these components get built.
+- [Setup](setup.md): accounts, keys, running locally and deploying.
