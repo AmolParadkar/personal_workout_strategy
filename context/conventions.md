@@ -27,11 +27,24 @@ How code and docs are written in this project, so everything reads as if one per
 
 ## TypeScript (`frontend/`)
 
-- **Expo** with **Expo Router**; TypeScript in strict mode.
-- One route file per page in `app/` (kept thin); the page's components and data hooks live in `src/features/<page>/`; shared components in `src/components/`.
+- **Expo SDK 58** with **Expo Router**; TypeScript in strict mode. The website is built as a single-page app (`web.output: "single"`).
+- **Expo changes a lot between versions:** before using an Expo or React Native API, check the docs for the installed version (https://docs.expo.dev/llms.txt is the index) rather than relying on memory.
+- Folder layout inside `frontend/src/`:
+  - `app/`: one thin route file per page (`app/today.tsx` is the URL `/today`); `_layout.tsx` is the frame around every page.
+  - `features/<page>/`: that page's components and data hooks; `features/navigation/pages.ts` is the single list of pages.
+  - `components/`: shared pieces (`NavBar`, `ProfileSwitcher`, `PagePlaceholder`).
+  - `theme/`: colours, spacing, sizes.
+- Imports use the `@/` alias for `src/` (`import { colors } from '@/theme'`).
 - Names: `PascalCase` for components and their files (`MetricCard.tsx`); `camelCase` for functions and variables; route files in `kebab-case` (`plan-for-today.tsx`).
+- Add libraries with `npx expo install <package>` (not `npm install`), so versions match the Expo SDK.
+- `Link asChild` needs a single style object on its child: wrap style lists in `StyleSheet.flatten([...])`.
 - API types are **generated** from the backend; never hand-written. Regenerate after any backend model change.
-- Formatting with Prettier and linting with ESLint (Expo defaults).
+- Linting with ESLint (Expo's config); type checking with `tsc`.
+- Commands (run inside `frontend/`):
+  - `npm run web`: run the website locally at http://localhost:8081, reloading on save (if changes stop showing, restart with `npx expo start --web --clear`)
+  - `npm run lint` and `npm run typecheck`: run both before calling anything done
+  - `npm run build:web`: build the production site into `dist/` (what Vercel runs)
+  - `npx expo-doctor`: check dependency and config problems
 
 ## Database
 

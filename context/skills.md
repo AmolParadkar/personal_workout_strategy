@@ -125,6 +125,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** Frontend skeleton built: Expo SDK 58 website with Expo Router, 9 placeholder pages, navigation bar (75 Hard shown only for Amol) and profile dropdown with placeholder profiles; `vercel.json` for deployment. Routes live in `frontend/src/app/` (Expo's current default).
 - **2026-10-20:** Backend skeleton built: uv project on Python 3.12, FastAPI with a `/api/health` endpoint, ruff and pytest.
 - **2026-10-20:** Development workflow (10 steps per roadmap item) added to [conventions.md](conventions.md#development-workflow).
 - **2026-10-20:** Access decided: "view both, change your own". Both logins can see both profiles; each can only change their own data.

@@ -16,7 +16,7 @@ Build order as milestones. Tick items as they're done; each milestone links to t
 - [x] Decide who can see whose data: view both, change your own ([access rules](data-model.md#access-rules))
 - [ ] Create Supabase project (Amol) and connect it
 - [x] Backend skeleton: uv project (Python 3.12), FastAPI app with `/api/health`, ruff, pytest
-- [ ] Frontend skeleton: Expo Router website with the 9 empty pages and the profile dropdown
+- [x] Frontend skeleton: Expo Router website (SDK 58) with the 9 empty pages, navigation bar and profile dropdown (placeholder profiles)
 - [ ] Deploy website and API to Vercel
 - [ ] Sign-in with Supabase Auth
 - [ ] `households`, `profiles`, `training_preferences`, `diet_preferences`, `display_settings` tables with access rules

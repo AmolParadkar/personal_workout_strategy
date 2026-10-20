@@ -138,7 +138,7 @@ See the [Privacy model](skills.md#privacy-model) in the hub. In code, each job t
 personal_workout_strategy/
 ├── CLAUDE.md           # Points Claude Code at the context files
 ├── context/            # Spec docs (hub, pages/, architecture, data model, conventions, roadmap)
-├── frontend/           # Expo website (TypeScript); types generated from the API
+├── frontend/           # Expo website (TypeScript): src/app (routes), src/features, src/components, src/theme; vercel.json
 ├── backend/            # One Python codebase
 │   ├── core/           # Shared: models, database access, LLM clients, prompts, nutrition lookup, job queue
 │   ├── api/            # FastAPI on Vercel
