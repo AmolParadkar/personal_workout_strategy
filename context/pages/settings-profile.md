@@ -2,7 +2,7 @@
 
 ← [Hub: skills.md](../skills.md) · Status: **Defined**
 
-**Purpose:** each person's details and settings. Opened from the profile dropdown at the top of every page.
+**Purpose:** each person's details and settings. Opened from the profile dropdown at the top of every page. When viewing the other person's profile, this page is read-only ("view both, change your own").
 
 ## What it holds
 
@@ -27,3 +27,4 @@ Not collected up front; each person fills them in here once the app exists.
 - [Workout Plan](workout-plan.md) and [Nutrition Plan](nutrition-plan.md): use these details as plan inputs.
 - [Summary](summary.md) and [Progress](progress.md): obey the opt-in switches.
 - [Personal Artifacts](personal-artifacts.md): the other source of plan inputs (health facts).
+- Data: [Profiles and settings](../data-model.md#profiles-and-settings).

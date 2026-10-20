@@ -4,6 +4,17 @@ _Last updated: 2026-10-20_
 
 This is the **hub** for the project's context files. It holds the app's structure, technical decisions and rules that apply to every page. Each page has its own file in [pages/](pages/), linked below; every file links back here and to its related pages.
 
+## Project docs
+
+| File | What it holds |
+|---|---|
+| [architecture.md](architecture.md) | Components, request flows, job types, job queue and worker safeguards, privacy routing, folder structure |
+| [data-model.md](data-model.md) | Every database table, grouped by area, with the pages that use it |
+| [conventions.md](conventions.md) | How code and docs are written: Python, TypeScript, database, LLM, testing, git, docs |
+| [roadmap.md](roadmap.md) | Build milestones with checkboxes |
+| [pages/](pages/) | One spec file per page (table below) |
+| `../CLAUDE.md` | Root file Claude Code reads every session; points here |
+
 **How these files are kept up to date:**
 
 - Changes to functionality, app structure or technical decisions are recorded in this file.
@@ -52,40 +63,16 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
   - **Ollama** on a local machine as a backup, and as the only model that reads health documents (see [Privacy model](#privacy-model)).
 - **Split of responsibilities:** the frontend and the backend / agentic logic (LLM calls, plan generation, photo analysis) are kept separate. **Vercel** hosts the website and the backend API; **Supabase** holds the database, login and file storage.
 - **Local worker:** a program on the local Mac that fetches pending jobs (e.g. documents to read) from Supabase, processes them with Ollama, and writes the results back. The Mac is never exposed to the internet, so no tunnel is needed.
-- **Job queue:** all slow or LLM work goes through a job queue in the database.
-  - **Quick cloud-LLM jobs first try on Vercel** (e.g. food photos via Groq, usually a few seconds). If a job doesn't finish within Vercel's time limit, it falls back to the queue.
-  - **No paid cloud worker for now** ($0 budget): queued jobs are processed by the Mac worker, so slow jobs wait until the Mac is on. See [Future enhancements](#future-enhancements).
-- **Mac worker safeguards** (the Mac is a single point of failure):
-  1. Every job has a status (`pending → processing → done / failed`), an attempt count and the last error. Jobs are claimed so two workers can't take the same one; jobs stuck in "processing" too long return to pending.
-  2. Retries with growing gaps; after the last attempt the job is marked failed, the error is shown in the app, and there's a **Retry** button.
-  3. **Heartbeat:** the worker records that it's alive every minute; if it stops, the app shows e.g. "Document reader offline since 9:40 pm. Your report is queued."
-  4. The worker and Ollama run as macOS background services (launchd): start at login, restart on crash; the worker checks Ollama responds before taking a job.
-  5. **Alert:** one notification (email or a free push service like ntfy) if the worker has been offline for ~12 hours and jobs are waiting.
-  6. **"Process in cloud now"** button per document: an explicit, one-off opt-out of the local-only privacy rule.
-- **Keeping data formats in sync:** one Python codebase for the API and the worker; Pydantic models are the single source of truth; the frontend's TypeScript types are generated from the API and a check fails if they're out of date; the frontend uses only the API (plus Supabase login and file upload).
-- **Login:** Supabase login, because the site holds health data. Each person's data is visible only to their own login.
+- **Job queue:** all slow or LLM work goes through a job queue in the database. Quick cloud-LLM jobs (e.g. food photos) try on Vercel first and fall back to the queue. No paid cloud worker for now ($0 budget): queued jobs wait for the Mac worker (see [Future enhancements](#future-enhancements)). The Mac worker has safeguards: job statuses with retries, heartbeat and offline notice, auto-restart, offline alert, and a "Process in cloud now" button. Details: [Architecture: Job queue](architecture.md#job-queue-and-worker-safeguards).
+- **Keeping data formats in sync:** one Python codebase for API and worker; Pydantic models as the single source of truth; frontend types generated from the API. Details: [Architecture](architecture.md#keeping-data-formats-in-sync).
+- **Login and access ("view both, change your own"):** each person has their own Supabase login, needed because the site holds health data. Both logins can **view** both profiles (the profile dropdown switches between them), but each person can only **change** their own data. Nobody else can see anything. Details: [Data model: Access rules](data-model.md#access-rules).
 - **Health data:**
   - Source is **Apple Health**.
   - Phase 1 (website): an **iOS Shortcuts automation** on each iPhone sends the data to the backend daily.
   - Phase 2 (app): the app reads Apple Health directly.
   - **Wearables:** none yet. The design must make them easy to add later; most sync into Apple Health, so they'd flow in through the same path.
 - **Languages:** **TypeScript** for the Expo frontend; **Python** for everything else (FastAPI backend on Vercel, worker, scripts). The frontend's data types are generated automatically from the Python API, so the two can't drift apart.
-- **Folder structure:**
-
-  ```
-  personal_workout_strategy/
-  ├── context/            # Spec docs (this hub + pages/)
-  ├── frontend/           # Expo website (TypeScript); types generated from the API
-  ├── backend/            # One Python codebase
-  │   ├── core/           # Shared: data models (Pydantic), database access, Qwen/Ollama client, prompts, nutrition lookup, job queue
-  │   ├── api/            # FastAPI on Vercel: quick requests and adding jobs to the queue
-  │   ├── worker/         # Job runner (on the Mac for now; cloud mode later, see Future enhancements)
-  │   └── tests/
-  ├── supabase/
-  │   └── migrations/     # Database tables and access rules
-  └── shortcuts/          # iOS Shortcut instructions + data format
-  ```
-
+- **Folder structure:** `frontend/`, `backend/` (`core/`, `api/`, `worker/`, `tests/`), `supabase/migrations/`, `shortcuts/`, `context/`. Details: [Architecture: Folder structure](architecture.md#folder-structure).
 - **External content:** exercise diagrams from a free exercise database (free-exercise-db or wger); muscle body map from an open-source component (e.g. react-native-body-highlighter); videos via the YouTube Data API; nutrients from USDA FoodData Central / Indian Food Composition Tables. Details in [Exercise Guide](pages/exercise-guide.md) and [Plan for Today](pages/plan-for-today.md).
 
 ### Privacy model
@@ -121,6 +108,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 - **No diagnoses:** out-of-range values say "discuss with your doctor"; suggestions never override prescribed treatment.
 - **Weight and calories are opt-in** everywhere, switched on in [Settings / Profile](pages/settings-profile.md).
 - **No alerts without a next step:** every warning comes with "here's what to do".
+- **Viewing the other person's profile is read-only:** logging buttons, uploads and plan changes are hidden or disabled.
 - **Missing data is explained**, e.g. "Connect a wearable to track this", never a blank.
 
 ## Open questions
@@ -137,6 +125,8 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-20:** Access decided: "view both, change your own". Both logins can see both profiles; each can only change their own data.
+- **2026-10-20:** Added [architecture.md](architecture.md), [data-model.md](data-model.md) (draft), [conventions.md](conventions.md), [roadmap.md](roadmap.md) and the root `CLAUDE.md`. Technical detail moved from this hub into architecture.md. Found a conflict between per-login privacy and the profile dropdown (open question).
 - **2026-10-20:** Project folder structure created (empty folders with `.gitkeep`) and `.gitignore` added for secrets, Python, Node/Expo, Vercel and macOS files.
 - **2026-10-20:** Job queue, Vercel-first quick jobs with Mac fallback, Mac worker safeguards, data-format sync approach, and first sign-in onboarding confirmed.
 - **2026-10-20:** Languages decided (TypeScript frontend, Python everywhere else) and folder structure recorded.

@@ -1,0 +1,70 @@
+# Conventions
+
+← [Hub: skills.md](skills.md) · Related: [Architecture](architecture.md) · [Data model](data-model.md) · [Roadmap](roadmap.md)
+
+How code and docs are written in this project, so everything reads as if one person wrote it.
+
+## General
+
+- **Keep it simple.** Two users; no premature scaling, caching or abstraction.
+- **Logic in the backend, screens in the frontend** (see [Architecture](architecture.md#components)).
+- **Comments explain *why*,** not what. Amol is new to TypeScript, so frontend code gets a short comment wherever a pattern isn't obvious.
+- **No secrets in code.** Keys go in `.env` (ignored by git); `.env.example` lists the names.
+
+## Python (`backend/`)
+
+- Python 3.12, managed with **uv**.
+- **ruff** for formatting and linting.
+- Type hints everywhere; **Pydantic v2** models for every request, response and job payload (in `backend/core/`).
+- **FastAPI** for the API. Routes are thin: validate, call `core`, return.
+- Names: `snake_case` for files, functions and variables; `PascalCase` for classes.
+- **pytest** for tests in `backend/tests/`, mirroring the `core/` layout.
+
+## TypeScript (`frontend/`)
+
+- **Expo** with **Expo Router**; TypeScript in strict mode.
+- One route file per page in `app/` (kept thin); the page's components and data hooks live in `src/features/<page>/`; shared components in `src/components/`.
+- Names: `PascalCase` for components and their files (`MetricCard.tsx`); `camelCase` for functions and variables; route files in `kebab-case` (`plan-for-today.tsx`).
+- API types are **generated** from the backend; never hand-written. Regenerate after any backend model change.
+- Formatting with Prettier and linting with ESLint (Expo defaults).
+
+## Database
+
+- Tables `snake_case` and plural (`food_logs`); columns `snake_case`.
+- Every table has `id`, `created_at`, `updated_at`; person-owned tables have `profile_id` and access rules.
+- **Access rules (row level security) are switched on for every table**, with no exceptions.
+- Every change is a new migration in `supabase/migrations/`, named `YYYYMMDDHHMMSS_short_description.sql`. Never edit a migration that's already been applied.
+- [Data model](data-model.md) is updated in the same change as the migration.
+
+## LLM usage
+
+- Prompts live in `backend/core/prompts/`, one file per job type.
+- LLM output is always requested as JSON and **validated with a Pydantic model**; invalid output is a failed attempt, not data.
+- **Numbers from data, words from the LLM:** nutrients from the food database, forecasts from calculations.
+- Each job type declares whether it's local-only (see [Architecture: Privacy routing](architecture.md#privacy-routing)).
+
+## Testing
+
+- Unit tests for core logic: nutrient calculation, forecasts, job queue (claiming, retries, stuck jobs), 75 Hard reset rule, video scoring.
+- LLM calls are mocked in tests.
+- A check that the generated frontend types are up to date.
+
+## Git
+
+- `main` is always deployable. Work happens on short branches named `feature/<short-name>` or `fix/<short-name>`.
+- Commit messages: short imperative summary ("Add water quick-add buttons"), body if the *why* isn't obvious.
+- Claude asks before committing or pushing.
+
+## Docs
+
+- All Markdown files live in `context/` (only exception: the root `CLAUDE.md`).
+- **Functionality, structure or technical changes** → update the [hub](skills.md) and add a dated line to its change log.
+- **Page-specific changes** → the page's file in [pages/](pages/).
+- **Table changes** → [data-model.md](data-model.md). **Flow or component changes** → [architecture.md](architecture.md). **Milestone progress** → [roadmap.md](roadmap.md).
+- Every file starts with a link back to the hub and ends with related links; new files follow the same pattern so the docs stay a connected graph.
+
+## Related
+
+- [Architecture](architecture.md): where each kind of code lives.
+- [Data model](data-model.md): the tables these rules apply to.
+- [Roadmap](roadmap.md): what's being built next.

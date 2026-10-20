@@ -45,3 +45,4 @@ For each person (set on [Settings / Profile](settings-profile.md)): available da
 - [Progress](progress.md): load capacity, forecasts and travel versions of this plan.
 - [Settings / Profile](settings-profile.md): plan inputs.
 - [Personal Artifacts](personal-artifacts.md): health facts that adjust the plan.
+- Data: [Workouts](../data-model.md#workouts). Flow: [Regenerating a plan](../architecture.md#regenerating-a-plan).

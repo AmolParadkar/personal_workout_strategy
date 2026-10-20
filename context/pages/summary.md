@@ -70,3 +70,4 @@ See [Data sources](../skills.md#data-sources) in the hub.
 - [Settings / Profile](settings-profile.md): opt-in card switches.
 - [Personal Artifacts](personal-artifacts.md): turns on condition-driven cards and action items.
 - [Nutrition Plan](nutrition-plan.md): source of the macro / micro targets.
+- Data: [Health data](../data-model.md#health-data), [Health records](../data-model.md#health-records), [Profiles and settings](../data-model.md#profiles-and-settings).

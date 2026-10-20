@@ -36,3 +36,4 @@
 - [Workout Plan](workout-plan.md): the weekly plan this guide covers; exercise swaps.
 - [Plan for Today](plan-for-today.md): links here from each exercise.
 - [Personal Artifacts](personal-artifacts.md): source of personal precautions.
+- Data: [Workouts](../data-model.md#workouts) (`exercises` table). Jobs: [Job types](../architecture.md#job-types).

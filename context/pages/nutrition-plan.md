@@ -25,3 +25,4 @@ Set on [Settings / Profile](settings-profile.md): diet type (vegetarian / eggeta
 - [Summary](summary.md): macro / micro targets vs achieved.
 - [Progress](progress.md): nutrition trends, forecasts and travel versions of this plan.
 - [Personal Artifacts](personal-artifacts.md): health facts that adjust the plan.
+- Data: [Nutrition](../data-model.md#nutrition). Flow: [Regenerating a plan](../architecture.md#regenerating-a-plan).

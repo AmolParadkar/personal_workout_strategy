@@ -25,3 +25,4 @@
 - [Workout Plan](workout-plan.md): the regular weekly plan (75 Hard workouts aren't planned there either).
 - [Plan for Today](plan-for-today.md): the regular daily logging page.
 - [Settings / Profile](settings-profile.md): profile this page belongs to.
+- Data: [75 Hard](../data-model.md#75-hard).

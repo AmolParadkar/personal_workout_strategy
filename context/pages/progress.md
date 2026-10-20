@@ -65,3 +65,4 @@ Decided: the LLM analyses progress photos. Open: where it runs.
 - [Personal Artifacts](personal-artifacts.md): blood work and body composition reports.
 - [Workout Plan](workout-plan.md) / [Nutrition Plan](nutrition-plan.md): what forecasts are based on, and what travel versions modify.
 - [Plan for Today](plan-for-today.md): source of the daily logs behind the trends.
+- Data: [Progress and planning](../data-model.md#progress-and-planning), [Health data](../data-model.md#health-data), [Health records](../data-model.md#health-records).

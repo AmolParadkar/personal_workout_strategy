@@ -58,3 +58,4 @@
 - [Summary](summary.md): reads everything logged here.
 - [Progress](progress.md): long-term trends of everything logged here.
 - [75 Hard](75-hard.md): Amol's separate daily checklist.
+- Data: [Workouts](../data-model.md#workouts), [Nutrition](../data-model.md#nutrition), [Health records](../data-model.md#health-records). Flow: [Logging a food photo](../architecture.md#logging-a-food-photo).

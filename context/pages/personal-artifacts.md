@@ -24,8 +24,8 @@ PDF lab reports, photos of reports, and doctor's notes or typed notes (e.g. "kne
   - Documents are read only by **local Ollama** (a Qwen vision model, e.g. Qwen2.5-VL, for photos).
   - Only confirmed facts (e.g. "low haemoglobin") go to the cloud Qwen API when building plans.
   - Uploads made while the local machine is off wait as "pending" and are read when it's next on.
-  - The page shows each document's status (pending / processing / done / failed with a **Retry** button), shows when the document reader is offline, and offers a one-off **"Process in cloud now"** button. See [Mac worker safeguards](../skills.md#technical-decisions).
-- **Storage:** original files in private Supabase Storage, visible only to that person's login. Older reports are kept so [Progress](progress.md) can show trends.
+  - The page shows each document's status (pending / processing / done / failed with a **Retry** button), shows when the document reader is offline, and offers a one-off **"Process in cloud now"** button. See [Mac worker safeguards](../architecture.md#job-queue-and-worker-safeguards).
+- **Storage:** original files in private Supabase Storage. Both of you can view them; only the owner can upload or delete (see [Access rules](../data-model.md#access-rules)). Older reports are kept so [Progress](progress.md) can show trends.
 - **Safety:** the app never diagnoses. Out-of-range values are marked "discuss with your doctor", and suggestions never override treatment a doctor prescribed (e.g. iron supplements).
 
 ## What uses these facts
@@ -35,3 +35,4 @@ PDF lab reports, photos of reports, and doctor's notes or typed notes (e.g. "kne
 - [Plan for Today](plan-for-today.md): daily medication checkboxes.
 - [Progress](progress.md): blood work and body composition trends.
 - [Exercise Guide](exercise-guide.md): personal precautions.
+- Data: [Health records](../data-model.md#health-records). Flow: [Uploading a health document](../architecture.md#uploading-a-health-document-personal-artifacts); safeguards: [Job queue](../architecture.md#job-queue-and-worker-safeguards).
