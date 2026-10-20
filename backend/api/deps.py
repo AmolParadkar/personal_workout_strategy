@@ -17,6 +17,12 @@ async def get_supabase() -> AsyncIterator[SupabaseClient]:
         yield SupabaseClient(settings.supabase_url, settings.supabase_publishable_key, http)
 
 
+async def get_http() -> AsyncIterator[httpx2.AsyncClient]:
+    """For calling other services (the health services' APIs)."""
+    async with httpx2.AsyncClient(timeout=20) as http:
+        yield http
+
+
 @dataclass
 class CurrentUser:
     id: str
@@ -39,4 +45,5 @@ async def get_current_user(
 
 
 SupabaseDep = Annotated[SupabaseClient, Depends(get_supabase)]
+HttpDep = Annotated[httpx2.AsyncClient, Depends(get_http)]
 CurrentUserDep = Annotated[CurrentUser, Depends(get_current_user)]

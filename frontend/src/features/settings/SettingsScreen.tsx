@@ -6,6 +6,7 @@ import { spacing, useTheme } from '@/theme';
 
 import { AppleHealthSection } from './AppleHealthSection';
 import { BodyWeightSection } from './BodyWeightSection';
+import { ConnectionsSection } from './ConnectionsSection';
 import {
   aboutDraft,
   aboutUpdate,
@@ -118,6 +119,7 @@ export function SettingsScreen() {
               Fields={SourcesFields}
               onSaved={setSettings}
             />
+            <ConnectionsSection profileId={state.settings.profile_id} />
             {state.settings.can_edit && <AppleHealthSection />}
           </View>
         )}

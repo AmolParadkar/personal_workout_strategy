@@ -7,6 +7,7 @@ from datetime import UTC, date, datetime, timedelta
 from pydantic import ValidationError
 
 from core import seventy_five_hard
+from core.connectors import preferred
 from core.models.health_data import (
     GALLON_ML,
     HealthConnection,
@@ -192,15 +193,19 @@ async def get_weight(
             "profile_id": f"eq.{profile_id}",
             "metric": "eq.weight_kg",
             "order": "recorded_on.desc,updated_at.desc",
-            "limit": "1",
+            "limit": "10",
         },
         token,
     )
-    latest = (
-        WeightEntry(
-            kg=float(rows[0]["value"]), date=rows[0]["recorded_on"], source=rows[0]["source"]
-        )
+    # The latest day's weigh-in, from the preferred source if several sent one.
+    row = (
+        preferred("weight_kg", [r for r in rows if r["recorded_on"] == rows[0]["recorded_on"]])
         if rows
+        else None
+    )
+    latest = (
+        WeightEntry(kg=float(row["value"]), date=row["recorded_on"], source=row["source"])
+        if row
         else None
     )
     return WeightSummary(latest=latest, can_edit=can_edit)

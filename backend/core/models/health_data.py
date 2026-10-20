@@ -14,11 +14,24 @@ Metric = Literal[
     "sleep_asleep_minutes",
     "bedtime",
     "wake_time",
+    "sleep_deep_minutes",
+    "sleep_rem_minutes",
+    "sleep_light_minutes",
+    "sleep_score",
     "weight_kg",
+    "body_fat_pct",
+    "muscle_mass_kg",
     "resting_hr",
     "hrv_ms",
     "vo2_max",
+    "systolic_mmhg",
+    "diastolic_mmhg",
+    "readiness_score",
+    "recovery_score",
+    "strain",
 ]
+# Where a measurement came from: the Shortcut, typed in, or a connected service.
+Source = Literal["apple_health", "manual", "withings", "oura", "whoop", "polar"]
 
 # Sensible ranges, so a typo in the Shortcut can't store nonsense.
 METRIC_RANGES: dict[str, tuple[float, float]] = {
@@ -27,10 +40,21 @@ METRIC_RANGES: dict[str, tuple[float, float]] = {
     "walking_running_km": (0, 300),
     "sleep_in_bed_minutes": (0, 1440),
     "sleep_asleep_minutes": (0, 1440),
+    "sleep_deep_minutes": (0, 1440),
+    "sleep_rem_minutes": (0, 1440),
+    "sleep_light_minutes": (0, 1440),
+    "sleep_score": (0, 100),
     "weight_kg": (20, 400),
+    "body_fat_pct": (1, 75),
+    "muscle_mass_kg": (5, 200),
     "resting_hr": (20, 250),
     "hrv_ms": (1, 500),
     "vo2_max": (5, 100),
+    "systolic_mmhg": (50, 260),
+    "diastolic_mmhg": (30, 160),
+    "readiness_score": (0, 100),
+    "recovery_score": (0, 100),
+    "strain": (0, 21),
 }
 # Recorded as a time, not a number.
 TIME_METRICS = {"bedtime", "wake_time"}
@@ -126,7 +150,7 @@ class AddWater(BaseModel):
 class WeightEntry(BaseModel):
     kg: float
     date: date
-    source: Literal["apple_health", "manual"]
+    source: Source
 
 
 class WeightSummary(BaseModel):

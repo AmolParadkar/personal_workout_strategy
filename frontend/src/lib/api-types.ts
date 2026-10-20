@@ -340,6 +340,104 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profiles/{profile_id}/connections": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Connections
+         * @description Which services a person has connected (view-only on the other person's profile).
+         */
+        get: operations["connections_api_profiles__profile_id__connections_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/connections/{name}/start": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Start Connection
+         * @description The service's sign-in address to send the person to.
+         */
+        post: operations["start_connection_api_me_connections__name__start_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/connections/{name}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete Connection
+         * @description Finish connecting with the code the service sent back, then fetch the last 30 days.
+         */
+        post: operations["complete_connection_api_me_connections__name__complete_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/connections/{name}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Disconnect */
+        delete: operations["disconnect_api_me_connections__name__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/connections/sync": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Sync
+         * @description Fetch new data from your connections. Without `force`, only those not synced
+         *     in the last 3 hours (the website calls this when it opens).
+         */
+        post: operations["sync_api_me_connections_sync_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -380,6 +478,27 @@ export interface components {
             item: "diet" | "workout_1" | "workout_2_outdoor" | "water" | "reading" | "photo";
             /** Checked */
             checked: boolean;
+        };
+        /** CompleteConnection */
+        CompleteConnection: {
+            /** Code */
+            code: string;
+            /** State */
+            state: string;
+            /** Redirect Uri */
+            redirect_uri: string;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+        };
+        /** Connections */
+        Connections: {
+            /** Services */
+            services: components["schemas"]["ServiceConnection"][];
+            /** Can Edit */
+            can_edit: boolean;
         };
         /** DayChecklist */
         DayChecklist: {
@@ -538,7 +657,7 @@ export interface components {
             /** Water Target Ml */
             water_target_ml: number;
             /** Data Sources */
-            data_sources: ("iphone_health" | "apple_watch" | "garmin" | "fitbit" | "samsung_watch" | "oura" | "whoop" | "withings" | "other_scale" | "bp_monitor" | "glucose_monitor" | "strava" | "nike_run_club" | "myfitnesspal" | "cronometer" | "healthifyme")[];
+            data_sources: ("iphone_health" | "apple_watch" | "garmin" | "fitbit" | "samsung_watch" | "polar" | "suunto" | "coros" | "amazfit" | "oura" | "whoop" | "withings" | "other_scale" | "bp_monitor" | "glucose_monitor" | "dexcom" | "strava" | "nike_run_club" | "myfitnesspal" | "cronometer" | "healthifyme")[];
             /** Data Sources Other */
             data_sources_other: string | null;
             /** Onboarded */
@@ -565,7 +684,7 @@ export interface components {
             /** Water Target Ml */
             water_target_ml?: number | null;
             /** Data Sources */
-            data_sources?: ("iphone_health" | "apple_watch" | "garmin" | "fitbit" | "samsung_watch" | "oura" | "whoop" | "withings" | "other_scale" | "bp_monitor" | "glucose_monitor" | "strava" | "nike_run_club" | "myfitnesspal" | "cronometer" | "healthifyme")[] | null;
+            data_sources?: ("iphone_health" | "apple_watch" | "garmin" | "fitbit" | "samsung_watch" | "polar" | "suunto" | "coros" | "amazfit" | "oura" | "whoop" | "withings" | "other_scale" | "bp_monitor" | "glucose_monitor" | "dexcom" | "strava" | "nike_run_club" | "myfitnesspal" | "cronometer" | "healthifyme")[] | null;
             /** Data Sources Other */
             data_sources_other?: string | null;
         };
@@ -598,6 +717,48 @@ export interface components {
             onboarded: boolean;
             /** Doing 75 Hard */
             doing_75_hard: boolean;
+        };
+        /** ServiceConnection */
+        ServiceConnection: {
+            /**
+             * Service
+             * @enum {string}
+             */
+            service: "withings" | "oura" | "whoop" | "polar";
+            /** Label */
+            label: string;
+            /** Available */
+            available: boolean;
+            /** Connected */
+            connected: boolean;
+            /** Connected At */
+            connected_at?: string | null;
+            /** Last Synced At */
+            last_synced_at?: string | null;
+            /** Last Sync Error */
+            last_sync_error?: string | null;
+            /**
+             * Needs Reconnect
+             * @default false
+             */
+            needs_reconnect: boolean;
+        };
+        /** ServiceSyncResult */
+        ServiceSyncResult: {
+            /**
+             * Service
+             * @enum {string}
+             */
+            service: "withings" | "oura" | "whoop" | "polar";
+            /** Saved */
+            saved: number;
+            /**
+             * Skipped
+             * @default false
+             */
+            skipped: boolean;
+            /** Error */
+            error?: string | null;
         };
         /** SetCheck */
         SetCheck: {
@@ -655,6 +816,37 @@ export interface components {
             current_day: number;
             /** Timezone */
             timezone: string;
+        };
+        /** StartConnection */
+        StartConnection: {
+            /** Redirect Uri */
+            redirect_uri: string;
+        };
+        /** StartedConnection */
+        StartedConnection: {
+            /** Url */
+            url: string;
+        };
+        /** SyncRequest */
+        SyncRequest: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /**
+             * Force
+             * @default false
+             */
+            force: boolean;
+            /** Service */
+            service?: ("withings" | "oura" | "whoop" | "polar") | null;
+        };
+        /** SyncResult */
+        SyncResult: {
+            /** Results */
+            results: components["schemas"]["ServiceSyncResult"][];
+            connections: components["schemas"]["Connections"];
         };
         /** TrainingPreferences */
         TrainingPreferences: {
@@ -732,7 +924,7 @@ export interface components {
              * Source
              * @enum {string}
              */
-            source: "apple_health" | "manual";
+            source: "apple_health" | "manual" | "withings" | "oura" | "whoop" | "polar";
         };
         /** WeightSummary */
         WeightSummary: {
@@ -1406,6 +1598,181 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WeightSummary"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    connections_api_profiles__profile_id__connections_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connections"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    start_connection_api_me_connections__name__start_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                name: "withings" | "oura" | "whoop" | "polar";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["StartConnection"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["StartedConnection"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_connection_api_me_connections__name__complete_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                name: "withings" | "oura" | "whoop" | "polar";
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteConnection"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ServiceSyncResult"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    disconnect_api_me_connections__name__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                name: "withings" | "oura" | "whoop" | "polar";
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Connections"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    sync_api_me_connections_sync_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncResult"];
                 };
             };
             /** @description Validation Error */

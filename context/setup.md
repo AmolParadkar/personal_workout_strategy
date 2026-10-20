@@ -25,6 +25,8 @@ Live addresses:
 | Supabase **publishable** key (`sb_publishable_…`, the default one) | No | `backend/.env`, `frontend/.env`, both Vercel projects | Safe in the website; access rules protect the data |
 | Supabase **secret** key **`backend-api`** (`sb_secret_…`) | **Yes** | `backend/.env` only | Bypasses all access rules. Used by integration tests; **not** on Vercel |
 | Supabase database password | **Yes** | Amol's password manager | Rarely needed; the CLI login covers migrations |
+| `CONNECTOR_ENCRYPTION_KEY` | **Yes** | `backend/.env`, API Vercel project | Encrypts the services' access keys. Make it once (command in `backend/.env.example`). **Changing it means everyone reconnects** |
+| `WITHINGS_` / `OURA_` / `WHOOP_` / `POLAR_` `CLIENT_ID` and `CLIENT_SECRET` | ID no, secret **yes** | `backend/.env`, API Vercel project | From each service's developer app ([how](data-sources.md#setting-up-a-services-developer-app-amol-once)). A service without them shows "Not set up yet" |
 
 Rules:
 
@@ -117,6 +119,10 @@ Full details: [Architecture: Deployment](architecture.md#deployment).
 ## Apple Health
 
 Each person builds the iOS Shortcut once: [apple-health-shortcut.md](apple-health-shortcut.md). The connection token is created in **Settings → Apple Health**; making a new one stops the old one, so paste the new one into the Shortcut.
+
+## Connected services
+
+Withings, Oura, Whoop and Polar each need a developer app (once, Amol): [data-sources.md](data-sources.md#setting-up-a-services-developer-app-amol-once). Then each person taps **Connect** in Settings → Connected services. New data is fetched when the app opens (at most every 3 hours) or with **Sync now**.
 
 ## Troubleshooting
 

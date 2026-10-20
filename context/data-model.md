@@ -31,18 +31,21 @@ Status: **Built** (migrations `20261020115531_profiles_and_settings.sql`, `20261
 
 ## Health data
 
-Used by: [Summary](pages/summary.md), [Progress](pages/progress.md), [Settings / Profile](pages/settings-profile.md) (body weight). Sources: the iOS Shortcut ([apple-health-shortcut.md](apple-health-shortcut.md)), manual entry, wearables later.
+Used by: [Summary](pages/summary.md), [Progress](pages/progress.md), [Settings / Profile](pages/settings-profile.md) (body weight). Sources: the iOS Shortcut ([apple-health-shortcut.md](apple-health-shortcut.md)), manual entry, and direct connections to Withings, Oura, Whoop and Polar ([data-sources.md](data-sources.md#connectors-design)).
 
-Status: **Built** (migration `20261020162050_health_data_water_and_tokens.sql`).
+Status: **Built** (migrations `20261020162050_health_data_water_and_tokens.sql`, `20261020173625_service_connections.sql`).
 
 | Table | Key fields | Purpose |
 |---|---|---|
-| `health_samples` | `profile_id`, `metric`, `recorded_on` (local day), `value`, `recorded_at` (exact time, for bedtime / wake time / weigh-ins), `source` (apple_health / manual); unique per person, metric, day and source | One generic table for every measurement. **One value per metric per day per source**: re-sending a day replaces it. New metrics or wearables need no new tables. |
+| `health_samples` | `profile_id`, `metric`, `recorded_on` (local day), `value`, `recorded_at` (exact time, for bedtime / wake time / weigh-ins), `source` (apple_health / manual / withings / oura / whoop / polar); unique per person, metric, day and source | One generic table for every measurement. **One value per metric per day per source**: re-sending a day replaces it. New metrics or wearables need no new tables. |
 | `ingest_tokens` | `profile_id` (one per person), `token_hash` (SHA-256), `last_used_at` | The iOS Shortcut's connection token. Only the hash is stored; the token is shown once. Private even within the household; the hash column is never readable. |
+| `service_connections` | `profile_id`, `service` (withings / oura / whoop / polar; one row per person per service), `access_token_enc`, `refresh_token_enc`, `expires_at`, `external_user_id`, `connected_at`, `last_synced_at`, `last_sync_error`, `needs_reconnect` | A direct connection. The service's keys are **encrypted by the API** (`CONNECTOR_ENCRYPTION_KEY`) and the key columns are never readable through the table; the household can read the status. |
 
-- **Metrics:** `steps`, `active_energy_kcal`, `walking_running_km`, `sleep_in_bed_minutes`, `sleep_asleep_minutes`, `bedtime`, `wake_time` (time only, in `recorded_at`), `weight_kg`, `resting_hr`, `hrv_ms`, `vo2_max`. Units are fixed per metric (in the name). Allowed ranges are in `backend/core/models/health_data.py`.
+- **Metrics:** `steps`, `active_energy_kcal`, `walking_running_km`, `sleep_in_bed_minutes`, `sleep_asleep_minutes`, `sleep_deep_minutes`, `sleep_rem_minutes`, `sleep_light_minutes`, `sleep_score`, `bedtime`, `wake_time` (time only, in `recorded_at`), `weight_kg`, `body_fat_pct`, `muscle_mass_kg`, `resting_hr`, `hrv_ms`, `vo2_max`, `systolic_mmhg`, `diastolic_mmhg`, `readiness_score` (Oura), `recovery_score` and `strain` (Whoop). Units are fixed per metric (in the name). Allowed ranges are in `backend/core/models/health_data.py`.
 - **For sleep, `recorded_on` is the morning you woke up**; for daily totals it's the day they happened.
 - Access: the household can read measurements; each person can add or correct only their own (manual weigh-ins). Shortcut data goes through the database function `public.ingest_health_samples(token, samples)`, which checks the token hash and saves only for that token's profile, so the API needs no secret key.
+- **Connected services** write through `public.save_service_samples(service, samples)`, which saves only for the caller and only for a service they've connected. Keys are saved with `public.save_service_connection(...)` and read back (still encrypted) with `public.my_service_connection_keys()`, both limited to the caller's own connections.
+- **Same metric from several sources:** every source is kept; pages pick one per metric with the preference order in `backend/core/connectors/__init__.py` (`SOURCE_PREFERENCE`): the specialist device first. `AI_ALLOWED` there says which sources' data may go to the LLM.
 
 Daily and weekly figures (averages, trends, baselines) are calculated from `health_samples`, not stored separately, unless performance later requires it.
 

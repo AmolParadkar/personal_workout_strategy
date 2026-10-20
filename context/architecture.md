@@ -42,6 +42,7 @@ exercise database (imported once), nutrition databases (imported once).
 | Worker | `backend/worker/` | Mac (now); cloud host later | Processes queued jobs, including all local-only (private) jobs. |
 | Database, auth, storage | `supabase/migrations/` | Supabase | Source of all data; access rules per login. |
 | Health data intake | iOS Shortcut ([guide](apple-health-shortcut.md)) | Each iPhone | Sends Apple Health data to the API daily. |
+| Direct connectors (M3b) | `backend/core/connectors/` | API on app open; Mac worker daily after M4 | Fetch Withings, Oura, Whoop and Polar data with each person's OAuth connection ([design](data-sources.md#connectors-design)). |
 
 ## What the frontend may talk to
 
@@ -76,6 +77,11 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `POST /api/me/seventy-five-hard/stop` | Stop the running challenge |
 | `POST /api/ingest/health` | Apple Health data from the iOS Shortcut (connection token, not sign-in); replies `saved` and `skipped` |
 | `GET` / `POST` / `DELETE /api/me/health-connection` | Connection status; create a token (shown once, replaces the old one); disconnect |
+| `GET /api/profiles/{id}/connections` | Each service's status (available, connected, last sync, error); `can_edit` only for your own |
+| `POST /api/me/connections/{service}/start` | The service's sign-in address (with a signed 10-minute `state`); 409 if its developer app isn't set up |
+| `POST /api/me/connections/{service}/complete` | Swap the returned code for keys, save them encrypted, fetch the last 30 days |
+| `POST /api/me/connections/sync` | Fetch new data from your connections (only those not synced for 3 hours, unless `force`; just one with `service`). Called on app open, by the header's Refresh button (`force`) and by Sync now (`force` + `service`) |
+| `DELETE /api/me/connections/{service}` | Cancel access at the service where possible and delete the keys (fetched data stays) |
 | `GET /api/profiles/{id}/water?day=` | Water for a local day, with total and target; `can_edit` only for your own |
 | `POST /api/me/water`, `DELETE /api/me/water/{id}?day=` | Log a glass (reaching 3.8 L ticks the 75 Hard water item); undo |
 | `GET /api/profiles/{id}/weight`, `POST /api/me/weight` | Latest body weight; log today's (corrects, not duplicates) |
@@ -114,6 +120,8 @@ Website → API → database → API returns data shaped for that page → websi
 2. The API checks each sample on its own (allowed metric, sensible range; numbers like `"8,421"` or `"78.4 kg"` are accepted). Bad or missing ones are **skipped with a reason**, so they don't lose the rest of the day.
 3. The API passes the valid samples to the database function `public.ingest_health_samples`, which looks up the token's **hash**, saves the samples for that person only (replacing any already sent for the same day), and records when the token was last used. The API needs no secret key for this.
 4. The reply lists `saved` and `skipped`; a wrong or replaced token gets `401`.
+
+Direct connectors ([M3b](roadmap.md#m3b--direct-connectors)) write to the same `health_samples` table with `source` set to the service; they sync when the person opens the app, and daily on the Mac after M4. Design: [data-sources.md](data-sources.md#connectors-design).
 
 ## Job types
 
@@ -180,6 +188,7 @@ Two Vercel projects, both built from the GitHub repo's `main` branch on every pu
 - Current variables:
   - `frontend/.env`: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the **default** publishable key; public, protected by the access rules). Only `EXPO_PUBLIC_` variables reach the website, and everything there is visible to visitors.
   - `backend/.env`: `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (a secret key named **`backend-api`** in Supabase).
+- Direct connectors (M3b): one OAuth client ID and secret per connected service (`WITHINGS_CLIENT_ID`, `WITHINGS_CLIENT_SECRET`, and the same for `OURA_`, `WHOOP_`, `POLAR_`) and `CONNECTOR_ENCRYPTION_KEY`, in `backend/.env` and the API's Vercel settings. These are not Supabase keys.
 - **One named secret key per component**, so a leaked key can be revoked without breaking the others: `backend-api` now; `mac-worker` for the worker in M4.
 - Secret keys are never pasted into chat or logs.
 - Keys that can read all data (Supabase service key) are only used by the API and worker, never by the website.
