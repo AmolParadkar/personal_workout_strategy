@@ -19,6 +19,11 @@ How code and docs are written in this project, so everything reads as if one per
 - **FastAPI** for the API. Routes are thin: validate, call `core`, return.
 - Names: `snake_case` for files, functions and variables; `PascalCase` for classes.
 - **pytest** for tests in `backend/tests/`, mirroring the `core/` layout.
+- Packages `api`, `core` and `worker` are top-level inside `backend/`, so imports read `from core.models.health import HealthResponse`.
+- Commands (run inside `backend/`):
+  - `uv run pytest`: run the tests
+  - `uv run ruff check .` and `uv run ruff format .`: lint and format
+  - `uv run uvicorn api.main:app --reload`: run the API locally at http://localhost:8000 (interactive docs at `/docs`)
 
 ## TypeScript (`frontend/`)
 

@@ -1,0 +1,29 @@
+[project]
+name = "workout-strategy-backend"
+version = "0.1.0"
+description = "API and worker for the personal workout strategy app"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.151.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx2>=2.15.1",
+    "pytest>=9.1.1",
+    "ruff>=0.17.1",
+    "uvicorn>=0.54.0",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# E/F: pycodestyle + pyflakes, I: import sorting, UP: modern syntax, B: likely bugs
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+# Run from backend/ so `api`, `core` and `worker` import as top-level packages
+pythonpath = ["."]
+testpaths = ["tests"]
