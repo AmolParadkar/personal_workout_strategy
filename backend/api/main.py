@@ -10,6 +10,7 @@ from api.routes import (
     profiles,
     settings,
     seventy_five_hard,
+    workouts,
 )
 from core import __version__
 from core.config import get_settings
@@ -33,6 +34,7 @@ app.include_router(health_data.router)
 app.include_router(connections.router)
 app.include_router(jobs.router)
 app.include_router(exercises.router)
+app.include_router(workouts.router)
 
 
 @app.exception_handler(NotSignedInError)

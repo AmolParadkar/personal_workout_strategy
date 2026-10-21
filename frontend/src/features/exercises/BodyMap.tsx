@@ -32,10 +32,13 @@ export function BodyMap({
   primary,
   secondary,
   gender,
+  labels = ['Primary', 'Secondary'],
 }: {
   primary: string[];
   secondary: string[];
   gender: 'male' | 'female';
+  // Legend for dark red and light red.
+  labels?: [string, string];
 }) {
   const { colors, mode } = useTheme();
   const data = bodyMapData(primary, secondary);
@@ -53,7 +56,7 @@ export function BodyMap({
       <View
         style={styles.bodies}
         role="img"
-        aria-label={`Muscles worked. Primary: ${primary.join(', ') || 'none'}. Secondary: ${secondary.join(', ') || 'none'}.`}
+        aria-label={`Body map. ${labels[0]}: ${primary.join(', ') || 'none'}. ${labels[1]}: ${secondary.join(', ') || 'none'}.`}
       >
         <View style={styles.side}>
           <Body {...common} side="front" />
@@ -65,8 +68,8 @@ export function BodyMap({
         </View>
       </View>
       <View style={styles.legend}>
-        <Legend color={PRIMARY_RED} label="Primary" />
-        <Legend color={SECONDARY_RED} label="Secondary" />
+        <Legend color={PRIMARY_RED} label={labels[0]} />
+        <Legend color={SECONDARY_RED} label={labels[1]} />
       </View>
     </View>
   );

@@ -16,6 +16,7 @@ import {
   dayOptions,
   dietTypeOptions,
   equipmentOptions,
+  experienceOptions,
   goalMetricOptions,
   goalOptions,
   locationOptions,
@@ -139,6 +140,17 @@ export function TrainingFields({ draft, onChange, disabled }: Props<TrainingDraf
           options={locationOptions}
           selected={draft.location}
           onChange={(location) => onChange({ location })}
+          disabled={disabled}
+        />
+      </Field>
+      <Field
+        label="Training experience"
+        hint="Beginner: under a year of regular training. Sets how hard the exercises are and the starting volume."
+      >
+        <ChipSelect
+          options={experienceOptions}
+          selected={draft.experience}
+          onChange={(experience) => onChange({ experience })}
           disabled={disabled}
         />
       </Field>

@@ -25,7 +25,7 @@ Live addresses:
 | Supabase **publishable** key (`sb_publishable_…`, the default one) | No | `backend/.env`, `frontend/.env`, both Vercel projects | Safe in the website; access rules protect the data |
 | Supabase **secret** key **`backend-api`** (`sb_secret_…`) | **Yes** | `backend/.env` only | Bypasses all access rules. Used by integration tests; **not** on Vercel |
 | Supabase **secret** key **`mac-worker`** (`sb_secret_…`) | **Yes** | `backend/.env` only (`MAC_WORKER_SECRET_KEY`) | Used only by the Mac worker; **not** on Vercel |
-| Groq API key (`gsk_…`) | **Yes** | `backend/.env` only (`GROQ_API_KEY`) | Used by the Mac worker for cloud Qwen |
+| Groq API key (`gsk_…`) | **Yes** | `backend/.env` (`GROQ_API_KEY`) and the **API's Vercel project** | Cloud Qwen: the Mac worker, and quick plan generation on Vercel. Free tier: 1,000 requests and about 1,000 output tokens a minute for Qwen |
 | YouTube Data API key | **Yes** | `backend/.env` only (`YOUTUBE_API_KEY`) | Used by the Mac worker to find exercise videos; restrict it to the YouTube Data API |
 | ntfy topic | Keep private | Supabase Vault (`ntfy_topic`) and the ntfy app | Anyone with the name can read the alerts |
 | Supabase database password | **Yes** | Amol's password manager | Rarely needed; the CLI login covers migrations |

@@ -81,11 +81,16 @@ Design: [data-sources.md](data-sources.md#connectors-design). Built and deployed
 
 ## M6 — Workout plans
 
-- [ ] Workout tables (plans, sessions, items, logs, completions)
-- [ ] Plan generation job with the five phases
-- [ ] [Workout Plan](pages/workout-plan.md): weekly view, change + preview, swaps, muscle coverage, body weight input
-- [ ] [Plan for Today](pages/plan-for-today.md) workout section: logging sets, effort feedback, streak
-- [ ] Progressive overload in the next week's plan
+Built in two parts. Part 1 (plans) is done; part 2 (doing the workout) is next.
+
+- [x] Workout tables (plans, sessions, items, logs, completions); training experience in Settings
+- [x] Plan generation with the five phases: rules + Groq on Vercel, Mac worker backup (Groq → Ollama → rules)
+- [x] [Workout Plan](pages/workout-plan.md): weekly view, new plan with preview, swaps, muscle coverage, body weight input
+- [x] Exercise Guide: this week's exercises by day and phase
+- [x] `GROQ_API_KEY` on the API's Vercel project (Amol), so plans are made straight away
+- [ ] Part 2: [Plan for Today](pages/plan-for-today.md) workout section: logging sets, effort feedback, streak
+- [ ] Part 2: progressive overload in the next week's plan
+- [ ] Part 2: change requests (add a session, mark a day unavailable) with preview of what moves
 
 ## M7 — Nutrition
 

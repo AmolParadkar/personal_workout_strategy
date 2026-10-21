@@ -16,6 +16,7 @@ import { ApiError, apiGet, type Schemas } from '@/lib/api';
 import { radius, spacing, useTheme } from '@/theme';
 
 import { equipmentOptions, muscleLabel, muscles } from './muscles';
+import { WeekExercises } from './WeekExercises';
 
 type ExerciseList = Schemas['ExerciseList'];
 type Summary = Schemas['ExerciseSummary'];
@@ -97,9 +98,10 @@ export function ExerciseLibraryScreen() {
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.text }]}>{pages.exerciseGuide.title}</Text>
         <Text style={[styles.description, { color: colors.textMuted }]}>
-          How to do each exercise: muscles worked, form cues, precautions and a short video. Once
-          workout plans arrive, this week’s exercises will be listed here first.
+          How to do each exercise: muscles worked, form cues, precautions and a short video.
         </Text>
+
+        <WeekExercises />
 
         <TextField
           label="Search exercises"

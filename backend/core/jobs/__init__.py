@@ -22,6 +22,8 @@ class JobDb(Protocol):
 
     async def update(self, table: str, filters: dict[str, str], values: dict[str, Any]) -> None: ...
 
+    async def rpc(self, function: str, args: dict[str, Any]) -> Any: ...
+
 
 @dataclass
 class JobContext:
@@ -66,4 +68,4 @@ def register(spec: JobSpec) -> JobSpec:
 
 
 # Imported for their register() calls.
-from core.jobs import exercise_guide, exercise_video, test_echo  # noqa: E402, F401
+from core.jobs import exercise_guide, exercise_video, test_echo, workout_plan  # noqa: E402, F401

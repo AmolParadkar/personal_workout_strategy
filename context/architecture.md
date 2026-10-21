@@ -86,6 +86,10 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `GET /api/exercises/{id}` | One exercise with guide and video, and whether each is ready, preparing, failed or not found |
 | `POST /api/exercises/{id}/video-feedback` | "Is this the right video?": `right` confirms it; `wrong` + reason searches again straight away, avoiding rejected videos (409 if the video changed meanwhile) |
 | `POST /api/exercises/{id}/prepare` | Queue the guide and video jobs it still needs (once; not again within a day of a failure) |
+| `GET /api/profiles/{id}/workout-plan?week_start=` | The week's active plan (and your draft preview), with muscle coverage; `generating` while the worker makes one |
+| `POST /api/me/workout-plan/generate` | Make this week's plan from `today` (`new_week`: only if the week has none; `requested`: a preview if one exists) |
+| `POST /api/me/workout-plans/{id}/apply`, `DELETE /api/me/workout-plans/{id}` | Use the previewed draft; or discard it |
+| `GET /api/me/session-items/{id}/alternatives`, `PUT /api/me/session-items/{id}/exercise` | Swaps for an exercise in your plan; make a swap |
 | `GET /api/jobs/{id}` | A job's status and result (household's jobs) |
 | `POST /api/me/jobs/{id}/retry` | Put your own failed job back in the queue |
 | `GET /api/worker-status` | Mac worker online (seen in 3 minutes), Ollama running, household jobs waiting |
@@ -118,9 +122,9 @@ Website → API → database → API returns data shaped for that page → websi
 
 ### Regenerating a plan
 
-1. Person asks for a new plan (or a confirmed change triggers one). The API creates a job.
-2. Quick attempt on Vercel; otherwise the worker processes it.
-3. The result is saved as a **draft** plan, shown as a preview; it becomes active only when the person confirms.
+1. A new week without a plan (app open), "Make a new plan", or later a confirmed change.
+2. The API reads the person's settings and the library, and tries Groq straight away (25 s budget); otherwise it queues `generate_workout_plan` and the Mac worker makes it (Groq → Ollama → rules).
+3. The whole plan is saved at once (`save_workout_plan`): **active** if the week had none, otherwise a **draft** shown as a preview, which becomes active only when the person confirms.
 
 ### Daily health data
 
@@ -136,7 +140,7 @@ Direct connectors ([M3b](roadmap.md#m3b--direct-connectors)) write to the same `
 | Job | Triggered by | Where it runs | Uses |
 |---|---|---|---|
 | `analyse_food_photo` | Plan for Today | Vercel first, then worker | Cloud Qwen vision (Ollama backup) |
-| `generate_workout_plan` | Workout Plan, confirmed facts, disruptions | Vercel first, then worker | Cloud Qwen |
+| `generate_workout_plan` | New week (app open), "Make a new plan"; later confirmed facts, disruptions | Vercel first (Groq, 25 s), then worker (Groq → Ollama → rules) | Cloud Qwen; rules always as the last resort ([how](pages/workout-plan.md#as-built-m6-part-1)) |
 | `generate_meal_plan` | Nutrition Plan, confirmed facts, disruptions | Vercel first, then worker | Cloud Qwen |
 | `extract_document_facts` | Personal Artifacts upload | **Worker only (local)** unless "Process in cloud now" | Ollama (Qwen vision) |
 | `analyse_progress_photo` | Progress | Open question: local or cloud | Qwen vision |
@@ -198,6 +202,7 @@ Two Vercel projects, both built from the GitHub repo's `main` branch on every pu
 - Current variables:
   - `frontend/.env`: `EXPO_PUBLIC_SUPABASE_URL`, `EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY` (the **default** publishable key; public, protected by the access rules). Only `EXPO_PUBLIC_` variables reach the website, and everything there is visible to visitors.
   - `backend/.env`: `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (a secret key named **`backend-api`** in Supabase).
+- `GROQ_API_KEY` (and optional `GROQ_MODEL`) on the **API's Vercel project** too, for quick plan generation (M6). Without it, plans are made by the Mac worker.
 - Direct connectors (M3b): one OAuth client ID and secret per connected service (`WITHINGS_CLIENT_ID`, `WITHINGS_CLIENT_SECRET`, and the same for `OURA_`, `WHOOP_`, `POLAR_`) and `CONNECTOR_ENCRYPTION_KEY`, in `backend/.env` and the API's Vercel settings. These are not Supabase keys.
 - **One named secret key per component**, so a leaked key can be revoked without breaking the others: `backend-api` (integration tests) and `mac-worker` (`MAC_WORKER_SECRET_KEY`, the worker only; never on Vercel).
 - Secret keys are never pasted into chat or logs.

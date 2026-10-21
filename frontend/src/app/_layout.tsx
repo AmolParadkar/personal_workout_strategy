@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from '@/features/auth/AuthContext';
 import { ProfileProvider } from '@/features/profile/ProfileContext';
 import { WorkerNotice } from '@/features/jobs/WorkerNotice';
 import { useSyncConnectionsOnOpen } from '@/features/settings/syncOnOpen';
+import { useEnsureWeekPlanOnOpen } from '@/features/workouts/plans';
 import { maxContentWidth, spacing, ThemeProvider, useTheme } from '@/theme';
 
 const SIGN_IN_PATH = '/sign-in';
@@ -72,6 +73,7 @@ function AuthGate() {
 function AppFrame() {
   const { colors } = useTheme();
   useSyncConnectionsOnOpen();
+  useEnsureWeekPlanOnOpen();
   // Bumped by the Refresh button: re-mounting the page makes it load its data again.
   const [pageKey, setPageKey] = useState(0);
   const [notice, setNotice] = useState<{ text: string; problem: boolean } | null>(null);
