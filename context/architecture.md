@@ -90,6 +90,12 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `POST /api/me/workout-plan/generate` | Make this week's plan from `today` (`new_week`: only if the week has none; `requested`: a preview if one exists) |
 | `POST /api/me/workout-plans/{id}/apply`, `DELETE /api/me/workout-plans/{id}` | Use the previewed draft; or discard it |
 | `GET /api/me/session-items/{id}/alternatives`, `PUT /api/me/session-items/{id}/exercise` | Swaps for an exercise in your plan; make a swap |
+| `GET /api/profiles/{id}/workout-today?day=[&session_id=]` | Today's session (or an earlier undone one this week), logged sets, completion, earlier undone sessions, streak |
+| `PUT /api/me/exercise-logs`, `DELETE /api/me/exercise-logs/{id}` | Save a set (again: corrects it); remove one |
+| `POST` / `DELETE /api/me/sessions/{id}/complete` | Finish a workout with an effort rating (again: re-rates); undo |
+| `POST /api/me/workout-plan/changes` | A change (day off, extra or shorter session, vacation, cheat meal, medical, something else): returns the week with a preview, or a message if it's for a later week |
+| `POST /api/me/plan-changes/{id}/end` | "I'm back" after a medical pause: previews the rest of the week, lighter |
+| `GET /api/me/core-lift-options?today=&search=` | Compound lifts you can do, for choosing core lifts |
 | `GET /api/jobs/{id}` | A job's status and result (household's jobs) |
 | `POST /api/me/jobs/{id}/retry` | Put your own failed job back in the queue |
 | `GET /api/worker-status` | Mac worker online (seen in 3 minutes), Ollama running, household jobs waiting |

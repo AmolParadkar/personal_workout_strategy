@@ -53,7 +53,7 @@ Daily and weekly figures (averages, trends, baselines) are calculated from `heal
 
 Used by: [Workout Plan](pages/workout-plan.md), [Plan for Today](pages/plan-for-today.md), [Exercise Guide](pages/exercise-guide.md).
 
-Status: plans, sessions and items **built** (migration `20261021120550_workout_plans.sql`, M6 part 1); logs and completions tables exist, used from M6 part 2. Access: the household reads everything; each person changes only their own. `training_preferences.experience` (beginner / intermediate / advanced) was added in the same migration.
+Status: plans, sessions and items **built** (migration `20261021120550_workout_plans.sql`, M6 part 1); logs and completions tables exist, used from M6 part 2. Access: the household reads everything; each person changes only their own. `training_preferences.experience` (beginner / intermediate / advanced) was added in the same migration. M6 part 2 (`20261021131124_workout_tracking.sql`): `training_preferences.core_exercises` (up to 8 exercise ids), `workout_plans.block_start` (6-week block), `plan_changes`, and saving an active plan or applying a draft moves that week's completions and logged sets to the new plan (`private.move_progress`).
 
 | Table | Key fields | Purpose |
 |---|---|---|
@@ -62,6 +62,7 @@ Status: plans, sessions and items **built** (migration `20261021120550_workout_p
 | `workout_plans` | `profile_id`, `week_start` (a Monday), `status` (draft / active / superseded), `rationale`, `made_by` (e.g. `groq:…`, `ollama:…`, `rules`), `reason` (new_week / requested / change) | One **active** plan per person per week (unique), at most one draft. Saved whole by `public.save_workout_plan(profile, week, status, plan)` (all or nothing; signed-in people only for themselves); `public.apply_workout_plan(id)` makes a draft active and the old one superseded. |
 | `workout_sessions` | `plan_id`, `profile_id`, `day`, `title`, `focus` (full_body / upper / lower / push / pull / legs), `minutes`, `explanation` | One per training day. |
 | `session_items` | `session_id`, `profile_id`, `phase` (cardio / mobility / activation / main / cooldown), `position`, `exercise_id`, `sets`, `reps_min`, `reps_max`, `duration_seconds`, `rest_seconds`, `target_load_kg`, `notes` | The five-phase structure. People can swap their own items' exercises. |
+| `plan_changes` | `profile_id`, `kind` (day_off / add_session / shorter / vacation / cheat_meal / medical / other), `start_date`, `end_date` (empty: medical pause until "I'm back"), `minutes`, `vacation_mode` (rest / travel), `cheat_mode` (spread / as_planned), `note`, `details` (the LLM's reading of "other"), `status` (pending / applied / discarded), `draft_plan_id` | Changes to the plan. Pending while previewed; applied with the draft (or straight away for later weeks); applied ones keep shaping later plans. Household reads; each person changes their own. |
 | `exercise_logs` | `profile_id`, `session_item_id`, `exercise_id`, `set_number`, `reps`, `load_kg`, `duration_seconds`, `logged_at` | What was actually done; drives progressive overload and load capacity. |
 | `session_completions` | `profile_id`, `session_id`, `done_on`, `completed_at`, `effort` (easy / right / too_hard) | Workout streak and effort feedback. |
 

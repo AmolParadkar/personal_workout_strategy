@@ -18,12 +18,10 @@ export function useProfileSettings(profileId: string) {
     let cancelled = false;
     apiGet<Settings>(`/api/profiles/${profileId}/settings`)
       .then((settings): SettingsState => ({ status: 'ready', settings }))
-      .catch(
-        (error): SettingsState => ({
-          status: 'error',
-          message: error instanceof Error ? error.message : 'Couldn’t load settings.',
-        }),
-      )
+      .catch((error): SettingsState => ({
+        status: 'error',
+        message: error instanceof Error ? error.message : 'Couldn’t load settings.',
+      }))
       .then((state) => {
         if (!cancelled) setLoaded({ profileId, state });
       });

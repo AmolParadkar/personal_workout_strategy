@@ -60,6 +60,7 @@ DataSource = Literal[
 
 DAY_ORDER: list[str] = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
+ExerciseId = Annotated[str, Field(pattern=r"^[A-Za-z0-9_-]{1,100}$")]
 DisplayName = Annotated[str, Field(min_length=1, max_length=50)]
 HeightCm = Annotated[float, Field(ge=50, le=260)]
 ShortTag = Annotated[str, Field(min_length=1, max_length=40)]
@@ -94,6 +95,8 @@ class TrainingPreferences(BaseModel):
     minutes_per_session: int | None
     location: Location | None
     experience: Experience | None = None
+    # Core lifts: always in the plan, never rotated (exercise library ids).
+    core_exercises: list[str] = []
 
 
 class DietPreferences(BaseModel):
@@ -162,8 +165,9 @@ class TrainingPreferencesUpdate(BaseModel):
     minutes_per_session: Annotated[int, Field(ge=5, le=300)] | None = None
     location: Location | None = None
     experience: Experience | None = None
+    core_exercises: Annotated[list[ExerciseId], Field(max_length=8)] | None = None
 
-    @field_validator("equipment")
+    @field_validator("equipment", "core_exercises")
     @classmethod
     def unique_equipment(cls, value: list[str] | None) -> list[str] | None:
         return _unique(value) if value is not None else value

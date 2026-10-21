@@ -680,6 +680,26 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/core-lift-options": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Core Lift Options
+         * @description Compound lifts you can do with your equipment and level, to choose core lifts.
+         */
+        get: operations["core_lift_options_api_me_core_lift_options_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/me/session-items/{item_id}/alternatives": {
         parameters: {
             query?: never;
@@ -720,6 +740,126 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profiles/{profile_id}/workout-today": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Workout Today
+         * @description The workout for `day` (the viewer's local date), or an earlier undone session
+         *     this week by `session_id`; with logged sets, completion and the streak.
+         */
+        get: operations["workout_today_api_profiles__profile_id__workout_today_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/exercise-logs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Log Set
+         * @description Save a set (reps, kg or time). Saving the same set again corrects it.
+         */
+        put: operations["log_set_api_me_exercise_logs_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/exercise-logs/{log_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** Delete Set */
+        delete: operations["delete_set_api_me_exercise_logs__log_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/sessions/{session_id}/complete": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Complete Session
+         * @description Mark a workout done, with how hard it felt (sent again: updates the rating).
+         */
+        post: operations["complete_session_api_me_sessions__session_id__complete_post"];
+        /** Undo Complete */
+        delete: operations["undo_complete_api_me_sessions__session_id__complete_delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/workout-plan/changes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Request Change
+         * @description Ask for a change (day off, extra or shorter session, vacation, cheat meal,
+         *     medical pause, something else). Returns the week with a preview to apply.
+         */
+        post: operations["request_change_api_me_workout_plan_changes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/plan-changes/{change_id}/end": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * End Change
+         * @description "I'm back" after a medical pause: previews the rest of the week, lighter.
+         */
+        post: operations["end_change_api_me_plan_changes__change_id__end_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -751,6 +891,21 @@ export interface components {
              */
             date: string;
         };
+        /**
+         * CatchUp
+         * @description An earlier session this week that isn't done yet (it can still be done).
+         */
+        CatchUp: {
+            /** Session Id */
+            session_id: string;
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Title */
+            title: string;
+        };
         /** ChecklistItem */
         ChecklistItem: {
             /**
@@ -774,6 +929,26 @@ export interface components {
              * Format: date
              */
             today: string;
+        };
+        /** CompleteSession */
+        CompleteSession: {
+            /**
+             * Done On
+             * Format: date
+             */
+            done_on: string;
+            /** Effort */
+            effort?: ("easy" | "right" | "too_hard") | null;
+        };
+        /** Completion */
+        Completion: {
+            /**
+             * Done On
+             * Format: date
+             */
+            done_on: string;
+            /** Effort */
+            effort: ("easy" | "right" | "too_hard") | null;
         };
         /** Connections */
         Connections: {
@@ -843,6 +1018,14 @@ export interface components {
             show_calorie_intake?: boolean | null;
             /** Show Calories Burned */
             show_calories_burned?: boolean | null;
+        };
+        /** EndChange */
+        EndChange: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
         };
         /** ExerciseDetail */
         ExerciseDetail: {
@@ -1031,6 +1214,19 @@ export interface components {
             /** Finished At */
             finished_at?: string | null;
         };
+        /** LogSet */
+        LogSet: {
+            /** Session Item Id */
+            session_item_id: string;
+            /** Set Number */
+            set_number: number;
+            /** Reps */
+            reps?: number | null;
+            /** Load Kg */
+            load_kg?: number | null;
+            /** Duration Seconds */
+            duration_seconds?: number | null;
+        };
         /** LogWeight */
         LogWeight: {
             /** Kg */
@@ -1067,6 +1263,8 @@ export interface components {
              * Format: date
              */
             week_start: string;
+            /** Block Start */
+            block_start?: string | null;
             /**
              * Status
              * @enum {string}
@@ -1087,6 +1285,60 @@ export interface components {
             sessions: components["schemas"]["PlanSession"][];
             /** Coverage */
             coverage: components["schemas"]["MuscleSets"][];
+        };
+        /** PlanChange */
+        PlanChange: {
+            /** Id */
+            id: string;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "day_off" | "add_session" | "shorter" | "vacation" | "cheat_meal" | "medical" | "other";
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date: string | null;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "pending" | "applied" | "discarded";
+            /** Summary */
+            summary: string;
+            /** Can End */
+            can_end: boolean;
+        };
+        /** PlanChangeRequest */
+        PlanChangeRequest: {
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "day_off" | "add_session" | "shorter" | "vacation" | "cheat_meal" | "medical" | "other";
+            /**
+             * Start Date
+             * Format: date
+             */
+            start_date: string;
+            /** End Date */
+            end_date?: string | null;
+            /** Minutes */
+            minutes?: number | null;
+            /** Vacation Mode */
+            vacation_mode?: ("rest" | "travel") | null;
+            /** Cheat Mode */
+            cheat_mode?: ("spread" | "as_planned") | null;
+            /** Note */
+            note?: string | null;
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
         };
         /** PlanItem */
         PlanItem: {
@@ -1281,6 +1533,21 @@ export interface components {
             /** Checked */
             checked: boolean;
         };
+        /** SetLog */
+        SetLog: {
+            /** Id */
+            id: string;
+            /** Session Item Id */
+            session_item_id: string;
+            /** Set Number */
+            set_number: number;
+            /** Reps */
+            reps: number | null;
+            /** Load Kg */
+            load_kg: number | null;
+            /** Duration Seconds */
+            duration_seconds: number | null;
+        };
         /**
          * SeventyFiveHardState
          * @description Everything the 75 Hard page shows for one person.
@@ -1382,6 +1649,26 @@ export interface components {
              */
             fail_times: number;
         };
+        /** TodayWorkout */
+        TodayWorkout: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            /** Has Plan */
+            has_plan: boolean;
+            session: components["schemas"]["PlanSession"] | null;
+            /** Logs */
+            logs: components["schemas"]["SetLog"][];
+            completion: components["schemas"]["Completion"] | null;
+            /** Catch Up */
+            catch_up: components["schemas"]["CatchUp"][];
+            /** Streak */
+            streak: number;
+            /** Can Edit */
+            can_edit: boolean;
+        };
         /** TrainingPreferences */
         TrainingPreferences: {
             /** Equipment */
@@ -1394,6 +1681,11 @@ export interface components {
             location: ("home" | "gym" | "travel") | null;
             /** Experience */
             experience?: ("beginner" | "intermediate" | "advanced") | null;
+            /**
+             * Core Exercises
+             * @default []
+             */
+            core_exercises: string[];
         };
         /** TrainingPreferencesUpdate */
         TrainingPreferencesUpdate: {
@@ -1407,6 +1699,8 @@ export interface components {
             location?: ("home" | "gym" | "travel") | null;
             /** Experience */
             experience?: ("beginner" | "intermediate" | "advanced") | null;
+            /** Core Exercises */
+            core_exercises?: string[] | null;
         };
         /** ValidationError */
         ValidationError: {
@@ -1499,6 +1793,13 @@ export interface components {
             generating: boolean;
             /** Can Edit */
             can_edit: boolean;
+            /**
+             * Changes
+             * @default []
+             */
+            changes: components["schemas"]["PlanChange"][];
+            /** Message */
+            message?: string | null;
         };
         /** WeightEntry */
         WeightEntry: {
@@ -2795,6 +3096,40 @@ export interface operations {
             };
         };
     };
+    core_lift_options_api_me_core_lift_options_get: {
+        parameters: {
+            query: {
+                today: string;
+                search?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExerciseSummary"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
     alternatives_api_me_session_items__item_id__alternatives_get: {
         parameters: {
             query?: never;
@@ -2842,6 +3177,254 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": components["schemas"]["SwapExercise"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeekPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    workout_today_api_profiles__profile_id__workout_today_get: {
+        parameters: {
+            query: {
+                day: string;
+                session_id?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayWorkout"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    log_set_api_me_exercise_logs_put: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["LogSet"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SetLog"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    delete_set_api_me_exercise_logs__log_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                log_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    complete_session_api_me_sessions__session_id__complete_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CompleteSession"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayWorkout"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    undo_complete_api_me_sessions__session_id__complete_delete: {
+        parameters: {
+            query: {
+                day: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                session_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TodayWorkout"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    request_change_api_me_workout_plan_changes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PlanChangeRequest"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeekPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    end_change_api_me_plan_changes__change_id__end_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                change_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EndChange"];
             };
         };
         responses: {

@@ -13,6 +13,14 @@
 - After the session: a quick effort rating (easy / right / too hard).
 - Completing the workout counts towards the **workout day streak** on the [Summary](summary.md).
 
+### As built (M6)
+
+- **Today's workout card** (above water): the session's title, length and explanation, then its five phases. Main and activation exercises have a row per set: reps, and kg for main exercises, with the target as a hint (from progressive overload) and the overload note under the exercise; ✓ saves the set (saving again corrects it). Timed moves (warm-up, holds, stretches) have **Mark done**. Exercise names open the Exercise Guide.
+- **Finish workout** asks "How hard was it?" (Easy / Just right / Too hard), which next week's plan uses; afterwards "✓ Workout done · felt …" with **Change rating** and **Undo**.
+- **Streak**: "N planned workouts in a row": rest days don't count; a planned workout not done by the end of its week breaks it (one missed earlier this week can still be done).
+- **Rest day**: says so, and offers any earlier session this week not yet done ("Do Wed: Upper body"), which can be logged today.
+- On the other person's profile it's view-only (their logged sets and whether it's done).
+
 ## Today's meals
 
 - A **recommended meal plan** for the day, taken from the [Nutrition Plan](nutrition-plan.md).

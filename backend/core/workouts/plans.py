@@ -5,7 +5,7 @@ Spec: context/pages/workout-plan.md; flow: context/architecture.md
 
 import asyncio
 from collections import defaultdict
-from datetime import date
+from datetime import date, timedelta
 from typing import Any
 
 import httpx2
@@ -17,6 +17,7 @@ from core.models.workouts import (
     PHASE_ORDER,
     MuscleSets,
     Plan,
+    PlanChange,
     PlanItem,
     PlanSession,
     WeekPlan,
@@ -24,7 +25,13 @@ from core.models.workouts import (
 from core.supabase import SupabaseClient
 from core.workouts import rules
 from core.workouts.generate import build_plan
-from core.workouts.inputs import load_inputs, status_to_save, user_select
+from core.workouts.inputs import (
+    kept_sessions,
+    load_inputs,
+    merge_kept,
+    status_to_save,
+    user_select,
+)
 
 PLAN_JOB = "generate_workout_plan"
 # Leave time inside Vercel's limit to save the plan or queue the job.
@@ -42,7 +49,7 @@ class NotAnAlternativeError(Exception):
 # --- Reading a week -----------------------------------------------------------------
 
 PLAN_SELECT = (
-    "id,week_start,status,rationale,made_by,reason,created_at,"
+    "id,week_start,block_start,status,rationale,made_by,reason,created_at,"
     "workout_sessions(id,day,title,focus,minutes,explanation,"
     "session_items(id,phase,position,exercise_id,sets,reps_min,reps_max,duration_seconds,"
     "rest_seconds,target_load_kg,notes,exercises(name,images,primary_muscles,secondary_muscles)))"
@@ -73,6 +80,7 @@ def to_plan(row: dict[str, Any]) -> Plan:
     return Plan(
         id=row["id"],
         week_start=row["week_start"],
+        block_start=row.get("block_start"),
         status=row["status"],
         rationale=row.get("rationale"),
         made_by=row.get("made_by"),
@@ -142,7 +150,71 @@ async def get_week(
         draft=by_status.get("draft") if can_edit else None,
         generating=await _generating(supabase, token, profile_id, week_start),
         can_edit=can_edit,
+        changes=await week_changes(supabase, token, profile_id, week_start, can_edit),
     )
+
+
+CHANGE_LABELS = {
+    "day_off": "Day off",
+    "add_session": "Extra session",
+    "shorter": "Shorter session",
+    "vacation": "Vacation",
+    "cheat_meal": "Cheat meal",
+    "medical": "Medical pause",
+    "other": "Change",
+}
+
+
+def change_summary(row: dict[str, Any]) -> str:
+    def short(d: str) -> str:
+        return date.fromisoformat(d).strftime("%a %d %b")
+
+    start, end = row["start_date"], row.get("end_date")
+    when = short(start) if not end or end == start else f"{short(start)} – {short(end)}"
+    extra = {
+        "shorter": f" ({row.get('minutes')} min)",
+        "vacation": " (training while away)"
+        if row.get("vacation_mode") == "travel"
+        else " (no training)",
+        "cheat_meal": " (extra load spread over the week)"
+        if row.get("cheat_mode") == "spread"
+        else " (workouts as planned)",
+        "medical": "" if end else " (until you're back)",
+        "other": f": {row.get('note')}" if row.get("note") else "",
+    }.get(row["kind"], "")
+    return f"{CHANGE_LABELS[row['kind']]} {when}{extra}"
+
+
+async def week_changes(
+    supabase: SupabaseClient, token: str, profile_id: str, week_start: date, can_edit: bool
+) -> list[PlanChange]:
+    """Changes affecting this week (applied, plus a pending one being previewed),
+    and any medical pause still running."""
+    week_end = week_start + timedelta(days=6)
+    rows = await supabase.select(
+        "plan_changes",
+        {
+            "select": "id,kind,start_date,end_date,minutes,vacation_mode,cheat_mode,note,status",
+            "profile_id": f"eq.{profile_id}",
+            "status": "in.(applied,pending)" if can_edit else "eq.applied",
+            "start_date": f"lte.{week_end.isoformat()}",
+            "or": f"(end_date.is.null,end_date.gte.{week_start.isoformat()})",
+            "order": "start_date",
+        },
+        token,
+    )
+    return [
+        PlanChange(
+            id=row["id"],
+            kind=row["kind"],
+            start_date=row["start_date"],
+            end_date=row.get("end_date"),
+            status=row["status"],
+            summary=change_summary(row),
+            can_end=can_edit and row["kind"] == "medical" and not row.get("end_date"),
+        )
+        for row in rows
+    ]
 
 
 # --- Making a plan --------------------------------------------------------------------
@@ -169,11 +241,14 @@ async def generate(
     try:
         if llm is None or not llm.groq_api_key:
             raise LlmError("No cloud LLM on the API")
-        inputs = await load_inputs(user_select(supabase, token), profile_id, week_start, today)
+        select = user_select(supabase, token)
+        inputs = await load_inputs(select, profile_id, week_start, today, reason)
         plan = await asyncio.wait_for(
             build_plan(inputs, http, llm, reason, rules_only_if_llm_fails=False),
             budget_seconds,
         )
+        # Days already done this week stay as they were.
+        plan = merge_kept(await kept_sessions(select, profile_id, week_start, today), plan)
         final = await status_to_save(
             user_select(supabase, token), profile_id, week_start, status, reason
         )
@@ -215,6 +290,18 @@ async def apply_draft(supabase: SupabaseClient, token: str, plan_id: str) -> Non
 async def discard_draft(
     supabase: SupabaseClient, token: str, profile_id: str, plan_id: str
 ) -> None:
+    # A change previewed with this draft is dropped with it.
+    await supabase.update(
+        "plan_changes",
+        {
+            "draft_plan_id": f"eq.{plan_id}",
+            "status": "eq.pending",
+            "profile_id": f"eq.{profile_id}",
+        },
+        {"status": "discarded"},
+        token,
+        returning="id",
+    )
     await supabase.delete(
         "workout_plans",
         {"id": f"eq.{plan_id}", "profile_id": f"eq.{profile_id}", "status": "eq.draft"},
@@ -298,3 +385,39 @@ async def swap(
         token,
         returning="id",
     )
+
+
+# --- Choosing core lifts -----------------------------------------------------------------
+
+CORE_OPTIONS = 20
+
+
+async def core_lift_options(
+    supabase: SupabaseClient, token: str, profile_id: str, today: date, search: str | None
+) -> list[ExerciseSummary]:
+    """Big compound lifts this person can do with their equipment and level,
+    matching `search` (every word, any order)."""
+    inputs = await load_inputs(
+        user_select(supabase, token), profile_id, rules.week_start_of(today), today, "requested"
+    )
+    kit = rules.kit_for(inputs.equipment, inputs.location)
+    pool = rules.phase_pools(rules.usable_library(inputs.library, kit, inputs.experience), kit)
+    words = [w.lower() for w in (search or "").split() if w]
+    options = [
+        e
+        for e in pool["main"]
+        if e.get("mechanic") == "compound" and all(w in e["name"].lower() for w in words)
+    ]
+    options.sort(key=lambda e: (len(e["name"]), e["name"]))
+    return [
+        ExerciseSummary(
+            id=e["id"],
+            name=e["name"],
+            category=e.get("category"),
+            equipment=e.get("equipment"),
+            level=e.get("level"),
+            primary_muscles=e.get("primary_muscles") or [],
+            image=None,
+        )
+        for e in options[:CORE_OPTIONS]
+    ]

@@ -50,9 +50,7 @@ export function SettingsScreen() {
         </Text>
 
         {state.status === 'loading' && <ActivityIndicator color={colors.primary} />}
-        {state.status === 'error' && (
-          <Text style={{ color: colors.alert }}>{state.message}</Text>
-        )}
+        {state.status === 'error' && <Text style={{ color: colors.alert }}>{state.message}</Text>}
         {state.status === 'ready' && (
           // `key` resets the sections' drafts when switching profile.
           <View key={state.settings.profile_id} style={styles.sections}>

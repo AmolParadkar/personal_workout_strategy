@@ -62,7 +62,11 @@ function OnboardingSteps({ settings, onDone }: { settings: Settings; onDone: () 
   const saveStep = async () => {
     // Every required field must be filled before moving on.
     const converted =
-      step === 0 ? aboutUpdate(about, true) : step === 1 ? trainingUpdate(training, true) : dietUpdate(diet, true);
+      step === 0
+        ? aboutUpdate(about, true)
+        : step === 1
+          ? trainingUpdate(training, true)
+          : dietUpdate(diet, true);
     if (converted.problems.length > 0) {
       setProblems(converted.problems);
       return;
@@ -110,13 +114,17 @@ function OnboardingSteps({ settings, onDone }: { settings: Settings; onDone: () 
           ))}
         </View>
 
-        <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.surface }]}>
+        <View
+          style={[styles.card, { borderColor: colors.border, backgroundColor: colors.surface }]}
+        >
           <View style={styles.heading}>
             <Text style={[styles.stepLabel, { color: colors.primary }]}>
               STEP {step + 1} OF {STEPS.length}
             </Text>
             <Text style={[styles.title, { color: colors.text }]}>{STEPS[step].title}</Text>
-            <Text style={[styles.subtitle, { color: colors.textMuted }]}>{STEPS[step].subtitle}</Text>
+            <Text style={[styles.subtitle, { color: colors.textMuted }]}>
+              {STEPS[step].subtitle}
+            </Text>
           </View>
 
           {step === 0 && (

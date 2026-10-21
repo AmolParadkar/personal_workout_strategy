@@ -105,13 +105,21 @@ export function AppleHealthSection() {
                 A new token stops the old one working. You’ll need to paste it into the Shortcut.
               </Text>
               <View style={styles.row}>
-                <Button label="Cancel" variant="secondary" onPress={() => setConfirmReplace(false)} />
+                <Button
+                  label="Cancel"
+                  variant="secondary"
+                  onPress={() => setConfirmReplace(false)}
+                />
                 <Button label="Create new token" onPress={create} disabled={busy} />
               </View>
             </View>
           ) : (
             <View style={styles.row}>
-              <Button label="New token" variant="secondary" onPress={() => setConfirmReplace(true)} />
+              <Button
+                label="New token"
+                variant="secondary"
+                onPress={() => setConfirmReplace(true)}
+              />
               <Button label="Disconnect" variant="secondary" onPress={disconnect} disabled={busy} />
             </View>
           )}
@@ -162,7 +170,12 @@ function Secret({
   return (
     <View style={styles.secret}>
       <Text style={[styles.label, { color: colors.textMuted }]}>{label}</Text>
-      <View style={[styles.valueBox, { borderColor: colors.border, backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.valueBox,
+          { borderColor: colors.border, backgroundColor: colors.background },
+        ]}
+      >
         <Text selectable style={[styles.value, { color: colors.text }]}>
           {value}
         </Text>

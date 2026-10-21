@@ -23,7 +23,7 @@ Not collected up front; each person fills them in here once the app exists.
 Sections, each saved on its own (saving one never touches unsaved changes in another):
 
 1. **About you:** name, date of birth, sex, height, goals (choose from a list) plus goal notes, the one metric you care about most, injuries or limitations.
-2. **Training:** days you can train, minutes per session, where you train, training experience (beginner / intermediate / advanced; optional, beginner if not set), equipment.
+2. **Training:** days you can train, minutes per session, where you train, training experience (beginner / intermediate / advanced; optional, beginner if not set), equipment, **core lifts** (up to 8 compound lifts kept in every plan for progressive overload; searchable, only lifts doable with the saved equipment are offered).
 3. **Food:** diet type, meals per day, cooking time, cuisines, allergies, foods you dislike (comma-separated).
 4. **Body weight:** latest weight and date (manual or Apple Health), plus "Today's weight (kg)" to log one. Logging again the same day corrects it.
 5. **Water:** daily target in ml (default 3000; 75 Hard's gallon is 3785).

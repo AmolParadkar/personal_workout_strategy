@@ -79,18 +79,18 @@ Design: [data-sources.md](data-sources.md#connectors-design). Built and deployed
 - [x] [Exercise Guide](pages/exercise-guide.md) pages: searchable library and exercise detail
 - [x] Groq and YouTube keys in `backend/.env` (Amol; both checked 2026-10-21): [how](setup.md#mac-worker)
 
-## M6 — Workout plans
+## M6 — Workout plans ✅
 
-Built in two parts. Part 1 (plans) is done; part 2 (doing the workout) is next.
+Built in two parts: plans (part 1), then doing the workouts and changing the plan (part 2).
 
 - [x] Workout tables (plans, sessions, items, logs, completions); training experience in Settings
 - [x] Plan generation with the five phases: rules + Groq on Vercel, Mac worker backup (Groq → Ollama → rules)
 - [x] [Workout Plan](pages/workout-plan.md): weekly view, new plan with preview, swaps, muscle coverage, body weight input
 - [x] Exercise Guide: this week's exercises by day and phase
 - [x] `GROQ_API_KEY` on the API's Vercel project (Amol), so plans are made straight away
-- [ ] Part 2: [Plan for Today](pages/plan-for-today.md) workout section: logging sets, effort feedback, streak
-- [ ] Part 2: progressive overload in the next week's plan
-- [ ] Part 2: change requests (add a session, mark a day unavailable) with preview of what moves
+- [x] Part 2: [Plan for Today](pages/plan-for-today.md) workout section: logging sets, effort feedback, streak, catching up a missed session
+- [x] Part 2: core lifts (Settings), 6-week blocks for other exercises, progressive overload from logged sets and effort
+- [x] Part 2: changes with preview: day off, extra or shorter session, vacation, cheat meal, medical pause with "I'm back", something else (LLM)
 
 ## M7 — Nutrition
 

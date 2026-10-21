@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from 'react-native';
 import { ChipSelect, Field, TextField, ToggleRow } from '@/components/form';
 import { spacing, useTheme } from '@/theme';
 
+import { CoreLiftsField } from './CoreLiftsField';
 import { dataSourceGroups, dataSourceInfo, routeNotes } from './dataSources';
 import type {
   AboutDraft,
@@ -163,6 +164,16 @@ export function TrainingFields({ draft, onChange, disabled }: Props<TrainingDraf
           disabled={disabled}
         />
       </Field>
+      <Field
+        label="Core lifts"
+        hint="Your main lifts, kept in every plan so the weights can keep going up (up to 8). Other exercises change every 6 weeks. Save your equipment first: only lifts you can do are offered."
+      >
+        <CoreLiftsField
+          value={draft.core_exercises}
+          onChange={(core_exercises) => onChange({ core_exercises })}
+          disabled={disabled}
+        />
+      </Field>
     </View>
   );
 }
@@ -232,7 +243,11 @@ export function FoodFields({ draft, onChange, disabled }: Props<DietDraft>) {
 export function WaterFields({ draft, onChange, disabled }: Props<WaterDraft>) {
   return (
     <View style={styles.fields}>
-      <Field label="Daily water target (ml)" hint="3000 ml = 3 litres. The 75 Hard gallon is 3785 ml." required>
+      <Field
+        label="Daily water target (ml)"
+        hint="3000 ml = 3 litres. The 75 Hard gallon is 3785 ml."
+        required
+      >
         <TextField
           label="Daily water target in millilitres"
           value={draft.water_target_ml}

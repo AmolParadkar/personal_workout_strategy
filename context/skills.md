@@ -34,8 +34,8 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
 | # | Page | Purpose | Status |
 |---|---|---|---|
 | 1 | [Summary](pages/summary.md) | Read-only dashboard: "How am I doing right now?" | Defined |
-| 2 | [Plan for Today](pages/plan-for-today.md) | Today's workout and meals, plus all daily logging (meals, water, medications) | Defined |
-| 3 | [Workout Plan](pages/workout-plan.md) | Weekly customised workout plan the person can change | Part 1 built (M6) |
+| 2 | [Plan for Today](pages/plan-for-today.md) | Today's workout and meals, plus all daily logging (meals, water, medications) | Workout and water built (M3, M6); meals in M7 |
+| 3 | [Workout Plan](pages/workout-plan.md) | Weekly customised workout plan the person can change | Built (M6) |
 | 4 | [Nutrition Plan](pages/nutrition-plan.md) | Weekly meal plan with macro / micro targets the person can change | Defined |
 | 5 | [Progress](pages/progress.md) | Long-term trends, insights, forecasts, what-if simulator, disruption planning | Defined (1 open question) |
 | 6 | [75 Hard](pages/75-hard.md) | Simple daily 75 Hard checklist and day counter | Built (M2) |
@@ -132,6 +132,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-21:** M6 part 2 built: Plan for Today workout card (log sets with targets, mark timed moves done, finish with an effort rating, streak, catch up a missed session); core lifts chosen in Settings and kept in every plan; other main exercises in 6-week blocks; progressive overload from what was lifted and how hard it felt; plan changes with preview (day off, extra or shorter session, vacation with or without training, cheat meal spread or as planned, medical pause with a gentle return, something else read by the LLM). Days already done and their progress are kept when a plan is replaced.
 - **2026-10-21:** M6 part 1 (workout plans) built: weekly plans made when the app opens in a new week (rules shape the week, warm-ups and cool-downs; Groq picks the main exercises from a short checked list and explains the sessions; Mac worker backup; rules alone as the last resort); Workout Plan page with day cards, swaps, muscle coverage, new plan with preview, body weight; this week's exercises on the Exercise Guide; training experience in Settings. Groq's free tier limits output to about 1,000 tokens a minute, so the plan answer is compact.
 - **2026-10-21:** Exercise Guide: **Is this the right video?** Yes confirms a video (no monthly refresh); No with a reason searches again straight away: the LLM turns all reasons into a better search and requirements, rejected videos are never chosen again, and every candidate is now rated for relevance as well as comment tone. Library search matches words in any order and, when nothing matches, shows the **5 closest matches** (pg_trgm) instead of an empty page; filters fold behind a Filters button. Table `video_feedback`; function `suggest_exercises`.
 - **2026-10-21:** Faster guide and video preparation: the worker looks for jobs every 3 seconds (was 10) and runs up to 3 at once, the video job fetches comments in parallel, and the exercise page checks every 2 seconds (was 5). A new exercise now fills in about 5–8 seconds after opening (was 12–15).
