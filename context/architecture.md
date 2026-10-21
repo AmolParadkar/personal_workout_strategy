@@ -82,6 +82,9 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `POST /api/me/connections/{service}/complete` | Swap the returned code for keys, save them encrypted, fetch the last 30 days |
 | `POST /api/me/connections/sync` | Fetch new data from your connections (only those not synced for 3 hours, unless `force`; just one with `service`). Called on app open, by the header's Refresh button (`force`) and by Sync now (`force` + `service`) |
 | `DELETE /api/me/connections/{service}` | Cancel access at the service where possible and delete the keys (fetched data stays) |
+| `GET /api/exercises?search=&muscle=&equipment=&offset=` | The exercise library, 30 at a time |
+| `GET /api/exercises/{id}` | One exercise with guide and video, and whether each is ready, preparing, failed or not found |
+| `POST /api/exercises/{id}/prepare` | Queue the guide and video jobs it still needs (once; not again within a day of a failure) |
 | `GET /api/jobs/{id}` | A job's status and result (household's jobs) |
 | `POST /api/me/jobs/{id}/retry` | Put your own failed job back in the queue |
 | `GET /api/worker-status` | Mac worker online (seen in 3 minutes), Ollama running, household jobs waiting |
@@ -136,11 +139,11 @@ Direct connectors ([M3b](roadmap.md#m3b--direct-connectors)) write to the same `
 | `generate_meal_plan` | Nutrition Plan, confirmed facts, disruptions | Vercel first, then worker | Cloud Qwen |
 | `extract_document_facts` | Personal Artifacts upload | **Worker only (local)** unless "Process in cloud now" | Ollama (Qwen vision) |
 | `analyse_progress_photo` | Progress | Open question: local or cloud | Qwen vision |
-| `find_exercise_video` | New exercise in a plan; monthly refresh | Worker | YouTube Data API + Qwen (comment rating) |
-| `write_exercise_guide` | New exercise in a plan | Worker | Cloud Qwen (form cues, precautions) |
+| `find_exercise_video` | Exercise opened without a video (M5), new exercise in a plan (M6); monthly refresh | Worker | YouTube Data API + Qwen (comment rating) |
+| `write_exercise_guide` | Exercise opened without a guide (M5), new exercise in a plan (M6) | Worker | Cloud Qwen on Groq, Ollama backup (form cues, precautions) |
 | `compute_forecast` | Progress, new data | Vercel first, then worker | Calculations; Qwen for the explanation |
 
-Each job's input and output are Pydantic models in `backend/core/`.
+Each job's input and output are Pydantic models in `backend/core/`. **LLM calls** go through `backend/core/llm.py`: Groq (cloud Qwen, `GROQ_MODEL`, default `qwen/qwen3.8-27b`) first, then Ollama on the Mac (`qwen3:8b`); answers must be JSON matching a Pydantic model, so a bad answer fails the attempt and is retried. Jobs that write shared data (the exercise library) get the worker's database access and run on the worker only.
 
 ## Job queue and worker safeguards
 

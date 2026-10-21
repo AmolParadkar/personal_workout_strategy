@@ -1,17 +1,9 @@
 import { useLocalSearchParams } from 'expo-router';
-import { Text } from 'react-native';
 
-import { PagePlaceholder } from '@/components/PagePlaceholder';
-import { useTheme } from '@/theme';
+import { ExerciseDetailScreen } from '@/features/exercises/ExerciseDetailScreen';
 
-// One exercise in detail, e.g. /exercises/barbell-squat.
+// One exercise in detail, e.g. /exercises/Barbell_Squat.
 export default function Screen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { colors } = useTheme();
-
-  return (
-    <PagePlaceholder page="exerciseGuide">
-      <Text style={{ color: colors.textMuted }}>Exercise: {id}</Text>
-    </PagePlaceholder>
-  );
+  return <ExerciseDetailScreen id={id} />;
 }

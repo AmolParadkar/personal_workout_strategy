@@ -519,6 +519,64 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/exercises": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * List Exercises
+         * @description The exercise library, 30 at a time, by name; filter by primary muscle or equipment.
+         */
+        get: operations["list_exercises_api_exercises_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exercises/{exercise_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Exercise */
+        get: operations["exercise_api_exercises__exercise_id__get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/exercises/{exercise_id}/prepare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Prepare
+         * @description Ask the Mac worker to write the guide and find a video, if still missing
+         *     (or the video is over a month old). Safe to call repeatedly.
+         */
+        post: operations["prepare_api_exercises__exercise_id__prepare_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -642,6 +700,78 @@ export interface components {
             show_calorie_intake?: boolean | null;
             /** Show Calories Burned */
             show_calories_burned?: boolean | null;
+        };
+        /** ExerciseDetail */
+        ExerciseDetail: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Category */
+            category: string | null;
+            /** Level */
+            level: string | null;
+            /** Force */
+            force: string | null;
+            /** Mechanic */
+            mechanic: string | null;
+            /** Equipment */
+            equipment: string | null;
+            /** Primary Muscles */
+            primary_muscles: string[];
+            /** Secondary Muscles */
+            secondary_muscles: string[];
+            /** Instructions */
+            instructions: string[];
+            /** Images */
+            images: string[];
+            /** About */
+            about: string | null;
+            /** Form Cues */
+            form_cues: string[] | null;
+            /** Precautions */
+            precautions: string[] | null;
+            /** Guide Written At */
+            guide_written_at: string | null;
+            video: components["schemas"]["Video"] | null;
+            /**
+             * Guide Status
+             * @enum {string}
+             */
+            guide_status: "ready" | "preparing" | "missing" | "none_found" | "failed";
+            /**
+             * Video Status
+             * @enum {string}
+             */
+            video_status: "ready" | "preparing" | "missing" | "none_found" | "failed";
+            /** Guide Error */
+            guide_error?: string | null;
+            /** Video Error */
+            video_error?: string | null;
+        };
+        /** ExerciseList */
+        ExerciseList: {
+            /** Items */
+            items: components["schemas"]["ExerciseSummary"][];
+            /** Has More */
+            has_more: boolean;
+        };
+        /** ExerciseSummary */
+        ExerciseSummary: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Category */
+            category: string | null;
+            /** Equipment */
+            equipment: string | null;
+            /** Level */
+            level: string | null;
+            /** Primary Muscles */
+            primary_muscles: string[];
+            /** Image */
+            image: string | null;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1023,6 +1153,23 @@ export interface components {
             input?: unknown;
             /** Context */
             ctx?: Record<string, never>;
+        };
+        /** Video */
+        Video: {
+            /** Id */
+            id: string;
+            /** Title */
+            title: string | null;
+            /** Channel */
+            channel: string | null;
+            /** Duration Seconds */
+            duration_seconds: number | null;
+            /** Views */
+            views: number | null;
+            /** Url */
+            url: string;
+            /** Thumbnail */
+            thumbnail: string;
         };
         /** WaterDay */
         WaterDay: {
@@ -2059,6 +2206,108 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["Job"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    list_exercises_api_exercises_get: {
+        parameters: {
+            query?: {
+                search?: string | null;
+                muscle?: ("abdominals" | "abductors" | "adductors" | "biceps" | "calves" | "chest" | "forearms" | "glutes" | "hamstrings" | "lats" | "lower back" | "middle back" | "neck" | "quadriceps" | "shoulders" | "traps" | "triceps") | null;
+                equipment?: string | null;
+                offset?: number;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExerciseList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    exercise_api_exercises__exercise_id__get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                exercise_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExerciseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    prepare_api_exercises__exercise_id__prepare_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                exercise_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExerciseDetail"];
                 };
             };
             /** @description Validation Error */

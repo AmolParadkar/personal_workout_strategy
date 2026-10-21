@@ -61,22 +61,23 @@ Design: [data-sources.md](data-sources.md#connectors-design). Built and deployed
 - [x] Sync on app open (over 3 hours since last), **Sync now** per service, and a **Refresh** button (↻) in the header for all services
 - [x] Per-metric source preference when two sources send the same metric (used for body weight; other pages use it as they're built)
 
-## M4 — Job queue and worker
+## M4 — Job queue and worker ✅
 
 - [x] `jobs`, `worker_heartbeats` tables
 - [x] Worker with claiming, retries, stuck-job recovery, heartbeat
 - [x] launchd setup for the worker (`backend/worker/launchd/install.sh`); Ollama runs from its Mac app
 - [x] Offline status in the app (Settings → Mac worker, notice on every page) and offline alert (ntfy, hourly check in Supabase)
 - [x] "Vercel first, then queue" helper for quick jobs
-- [ ] Set up on this Mac (Amol): `mac-worker` secret key, Ollama app, `install.sh`, ntfy topic: [how](setup.md#mac-worker)
+- [x] Set up on this Mac (Amol): `mac-worker` secret key, Ollama app, `install.sh`, ntfy topic (test notification received 2026-10-21): [how](setup.md#mac-worker)
 
-## M5 — Exercise library and Exercise Guide
+## M5 — Exercise library and Exercise Guide ✅
 
-- [ ] Import free-exercise-db into `exercises`
-- [ ] Body map component (red primary / light red secondary)
-- [ ] Form cues and precautions job
-- [ ] YouTube video scoring job (under 3 min, Shorts allowed)
-- [ ] [Exercise Guide](pages/exercise-guide.md) pages
+- [x] Import free-exercise-db into `exercises` (876 exercises; `scripts/import_exercises.py`)
+- [x] Body map component (red primary / light red secondary)
+- [x] Form cues and precautions job (Groq, Ollama backup)
+- [x] YouTube video scoring job (under 3 min, Shorts allowed)
+- [x] [Exercise Guide](pages/exercise-guide.md) pages: searchable library and exercise detail
+- [x] Groq and YouTube keys in `backend/.env` (Amol; both checked 2026-10-21): [how](setup.md#mac-worker)
 
 ## M6 — Workout plans
 

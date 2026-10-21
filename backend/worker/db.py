@@ -32,6 +32,22 @@ class WorkerDb:
             "requeue_stuck_jobs", {"p_stuck_after": f"{stuck_after_seconds} seconds"}
         )
 
+    async def select(self, table: str, params: dict[str, str]) -> list[dict[str, Any]]:
+        response = await self._http.get(
+            f"{self._url}/rest/v1/{table}", params=params, headers=self._headers
+        )
+        response.raise_for_status()
+        return response.json()
+
+    async def update(self, table: str, filters: dict[str, str], values: dict[str, Any]) -> None:
+        response = await self._http.patch(
+            f"{self._url}/rest/v1/{table}",
+            params=filters,
+            json=values,
+            headers={**self._headers, "Prefer": "return=minimal"},
+        )
+        response.raise_for_status()
+
     async def update_job(self, job_id: str, values: dict[str, Any]) -> None:
         response = await self._http.patch(
             f"{self._url}/rest/v1/jobs",

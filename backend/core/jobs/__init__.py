@@ -8,9 +8,19 @@ helper look them up by name. Real job types arrive with their pages (M5+);
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Protocol
 
 import httpx2
+
+from core.llm import LlmConfig
+
+
+class JobDb(Protocol):
+    """Database access for jobs that read or write shared data (the worker's secret key)."""
+
+    async def select(self, table: str, params: dict[str, str]) -> list[dict[str, Any]]: ...
+
+    async def update(self, table: str, filters: dict[str, str], values: dict[str, Any]) -> None: ...
 
 
 @dataclass
@@ -19,6 +29,10 @@ class JobContext:
     worker_id: str
     attempt: int
     http: httpx2.AsyncClient
+    # Set by the worker; not available to jobs run on Vercel.
+    db: JobDb | None = None
+    llm: LlmConfig | None = None
+    youtube_api_key: str | None = None
 
 
 Handler = Callable[[dict[str, Any], JobContext], Awaitable[dict[str, Any]]]
@@ -52,4 +66,4 @@ def register(spec: JobSpec) -> JobSpec:
 
 
 # Imported for their register() calls.
-from core.jobs import test_echo  # noqa: E402, F401
+from core.jobs import exercise_guide, exercise_video, test_echo  # noqa: E402, F401
