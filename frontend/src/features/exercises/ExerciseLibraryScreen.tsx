@@ -34,7 +34,10 @@ export function ExerciseLibraryScreen() {
     key: string;
     items: Summary[];
     hasMore: boolean;
+    suggestions: Summary[];
   } | null>(null);
+  const [showFilters, setShowFilters] = useState(false);
+  const activeFilters = muscle.length + equipment.length;
   const [error, setError] = useState<string | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
 
@@ -55,7 +58,12 @@ export function ExerciseLibraryScreen() {
     apiGet<ExerciseList>(`/api/exercises?${key}`)
       .then((list) => {
         if (!cancelled) {
-          setResults({ key, items: list.items, hasMore: list.has_more });
+          setResults({
+            key,
+            items: list.items,
+            hasMore: list.has_more,
+            suggestions: list.suggestions ?? [],
+          });
           setError(null);
         }
       })
@@ -76,7 +84,7 @@ export function ExerciseLibraryScreen() {
       const more = new URLSearchParams(key);
       more.set('offset', String(current.items.length));
       const list = await apiGet<ExerciseList>(`/api/exercises?${more}`);
-      setResults({ key, items: [...current.items, ...list.items], hasMore: list.has_more });
+      setResults({ ...current, items: [...current.items, ...list.items], hasMore: list.has_more });
     } catch (e) {
       setError(e instanceof ApiError ? e.message : 'Couldn’t load more.');
     } finally {
@@ -99,20 +107,42 @@ export function ExerciseLibraryScreen() {
           onChange={setSearch}
           placeholder="e.g. squat, push-up, plank"
         />
-        <Field label="Muscle">
-          <ChipSelect
-            options={muscles.map((m) => ({ value: m, label: muscleLabel(m) }))}
-            selected={muscle}
-            onChange={setMuscle}
+        {/* Folded by default, so results show right under the search box on phones. */}
+        <View style={styles.filterBar}>
+          <Button
+            label={`${showFilters ? 'Hide filters' : 'Filters'}${activeFilters ? ` (${activeFilters})` : ''}`}
+            variant="secondary"
+            onPress={() => setShowFilters((shown) => !shown)}
           />
-        </Field>
-        <Field label="Equipment">
-          <ChipSelect
-            options={equipmentOptions.map((e) => ({ value: e, label: muscleLabel(e) }))}
-            selected={equipment}
-            onChange={setEquipment}
-          />
-        </Field>
+          {activeFilters > 0 && (
+            <Button
+              label="Clear"
+              variant="secondary"
+              onPress={() => {
+                setMuscle([]);
+                setEquipment([]);
+              }}
+            />
+          )}
+        </View>
+        {showFilters && (
+          <>
+            <Field label="Muscle">
+              <ChipSelect
+                options={muscles.map((m) => ({ value: m, label: muscleLabel(m) }))}
+                selected={muscle}
+                onChange={setMuscle}
+              />
+            </Field>
+            <Field label="Equipment">
+              <ChipSelect
+                options={equipmentOptions.map((e) => ({ value: e, label: muscleLabel(e) }))}
+                selected={equipment}
+                onChange={setEquipment}
+              />
+            </Field>
+          </>
+        )}
 
         {error && (
           <Text accessibilityRole="alert" style={{ color: colors.alert }}>
@@ -120,14 +150,27 @@ export function ExerciseLibraryScreen() {
           </Text>
         )}
         {!current && !error && <ActivityIndicator color={colors.primary} />}
-        {current && current.items.length === 0 && (
-          <Text style={{ color: colors.textMuted }}>No exercises match. Try fewer filters.</Text>
+        {current && current.items.length === 0 && current.suggestions.length > 0 && (
+          <Text style={{ color: colors.textMuted }}>
+            No exact match for “{query}”. Closest matches:
+          </Text>
+        )}
+        {current && current.items.length === 0 && current.suggestions.length === 0 && (
+          <Text style={{ color: colors.textMuted }}>
+            {query
+              ? `Nothing close to “${query}”. Try another word, or fewer filters.`
+              : 'No exercises match. Try fewer filters.'}
+          </Text>
         )}
 
         <View style={styles.list}>
           {current?.items.map((exercise) => (
             <ExerciseRow key={exercise.id} exercise={exercise} />
           ))}
+          {current?.items.length === 0 &&
+            current.suggestions.map((exercise) => (
+              <ExerciseRow key={exercise.id} exercise={exercise} />
+            ))}
         </View>
         {current?.hasMore && (
           <Button
@@ -200,6 +243,11 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   list: {
+    gap: spacing.sm,
+  },
+  filterBar: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: spacing.sm,
   },
   row: {

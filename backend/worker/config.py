@@ -26,8 +26,10 @@ class WorkerSettings(BaseSettings):
     groq_model: str = "qwen/qwen3.8-27b"
     # YouTube Data API v3 key (Google Cloud console), for exercise videos.
     youtube_api_key: str | None = None
-    # How often to look for work when the queue is empty.
-    poll_seconds: float = 10
+    # How often to look for new jobs (each look is one small database request).
+    poll_seconds: float = 3
+    # Jobs run at the same time (e.g. an exercise's guide and its video).
+    max_parallel_jobs: int = 3
     heartbeat_seconds: float = 60
 
     @property

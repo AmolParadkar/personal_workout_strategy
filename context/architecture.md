@@ -82,8 +82,9 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `POST /api/me/connections/{service}/complete` | Swap the returned code for keys, save them encrypted, fetch the last 30 days |
 | `POST /api/me/connections/sync` | Fetch new data from your connections (only those not synced for 3 hours, unless `force`; just one with `service`). Called on app open, by the header's Refresh button (`force`) and by Sync now (`force` + `service`) |
 | `DELETE /api/me/connections/{service}` | Cancel access at the service where possible and delete the keys (fetched data stays) |
-| `GET /api/exercises?search=&muscle=&equipment=&offset=` | The exercise library, 30 at a time |
+| `GET /api/exercises?search=&muscle=&equipment=&offset=` | The exercise library, 30 at a time; words match in any order; with no results, `suggestions` (the 5 closest names) |
 | `GET /api/exercises/{id}` | One exercise with guide and video, and whether each is ready, preparing, failed or not found |
+| `POST /api/exercises/{id}/video-feedback` | "Is this the right video?": `right` confirms it; `wrong` + reason searches again straight away, avoiding rejected videos (409 if the video changed meanwhile) |
 | `POST /api/exercises/{id}/prepare` | Queue the guide and video jobs it still needs (once; not again within a day of a failure) |
 | `GET /api/jobs/{id}` | A job's status and result (household's jobs) |
 | `POST /api/me/jobs/{id}/retry` | Put your own failed job back in the queue |
@@ -153,7 +154,7 @@ All slow or LLM work goes through the `jobs` table (see [Data model: Jobs](data-
 - **No paid cloud worker for now:** queued jobs wait for the Mac worker. See [Future enhancements](skills.md#future-enhancements).
 - **Worker modes:** `--mode local` (the Mac: may take any job, including local-only ones) and `--mode cloud` (future: may not take local-only jobs).
 
-Built in M4: job types in `backend/core/jobs/` (one file each, registered with their rules: local-only, try on Vercel, needs Ollama, attempts, time limit); the queue in `backend/core/jobs/queue.py`; the worker in `backend/worker/` (`uv run python -m worker`). `test_echo` is a job that only echoes, for checking the pipeline (Settings → Mac worker → Send test job).
+Built in M4: job types in `backend/core/jobs/` (one file each, registered with their rules: local-only, try on Vercel, needs Ollama, attempts, time limit); the queue in `backend/core/jobs/queue.py`; the worker in `backend/worker/` (`uv run python -m worker`). The worker looks for new jobs every 3 seconds and runs up to 3 at once (e.g. an exercise's guide and video side by side); its heartbeat continues while jobs run. `test_echo` is a job that only echoes, for checking the pipeline (Settings → Mac worker → Send test job).
 
 Safeguards, because the Mac is a single point of failure:
 

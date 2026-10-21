@@ -19,10 +19,11 @@ import { radius, spacing, useTheme } from '@/theme';
 
 import { BodyMap } from './BodyMap';
 import { muscleLabel } from './muscles';
+import { VideoFeedback } from './VideoFeedback';
 
 type Exercise = Schemas['ExerciseDetail'];
 
-const POLL_MS = 5000;
+const POLL_MS = 2000;
 
 const isPreparing = (e: Exercise) =>
   e.guide_status === 'preparing' || e.video_status === 'preparing';
@@ -179,16 +180,31 @@ export function ExerciseDetailScreen({ id }: { id: string }) {
             {/* 6. Video */}
             <View style={card}>
               <Text style={[styles.heading, text]}>Video</Text>
-              {exercise.video ? (
-                <VideoCard video={exercise.video} />
+              {exercise.video_status === 'preparing' || exercise.video_status === 'missing' ? (
+                <Preparing
+                  what={
+                    exercise.videos_rejected > 0
+                      ? 'a better video, using your feedback'
+                      : 'a short video'
+                  }
+                  workerOffline={workerOffline}
+                />
+              ) : exercise.video ? (
+                <>
+                  <VideoCard video={exercise.video} />
+                  <VideoFeedback
+                    exercise={exercise}
+                    onUpdated={(updated) => setLoaded({ id, exercise: updated })}
+                  />
+                </>
               ) : exercise.video_status === 'none_found' ? (
                 <Text style={[styles.body, muted]}>
-                  No short video (under 3 minutes) found for this one. We’ll look again next month.
+                  {exercise.videos_rejected > 0
+                    ? 'No other short video matched your feedback. We’ll look again next month.'
+                    : 'No short video (under 3 minutes) found for this one. We’ll look again next month.'}
                 </Text>
-              ) : exercise.video_status === 'failed' ? (
-                <Failed what="a video" reason={exercise.video_error} />
               ) : (
-                <Preparing what="a short video" workerOffline={workerOffline} />
+                <Failed what="a video" reason={exercise.video_error} />
               )}
             </View>
           </>

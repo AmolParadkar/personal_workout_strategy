@@ -116,9 +116,22 @@ async def process(db: WorkerDb, http: httpx2.AsyncClient, settings: WorkerSettin
     log.info("Job %s → %s", job["id"], values["status"])
 
 
+async def _process_safely(db: WorkerDb, http, settings: WorkerSettings, job: dict) -> None:
+    try:
+        await process(db, http, settings, job)
+    except httpx2.HTTPError as error:
+        # The result couldn't be saved; the job is taken back after
+        # STUCK_AFTER_SECONDS and run again.
+        log.warning("Couldn't save job %s (%s)", job["id"], error)
+
+
 async def run(settings: WorkerSettings, stop: asyncio.Event, once: bool = False) -> None:
-    """Work until `stop` is set (or, with `once`, until the queue is empty)."""
+    """Work until `stop` is set (or, with `once`, until the queue is empty).
+
+    Up to `max_parallel_jobs` jobs run at the same time (e.g. an exercise's guide
+    and video side by side); the heartbeat keeps going while they run."""
     started_at = datetime.now(UTC)
+    running: set[asyncio.Task] = set()
     async with httpx2.AsyncClient(timeout=30) as http:
         db = WorkerDb(settings.supabase_url, settings.mac_worker_secret_key, http)
         last_beat: datetime | None = None
@@ -142,25 +155,29 @@ async def run(settings: WorkerSettings, stop: asyncio.Event, once: bool = False)
                     if requeued:
                         log.warning("Put %s stuck job(s) back in the queue", requeued)
                     last_beat = now
-                job = await db.claim(settings.worker_id, settings.worker_mode)
+                while len(running) < settings.max_parallel_jobs:
+                    job = await db.claim(settings.worker_id, settings.worker_mode)
+                    if not job:
+                        break
+                    running.add(asyncio.create_task(_process_safely(db, http, settings, job)))
             except httpx2.HTTPError as error:
                 # No internet or Supabase unavailable: wait and try again.
                 log.warning("Can't reach Supabase (%s); retrying", error)
-                job = None
-            if job:
-                try:
-                    await process(db, http, settings, job)
-                except httpx2.HTTPError as error:
-                    # The result couldn't be saved; the job is taken back after
-                    # STUCK_AFTER_SECONDS and run again.
-                    log.warning("Couldn't save job %s (%s)", job["id"], error)
-                continue
-            if once:
+            if once and not running:
                 return
-            try:
-                await asyncio.wait_for(stop.wait(), settings.poll_seconds)
-            except TimeoutError:
-                pass
+            # Wake up when a job finishes (to take the next one), when told to
+            # stop, or after `poll_seconds` to look for new jobs.
+            stopping = asyncio.create_task(stop.wait())
+            done, _ = await asyncio.wait(
+                running | {stopping},
+                timeout=settings.poll_seconds,
+                return_when=asyncio.FIRST_COMPLETED,
+            )
+            stopping.cancel()
+            running -= done
+        if running:
+            # Stopping (e.g. launchd at shutdown): let the current jobs finish.
+            await asyncio.wait(running)
 
 
 def main() -> None:
