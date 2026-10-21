@@ -3,6 +3,8 @@ from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from core.llm import LlmConfig
+
 
 class WorkerSettings(BaseSettings):
     """The worker's configuration (locally from backend/.env)."""
@@ -16,6 +18,23 @@ class WorkerSettings(BaseSettings):
     worker_id: str = socket.gethostname()
     worker_mode: Literal["local", "cloud"] = "local"
     ollama_url: str = "http://localhost:11434"
+    # Local Qwen model, the backup when Groq fails (`ollama pull qwen3:8b`).
+    ollama_text_model: str = "qwen3:8b"
+    # Cloud Qwen on Groq (console.groq.com → API Keys). Preview models change:
+    # check console.groq.com/docs/models if Groq stops answering.
+    groq_api_key: str | None = None
+    groq_model: str = "qwen/qwen3.8-27b"
+    # YouTube Data API v3 key (Google Cloud console), for exercise videos.
+    youtube_api_key: str | None = None
     # How often to look for work when the queue is empty.
     poll_seconds: float = 10
     heartbeat_seconds: float = 60
+
+    @property
+    def llm(self) -> LlmConfig:
+        return LlmConfig(
+            groq_api_key=self.groq_api_key,
+            groq_model=self.groq_model,
+            ollama_url=self.ollama_url,
+            ollama_model=self.ollama_text_model,
+        )

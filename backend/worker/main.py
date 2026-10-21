@@ -81,7 +81,14 @@ async def process(db: WorkerDb, http: httpx2.AsyncClient, settings: WorkerSettin
         )
         return
 
-    ctx = JobContext(worker_id=settings.worker_id, attempt=job["attempts"], http=http)
+    ctx = JobContext(
+        worker_id=settings.worker_id,
+        attempt=job["attempts"],
+        http=http,
+        db=db,
+        llm=settings.llm,
+        youtube_api_key=settings.youtube_api_key,
+    )
     log.info("Running %s %s (attempt %s)", job["type"], job["id"], job["attempts"])
     try:
         result = await asyncio.wait_for(spec.handler(job["payload"], ctx), spec.timeout_seconds)

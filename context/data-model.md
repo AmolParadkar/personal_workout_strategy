@@ -55,7 +55,7 @@ Used by: [Workout Plan](pages/workout-plan.md), [Plan for Today](pages/plan-for-
 
 | Table | Key fields | Purpose |
 |---|---|---|
-| `exercises` | `name`, `source` (free-exercise-db / wger), `equipment`, `primary_muscles[]`, `secondary_muscles[]`, `images[]`, `form_cues`, `precautions`, `video_id`, `video_checked_at` | Shared exercise library (not per person). Form cues and precautions written once by the LLM; video chosen by the scoring job. |
+| `exercises` | `id` (the source's id, e.g. `Barbell_Squat`), `name`, `source`, `category`, `level`, `force`, `mechanic`, `equipment`, `primary_muscles[]`, `secondary_muscles[]`, `instructions[]`, `images[]` (CDN addresses), `about`, `form_cues[]`, `precautions[]`, `guide_model`, `guide_written_at`, `video_id`, `video_title`, `video_channel`, `video_duration_seconds`, `video_views`, `video_score`, `video_checked_at` | Shared exercise library (not per person), **built in M5** (migration `20261021052715_exercises.sql`): 876 exercises from free-exercise-db. Everyone signed in reads it; only the importer and the worker (secret keys) write. Guide text written once by the LLM; video chosen by the scoring job. |
 | `workout_plans` | `profile_id`, `week_start`, `status` (draft / active / superseded), `rationale`, `job_id` | One plan per person per week. A draft is the preview shown before a change is applied. |
 | `workout_sessions` | `plan_id`, `date`, `title`, `focus` (e.g. legs), `explanation` | One per training day. |
 | `session_items` | `session_id`, `phase` (cardio / mobility / activation / main / cooldown), `position`, `exercise_id`, `sets`, `reps`, `target_load_kg`, `duration_min` | The five-phase structure. |

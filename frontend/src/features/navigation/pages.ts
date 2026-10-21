@@ -67,7 +67,7 @@ export const pages: Record<PageKey, PageInfo> = {
   exerciseGuide: {
     title: 'Exercise Guide',
     href: '/exercises',
-    description: 'How to do every exercise in this week’s plan.',
+    description: 'How to do each exercise: muscles worked, form cues, precautions and a video.',
     milestone: 'M5',
   },
   artifacts: {

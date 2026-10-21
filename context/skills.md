@@ -39,7 +39,7 @@ A personalised health app for two users: **Amol** and **his spouse**. Both use i
 | 4 | [Nutrition Plan](pages/nutrition-plan.md) | Weekly meal plan with macro / micro targets the person can change | Defined |
 | 5 | [Progress](pages/progress.md) | Long-term trends, insights, forecasts, what-if simulator, disruption planning | Defined (1 open question) |
 | 6 | [75 Hard](pages/75-hard.md) | Simple daily 75 Hard checklist and day counter | Built (M2) |
-| 7 | [Exercise Guide](pages/exercise-guide.md) | Diagram, body map, form cues, precautions and best short video for each exercise | Defined |
+| 7 | [Exercise Guide](pages/exercise-guide.md) | Diagram, body map, form cues, precautions and best short video for each exercise | Built (M5; plan view in M6) |
 | 8 | [Personal Artifacts](pages/personal-artifacts.md) | Upload health documents; confirmed facts adjust the plans | Defined |
 | 9 | [Settings / Profile](pages/settings-profile.md) | Personal details (plan inputs) and opt-in card switches | Built (M1) |
 
@@ -132,6 +132,7 @@ Where each metric comes from with an iPhone only (no watch yet):
 
 ## Change log
 
+- **2026-10-21:** M5 (exercise library and Exercise Guide) built: 876 exercises imported from free-exercise-db (images from the jsDelivr CDN, nothing stored); searchable library page and exercise page with start/end images, front/back body map, AI-written about, form cues and precautions, and a scored YouTube video. Guide and video are prepared by the Mac worker the first time an exercise is opened (not Vercel, because only the worker writes to the shared library). LLM client: Groq (cloud Qwen) with Ollama `qwen3:8b` as backup.
 - **2026-10-21:** M4 (job queue and worker) built: `jobs` and `worker_heartbeats`, atomic claiming, retries with growing gaps, stuck-job recovery, heartbeat, Ollama check; job types registered in `backend/core/jobs/` with a `test_echo` job; "Vercel first, then queue" helper; worker as a launchd service; offline notice in the app and an ntfy alert sent by an hourly check inside Supabase (pg_cron). Ollama runs from its Mac app instead of a separate launchd service (no Homebrew needed).
 - **2026-10-21:** Switching on the direct connectors (developer apps, first real connections, AI-terms check, Mac daily sync) parked until after M10: moved to [roadmap → After development](roadmap.md#after-development--switch-on-the-integrations). The connector code stays live and idle.
 - **2026-10-20:** M3b (direct connectors) built: Withings, Oura, Whoop and Polar connect from Settings → Connected services with their own sign-in; keys encrypted by the API (`CONNECTOR_ENCRYPTION_KEY`) in `service_connections`; new data fetched on app open (every 3 hours at most) or with Sync now; new metrics (body composition, blood pressure, sleep stages and scores, readiness, recovery, strain); per-metric source preference and an AI-allowed flag per source; more choices under "Apps and devices you use". Waiting on the developer apps to test with real accounts. A **Refresh** button (↻) in the header fetches from all connected services straight away and reloads the page.

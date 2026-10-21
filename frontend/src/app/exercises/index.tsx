@@ -1,5 +1,5 @@
-import { PagePlaceholder } from '@/components/PagePlaceholder';
+import { ExerciseLibraryScreen } from '@/features/exercises/ExerciseLibraryScreen';
 
 export default function Screen() {
-  return <PagePlaceholder page="exerciseGuide" />;
+  return <ExerciseLibraryScreen />;
 }
