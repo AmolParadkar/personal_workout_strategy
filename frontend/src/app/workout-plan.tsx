@@ -1,5 +1,5 @@
-import { PagePlaceholder } from '@/components/PagePlaceholder';
+import { WorkoutPlanScreen } from '@/features/workouts/WorkoutPlanScreen';
 
 export default function Screen() {
-  return <PagePlaceholder page="workoutPlan" />;
+  return <WorkoutPlanScreen />;
 }

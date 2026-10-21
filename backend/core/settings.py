@@ -18,7 +18,7 @@ from core.supabase import SupabaseClient
 SETTINGS_SELECT = (
     "id,user_id,display_name,date_of_birth,sex,height_cm,goals,goals_notes,goal_metric,"
     "injuries_notes,water_target_ml,data_sources,data_sources_other,onboarded_at,"
-    "training_preferences(equipment,available_days,minutes_per_session,location),"
+    "training_preferences(equipment,available_days,minutes_per_session,location,experience),"
     "diet_preferences(diet_type,cuisines,allergies,dislikes,meals_per_day,cooking_minutes),"
     "display_settings(show_weight,show_calorie_intake,show_calories_burned)"
 )

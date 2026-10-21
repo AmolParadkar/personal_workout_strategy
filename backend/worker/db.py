@@ -16,6 +16,9 @@ class WorkerDb:
         self._headers = {"apikey": secret_key}
         self._http = http
 
+    async def rpc(self, function: str, args: dict[str, Any]) -> Any:
+        return await self._rpc(function, args)
+
     async def _rpc(self, function: str, args: dict[str, Any]) -> Any:
         response = await self._http.post(
             f"{self._url}/rest/v1/rpc/{function}", json=args, headers=self._headers

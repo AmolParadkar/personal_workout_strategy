@@ -2,6 +2,8 @@ from functools import lru_cache
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from core.llm import LlmConfig
+
 
 class Settings(BaseSettings):
     """Configuration from environment variables (locally from backend/.env)."""
@@ -29,6 +31,16 @@ class Settings(BaseSettings):
     whoop_client_secret: str | None = None
     polar_client_id: str | None = None
     polar_client_secret: str | None = None
+
+    # Cloud Qwen on Groq, for quick plan generation on Vercel (the Mac worker has
+    # its own copy). Without it, plans are made by the worker.
+    groq_api_key: str | None = None
+    groq_model: str = "qwen/qwen3.8-27b"
+
+    @property
+    def llm(self) -> LlmConfig:
+        # No Ollama on Vercel: the worker is the backup.
+        return LlmConfig(self.groq_api_key, self.groq_model, None, "")
 
     def connector_credentials(self, service: str) -> tuple[str, str] | None:
         """The developer app's client ID and secret, or None if not set up."""

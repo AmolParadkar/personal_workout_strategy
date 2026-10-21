@@ -25,6 +25,7 @@ export type TrainingDraft = {
   available_days: Training['available_days'];
   minutes_per_session: string;
   location: NonNullable<Training['location']>[];
+  experience: NonNullable<Training['experience']>[];
 };
 
 export type DietDraft = {
@@ -78,6 +79,7 @@ export function trainingDraft(settings: Settings): TrainingDraft {
     available_days: t.available_days,
     minutes_per_session: text(t.minutes_per_session),
     location: one(t.location),
+    experience: one(t.experience),
   };
 }
 
@@ -176,6 +178,7 @@ export function trainingUpdate(
       available_days: draft.available_days,
       minutes_per_session: minutes,
       location: draft.location[0] ?? null,
+      experience: draft.experience[0] ?? null,
     },
   };
 }

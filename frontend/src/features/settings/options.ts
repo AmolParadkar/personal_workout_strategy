@@ -51,6 +51,12 @@ export const locationOptions: Option<NonNullable<Training['location']>>[] = [
   { value: 'travel', label: 'Travelling' },
 ];
 
+export const experienceOptions: Option<NonNullable<Training['experience']>>[] = [
+  { value: 'beginner', label: 'Beginner' },
+  { value: 'intermediate', label: 'Intermediate' },
+  { value: 'advanced', label: 'Advanced' },
+];
+
 export const equipmentOptions: Option<Training['equipment'][number]>[] = [
   { value: 'bodyweight', label: 'Bodyweight only' },
   { value: 'dumbbells', label: 'Dumbbells' },

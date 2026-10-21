@@ -16,6 +16,8 @@ GoalMetric = Literal[
 ]
 Day = Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 Location = Literal["home", "gym", "travel"]
+# Training experience: sets exercise difficulty and starting volume (beginner if not set).
+Experience = Literal["beginner", "intermediate", "advanced"]
 Equipment = Literal[
     "bodyweight",
     "dumbbells",
@@ -91,6 +93,7 @@ class TrainingPreferences(BaseModel):
     available_days: list[Day]
     minutes_per_session: int | None
     location: Location | None
+    experience: Experience | None = None
 
 
 class DietPreferences(BaseModel):
@@ -158,6 +161,7 @@ class TrainingPreferencesUpdate(BaseModel):
     available_days: list[Day] | None = None
     minutes_per_session: Annotated[int, Field(ge=5, le=300)] | None = None
     location: Location | None = None
+    experience: Experience | None = None
 
     @field_validator("equipment")
     @classmethod

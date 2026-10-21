@@ -53,15 +53,17 @@ Daily and weekly figures (averages, trends, baselines) are calculated from `heal
 
 Used by: [Workout Plan](pages/workout-plan.md), [Plan for Today](pages/plan-for-today.md), [Exercise Guide](pages/exercise-guide.md).
 
+Status: plans, sessions and items **built** (migration `20261021120550_workout_plans.sql`, M6 part 1); logs and completions tables exist, used from M6 part 2. Access: the household reads everything; each person changes only their own. `training_preferences.experience` (beginner / intermediate / advanced) was added in the same migration.
+
 | Table | Key fields | Purpose |
 |---|---|---|
 | `exercises` | `id` (the source's id, e.g. `Barbell_Squat`), `name`, `source`, `category`, `level`, `force`, `mechanic`, `equipment`, `primary_muscles[]`, `secondary_muscles[]`, `instructions[]`, `images[]` (CDN addresses), `about`, `form_cues[]`, `precautions[]`, `guide_model`, `guide_written_at`, `video_id`, `video_title`, `video_channel`, `video_duration_seconds`, `video_views`, `video_score`, `video_checked_at` | Shared exercise library (not per person), **built in M5**. Fuzzy name suggestions via `public.suggest_exercises(query, muscle, equipment, limit)` (pg_trgm) (migration `20261021052715_exercises.sql`): 876 exercises from free-exercise-db. Everyone signed in reads it; only the importer and the worker (secret keys) write. Guide text written once by the LLM; video chosen by the scoring job. |
 | `video_feedback` | `exercise_id`, `profile_id`, `video_id`, `video_title`, `verdict` (right / wrong), `reason` (required for wrong) | "Is this the right video?" answers. Shared like the library (everyone signed in reads; each adds their own). Rejections guide the next video search; a "right" on the current video stops the monthly refresh. |
-| `workout_plans` | `profile_id`, `week_start`, `status` (draft / active / superseded), `rationale`, `job_id` | One plan per person per week. A draft is the preview shown before a change is applied. |
-| `workout_sessions` | `plan_id`, `date`, `title`, `focus` (e.g. legs), `explanation` | One per training day. |
-| `session_items` | `session_id`, `phase` (cardio / mobility / activation / main / cooldown), `position`, `exercise_id`, `sets`, `reps`, `target_load_kg`, `duration_min` | The five-phase structure. |
-| `exercise_logs` | `profile_id`, `session_item_id`, `set_number`, `reps`, `load_kg`, `logged_at` | What was actually done; drives progressive overload and load capacity. |
-| `session_completions` | `profile_id`, `session_id`, `completed_at`, `effort` (easy / right / too_hard) | Workout streak and effort feedback. |
+| `workout_plans` | `profile_id`, `week_start` (a Monday), `status` (draft / active / superseded), `rationale`, `made_by` (e.g. `groq:…`, `ollama:…`, `rules`), `reason` (new_week / requested / change) | One **active** plan per person per week (unique), at most one draft. Saved whole by `public.save_workout_plan(profile, week, status, plan)` (all or nothing; signed-in people only for themselves); `public.apply_workout_plan(id)` makes a draft active and the old one superseded. |
+| `workout_sessions` | `plan_id`, `profile_id`, `day`, `title`, `focus` (full_body / upper / lower / push / pull / legs), `minutes`, `explanation` | One per training day. |
+| `session_items` | `session_id`, `profile_id`, `phase` (cardio / mobility / activation / main / cooldown), `position`, `exercise_id`, `sets`, `reps_min`, `reps_max`, `duration_seconds`, `rest_seconds`, `target_load_kg`, `notes` | The five-phase structure. People can swap their own items' exercises. |
+| `exercise_logs` | `profile_id`, `session_item_id`, `exercise_id`, `set_number`, `reps`, `load_kg`, `duration_seconds`, `logged_at` | What was actually done; drives progressive overload and load capacity. |
+| `session_completions` | `profile_id`, `session_id`, `done_on`, `completed_at`, `effort` (easy / right / too_hard) | Workout streak and effort feedback. |
 
 ## Nutrition
 
