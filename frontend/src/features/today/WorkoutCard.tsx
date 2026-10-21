@@ -294,11 +294,6 @@ function SetRow({
     styles.input,
     { borderColor: error ? colors.alert : colors.border, color: colors.text },
   ];
-  const target =
-    item.reps_max && item.reps_max !== item.reps_min
-      ? `${item.reps_min}–${item.reps_max}`
-      : `${item.reps_min ?? ''}`;
-
   return (
     <View style={styles.setRow}>
       <Text style={[styles.setLabel, { color: colors.textMuted }]}>Set {setNumber}</Text>
@@ -306,8 +301,6 @@ function SetRow({
         value={reps}
         onChangeText={setReps}
         inputMode="numeric"
-        placeholder={target}
-        placeholderTextColor={colors.textMuted}
         accessibilityLabel={`${item.exercise_name} set ${setNumber} reps`}
         editable={canEdit}
         style={input}
@@ -319,8 +312,6 @@ function SetRow({
             value={kg}
             onChangeText={setKg}
             inputMode="decimal"
-            placeholder={item.target_load_kg ? String(item.target_load_kg) : '–'}
-            placeholderTextColor={colors.textMuted}
             accessibilityLabel={`${item.exercise_name} set ${setNumber} kg`}
             editable={canEdit}
             style={input}
