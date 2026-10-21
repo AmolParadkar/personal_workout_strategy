@@ -23,7 +23,14 @@ from core.models.nutrition import (
     WeekMealPlan,
 )
 from core.nutrition import rules
-from core.nutrition.generate import MAX_FAT_SHARE, build_plan, fat_share, size
+from core.nutrition.generate import (
+    MAX_FAT_SHARE,
+    build_plan,
+    fat_share,
+    main_kind,
+    portions_for,
+    size,
+)
 from core.nutrition.inputs import (
     FOOD_COLUMNS,
     MissingDetailsError,
@@ -39,7 +46,7 @@ from core.workouts.inputs import user_select
 
 PLAN_JOB = "generate_meal_plan"
 VERCEL_BUDGET_SECONDS = 25.0
-SWAP_COUNT = 6
+SWAP_COUNT = 12
 # A meal out is usually richer than the one planned.
 EATING_OUT_EXTRA = 0.3
 # Most a day's planned calories are trimmed to make up for a meal out.
@@ -275,18 +282,195 @@ async def foods_by_id(
 
 
 def portions_of(meal: dict[str, Any], foods: dict[str, dict[str, Any]]) -> list[Portion]:
-    """A saved meal's items as portions; the staple (or the only dish) is the one
-    resized, as when the plan was made."""
+    """A saved meal's items as portions, resized the same way as when the plan was
+    made (the staple carries the size)."""
     items = [i for i in meal.get("items") or [] if i["food_id"] in foods]
-    flexible = 1 if meal["slot"] in ("lunch", "dinner") and len(items) > 1 else 0
-    return [
-        Portion(foods[i["food_id"]], float(i["servings"]), flexible=n == flexible)
-        for n, i in enumerate(items)
-    ]
+    portions = portions_for(meal["slot"], [foods[i["food_id"]] for i in items])
+    for portion, i in zip(portions, items, strict=True):
+        portion.servings = float(i["servings"])
+    return portions
 
 
 def slot_target(day_kcal: float, slots: list[str], position: int) -> float:
     return rules.slot_kcal(day_kcal, slots)[position]
+
+
+# A week held in memory: [{"day", "targets", "meals": [{"slot", "position", "kind",
+# "name", "items", "nutrients", "note"}]}], as saved by save_meal_plan.
+MEAL_FIELDS = ("slot", "position", "kind", "name", "items", "nutrients", "note")
+
+
+def plan_days(row: dict[str, Any]) -> list[dict[str, Any]]:
+    """A saved plan (PLAN_SELECT) as the days save_meal_plan takes."""
+    meals = row.get("planned_meals") or []
+    return [
+        {
+            "day": t["day"],
+            "targets": {k: v for k, v in t.items() if k != "day"},
+            "meals": [
+                {k: m.get(k) for k in MEAL_FIELDS}
+                for m in sorted(
+                    (m for m in meals if m["day"] == t["day"]), key=lambda m: m["position"]
+                )
+            ],
+        }
+        for t in sorted(row.get("daily_targets") or [], key=lambda t: t["day"])
+    ]
+
+
+def _share(day: dict[str, Any], position: int) -> float:
+    slots = [m["slot"] for m in day["meals"]]
+    return slot_target(day["targets"]["kcal"], slots, position)
+
+
+def _same_kind(a: dict[str, Any], b: dict[str, Any]) -> bool:
+    if a.get("role") != b.get("role"):
+        return False
+    return a.get("role") != "main" or main_kind(a) == main_kind(b)
+
+
+def replace_dish(
+    day: dict[str, Any],
+    position: int,
+    food: dict[str, Any],
+    foods: dict[str, dict[str, Any]],
+    item: int | None = None,
+) -> None:
+    """Put `food` in a meal: in place of item `item`, or of the dish of the same
+    kind (a dal for a dal, a sabzi for a sabzi, rice for chapati), or of the main
+    dish; then resize the meal to its share of the day."""
+    meal = day["meals"][position]
+    items = list(meal.get("items") or [])
+    if item is None:
+        item = next(
+            (
+                n
+                for n, i in enumerate(items)
+                if i["food_id"] in foods and _same_kind(foods[i["food_id"]], food)
+            ),
+            0,
+        )
+    entry = {"food_id": food["id"], "servings": 1}
+    if items:
+        items[min(item, len(items) - 1)] = entry
+    else:
+        items = [entry]
+    foods = {**foods, food["id"]: food}
+    portions = portions_of({**meal, "items": items}, foods)
+    size(meal["slot"], portions, _share(day, position))
+    rebuilt = rules.meal_json(meal["slot"], position, portions)
+    rebuilt.pop("_lead", None)
+    day["meals"][position] = {**meal, **rebuilt, "kind": "meal", "note": None}
+
+
+def mark_eating_out(
+    days: list[dict[str, Any]],
+    refs: set[tuple[str, int]],
+    foods: dict[str, dict[str, Any]],
+    today: date,
+) -> bool:
+    """Mark meals (day, position) as eaten out: each counted as a little richer
+    than planned, and one meal on each following day trimmed (up to 10% of the
+    day) until that's made up. Returns whether anything was trimmed."""
+    by_day = {d["day"]: d for d in days}
+    extra = 0.0
+    for day_iso, position in refs:
+        day = by_day[day_iso]
+        meal = day["meals"][position]
+        t = day["targets"]
+        share = _share(day, position)
+        estimate = share * (1 + EATING_OUT_EXTRA)
+        extra += estimate - float((meal.get("nutrients") or {}).get("kcal") or share)
+        ratio = estimate / t["kcal"]
+        day["meals"][position] = {
+            **meal,
+            "kind": "eating_out",
+            "name": "Eating out",
+            "items": [],
+            "nutrients": {
+                "kcal": round(estimate),
+                "protein_g": round(t["protein_g"] * ratio * 0.8, 1),
+                "carbs_g": round(t["carbs_g"] * ratio, 1),
+                "fat_g": round(t["fat_g"] * ratio * 1.4, 1),
+                "micros": {},
+            },
+            "note": "An estimate: a meal out is usually richer. Log what you eat on the day.",
+        }
+
+    # Take what's needed from the next day first (up to 10% of it), then the day
+    # after, until it's made up (that day's other meals if it's the last day).
+    first = min(day for day, _ in refs)
+    later = [d for d in sorted(by_day) if d > first and d >= today.isoformat()] or [first]
+    remaining = max(extra, 0.0)
+    for day_iso in later:
+        day = by_day[day_iso]
+        trim = min(remaining, MOST_TRIM * day["targets"]["kcal"])
+        if trim <= 0:
+            break
+        order = sorted(
+            (n for n, m in enumerate(day["meals"]) if m["kind"] == "meal"),
+            key=lambda n: ["dinner", "lunch", "breakfast", "snack"].index(day["meals"][n]["slot"]),
+        )
+        # The whole trim on one meal (dinner first), so the smaller portion shows.
+        for n in order:
+            meal = day["meals"][n]
+            portions = portions_of(meal, foods)
+            if not portions:
+                continue
+            current = float((meal.get("nutrients") or {}).get("kcal") or 0)
+            size(meal["slot"], portions, current - trim)
+            rebuilt = rules.meal_json(meal["slot"], n, portions, meal.get("note"))
+            rebuilt.pop("_lead", None)
+            if rebuilt["nutrients"]["kcal"] < current:
+                day["meals"][n] = {**meal, **rebuilt}
+                remaining -= current - rebuilt["nutrients"]["kcal"]
+                break
+    return remaining < extra
+
+
+async def active_row(
+    supabase: SupabaseClient, token: str, profile_id: str, week_start: date
+) -> dict[str, Any] | None:
+    rows = await supabase.select(
+        "meal_plans",
+        {
+            "select": PLAN_SELECT,
+            "profile_id": f"eq.{profile_id}",
+            "week_start": f"eq.{week_start.isoformat()}",
+            "status": "eq.active",
+        },
+        token,
+    )
+    return rows[0] if rows else None
+
+
+async def save_draft(
+    supabase: SupabaseClient,
+    token: str,
+    profile_id: str,
+    week_start: date,
+    base: dict[str, Any],
+    days: list[dict[str, Any]],
+    note: str,
+    rationale_extra: str = "",
+) -> None:
+    await save(
+        supabase,
+        token,
+        profile_id,
+        week_start,
+        "draft",
+        {
+            "rationale": ((base.get("rationale") or "") + rationale_extra).strip()[:2000],
+            "made_by": base.get("made_by"),
+            "reason": "change",
+            "change_note": note[:200],
+            "days": days,
+        },
+    )
+
+
+# --- Swapping a dish -------------------------------------------------------------------------
 
 
 async def _own_meal(
@@ -307,37 +491,63 @@ async def _own_meal(
     return rows[0]
 
 
-# --- Swapping a dish -------------------------------------------------------------------------
-
-
 async def alternatives(
-    supabase: SupabaseClient, token: str, profile_id: str, meal_id: str, today: date
+    supabase: SupabaseClient,
+    token: str,
+    profile_id: str,
+    meal_id: str,
+    today: date,
+    item: int = 0,
+    search: str | None = None,
 ) -> list[FoodOption]:
-    """Dishes in the same role (main, breakfast, staple, …) the person can have,
-    closest in protein for their calories first."""
+    """Swaps for one dish in a meal: the same kind of dish (a dal for a dal, a
+    sabzi for a sabzi, …) the person can have, closest in protein for their
+    calories first; with `search`, any dish of that kind whose name matches,
+    the household's own dishes included."""
     meal = await _own_meal(supabase, token, profile_id, meal_id)
     items = meal.get("items") or []
     if meal["kind"] != "meal" or not items:
         return []
-    lead_id = items[0]["food_id"]
+    current_id = items[min(item, len(items) - 1)]["food_id"]
     inputs = await load_inputs(
         user_select(supabase, token), profile_id, rules.week_start_of(today), today
     )
-    lead = next((f for f in inputs.foods if f["id"] == lead_id), None)
-    if lead is None:
+    current = next((f for f in inputs.foods if f["id"] == current_id), None)
+    if current is None:
         return []
     avoid = rules.avoid_words(inputs.allergies, inputs.dislikes)
     in_meal = {i["food_id"] for i in items}
-    density = _density(lead)
+    words = [w.lower() for w in (search or "").split() if w]
     pool = [
         f
         for f in inputs.foods
-        if f.get("role") == lead.get("role")
-        and f["id"] not in in_meal
-        and (f.get("alias") or fat_share(f) <= MAX_FAT_SHARE)
+        if f["id"] not in in_meal
         and rules.allowed(f, inputs.diet_type, avoid)
+        and (
+            rules.matches_search(f, search or "")
+            if words
+            else _same_kind(f, current)
+            and (f.get("alias") or f.get("source") == "custom" or fat_share(f) <= MAX_FAT_SHARE)
+        )
     ]
-    pool.sort(key=lambda f: (abs(_density(f) - density), rules.display_name(f)))
+    if words:
+        # Dishes named that way before dishes that only contain it.
+        pool.sort(
+            key=lambda f: (
+                not rules.matches_search(f, search or "", names_only=True),
+                not _same_kind(f, current),
+                len(f["name"]),
+            )
+        )
+    else:
+        density = _density(current)
+        pool.sort(
+            key=lambda f: (
+                f.get("source") != "custom",
+                abs(_density(f) - density),
+                rules.display_name(f),
+            )
+        )
     return [_option(f) for f in pool[:SWAP_COUNT]]
 
 
@@ -355,40 +565,42 @@ def _option(food: dict[str, Any]) -> FoodOption:
         kcal=round(n["kcal"]),
         protein_g=round(n["protein_g"], 1),
         diet=food["diet"],
+        custom=food.get("source") == "custom",
     )
 
 
 async def swap(
-    supabase: SupabaseClient, token: str, profile_id: str, meal_id: str, food_id: str, today: date
+    supabase: SupabaseClient,
+    token: str,
+    profile_id: str,
+    meal_id: str,
+    food_id: str,
+    today: date,
+    item: int = 0,
+    search: str | None = None,
 ) -> str:
-    """Put the chosen dish in place of the meal's main one, resize the meal to its
-    share of the day's calories, and return the plan's id."""
-    offered = await alternatives(supabase, token, profile_id, meal_id, today)
+    """Put the chosen dish in place of item `item`, resize the meal to its share
+    of the day's calories, and return the plan's id."""
+    offered = await alternatives(supabase, token, profile_id, meal_id, today, item, search)
     if food_id not in {o.id for o in offered}:
         raise NotAnAlternativeError
     meal = await _own_meal(supabase, token, profile_id, meal_id)
-    items = meal["items"]
-    foods = await foods_by_id(supabase, token, {i["food_id"] for i in items} | {food_id})
-    replaced = [{**items[0], "food_id": food_id, "servings": 1}] + items[1:]
-    portions = portions_of({**meal, "items": replaced}, foods)
+    foods = await foods_by_id(supabase, token, {i["food_id"] for i in meal["items"]} | {food_id})
     plan = meal["meal_plans"]
-    day_kcal = next(t["kcal"] for t in plan["daily_targets"] if t["day"] == meal["day"])
-    slots = [
-        m["slot"]
-        for m in sorted(plan["planned_meals"], key=lambda m: m["position"])
-        if m["day"] == meal["day"]
-    ]
-    size(meal["slot"], portions, slot_target(day_kcal, slots, meal["position"]))
-    rebuilt = rules.meal_json(meal["slot"], meal["position"], portions)
+    day_meals = sorted(
+        (m for m in plan["planned_meals"] if m["day"] == meal["day"]), key=lambda m: m["position"]
+    )
+    day = {
+        "day": meal["day"],
+        "targets": next(t for t in plan["daily_targets"] if t["day"] == meal["day"]),
+        "meals": [meal if m["position"] == meal["position"] else m for m in day_meals],
+    }
+    replace_dish(day, meal["position"], foods[food_id], foods, item)
+    rebuilt = day["meals"][meal["position"]]
     await supabase.update(
         "planned_meals",
         {"id": f"eq.{meal_id}", "profile_id": f"eq.{profile_id}"},
-        {
-            "name": rebuilt["name"],
-            "items": rebuilt["items"],
-            "nutrients": rebuilt["nutrients"],
-            "note": None,
-        },
+        {k: rebuilt[k] for k in ("name", "items", "nutrients", "note")},
         token,
         returning="id",
     )
@@ -398,31 +610,19 @@ async def swap(
 # --- Eating out --------------------------------------------------------------------------------
 
 
-def _short(day: str) -> str:
+def short_day(day: str) -> str:
     return date.fromisoformat(day).strftime("%a %d %b")
 
 
 async def eating_out(
     supabase: SupabaseClient, token: str, profile_id: str, meal_ids: list[str], today: date
 ) -> WeekMealPlan:
-    """A preview of the week with those meals eaten out: each counted as a little
-    richer than planned, and one meal on each following day trimmed (up to 10%
-    of the day) until that's made up, so the week stays on target."""
+    """A preview of the week with those meals eaten out (see mark_eating_out)."""
     week_start = rules.week_start_of(today)
-    rows = await supabase.select(
-        "meal_plans",
-        {
-            "select": PLAN_SELECT,
-            "profile_id": f"eq.{profile_id}",
-            "week_start": f"eq.{week_start.isoformat()}",
-            "status": "eq.active",
-        },
-        token,
-    )
-    if not rows:
+    row = await active_row(supabase, token, profile_id, week_start)
+    if not row:
         raise ChangeError("There's no meal plan this week to change.")
-    plan = rows[0]
-    meals = plan.get("planned_meals") or []
+    meals = row.get("planned_meals") or []
     chosen = [m for m in meals if m["id"] in set(meal_ids)]
     if len(chosen) != len(set(meal_ids)):
         raise ChangeError("Those meals aren't in this week's plan.")
@@ -430,106 +630,18 @@ async def eating_out(
         raise ChangeError("Choose meals from today on.")
     if any(m["kind"] == "eating_out" for m in chosen):
         raise ChangeError("That meal is already marked as eating out.")
-
-    targets = {t["day"]: t for t in plan.get("daily_targets") or []}
-    slots_by_day: dict[str, list[str]] = {}
-    for m in sorted(meals, key=lambda m: m["position"]):
-        slots_by_day.setdefault(m["day"], []).append(m["slot"])
-
-    extra = 0.0
-    replaced: dict[str, dict[str, Any]] = {}
-    for m in chosen:
-        t = targets[m["day"]]
-        share = slot_target(t["kcal"], slots_by_day[m["day"]], m["position"])
-        estimate = share * (1 + EATING_OUT_EXTRA)
-        extra += estimate - float((m.get("nutrients") or {}).get("kcal") or share)
-        ratio = estimate / t["kcal"]
-        replaced[m["id"]] = {
-            **m,
-            "kind": "eating_out",
-            "name": "Eating out",
-            "items": [],
-            "nutrients": {
-                "kcal": round(estimate),
-                "protein_g": round(t["protein_g"] * ratio * 0.8, 1),
-                "carbs_g": round(t["carbs_g"] * ratio, 1),
-                "fat_g": round(t["fat_g"] * ratio * 1.4, 1),
-                "micros": {},
-            },
-            "note": "An estimate: a meal out is usually richer. Log what you eat on the day.",
-        }
-
-    # Trim the days after the first meal out (or that day's other meals if it's Sunday).
-    first = min(m["day"] for m in chosen)
-    later = [d for d in sorted(targets) if d > first and d >= today.isoformat()]
-    trim_days = later or [first]
+    days = plan_days(row)
     foods = await foods_by_id(
-        supabase,
-        token,
-        {i["food_id"] for m in meals for i in m.get("items") or [] if m["day"] in trim_days},
+        supabase, token, {i["food_id"] for m in meals for i in m.get("items") or []}
     )
-    # Take what's needed from the next day first (up to 10% of it), then the
-    # day after, until the extra is made up, so the smaller portions really show.
-    remaining = max(extra, 0.0)
-    new_meals: dict[str, dict[str, Any]] = dict(replaced)
-    for day in trim_days:
-        t = targets[day]
-        trim = min(remaining, MOST_TRIM * t["kcal"])
-        if trim <= 0:
-            break
-        day_meals = [
-            m for m in meals if m["day"] == day and m["kind"] == "meal" and m["id"] not in replaced
-        ]
-        # The whole trim on one meal (dinner first), so the smaller portion shows.
-        day_meals.sort(key=lambda m: ["dinner", "lunch", "breakfast", "snack"].index(m["slot"]))
-        for m in day_meals:
-            portions = portions_of(m, foods)
-            if not portions:
-                continue
-            current = float((m.get("nutrients") or {}).get("kcal") or 0)
-            size(m["slot"], portions, current - trim)
-            rebuilt = rules.meal_json(m["slot"], m["position"], portions, m.get("note"))
-            rebuilt.pop("_lead", None)
-            if rebuilt["nutrients"]["kcal"] < current:
-                new_meals[m["id"]] = {**m, **rebuilt}
-                remaining -= current - rebuilt["nutrients"]["kcal"]
-                break
-
-    days = []
-    for day in sorted(targets):
-        t = targets[day]
-        day_meals = sorted(
-            (new_meals.get(m["id"], m) for m in meals if m["day"] == day),
-            key=lambda m: m["position"],
-        )
-        days.append(
-            {
-                "day": day,
-                "targets": {k: v for k, v in t.items() if k != "day"},
-                "meals": [
-                    {
-                        k: m.get(k)
-                        for k in ("slot", "position", "kind", "name", "items", "nutrients", "note")
-                    }
-                    for m in day_meals
-                ],
-            }
-        )
+    trimmed = mark_eating_out(days, {(m["day"], m["position"]) for m in chosen}, foods, today)
     note = "Eating out: " + "; ".join(
-        f"{_short(m['day'])}, {m['slot']}" for m in sorted(chosen, key=lambda m: m["day"])
+        f"{short_day(m['day'])}, {m['slot']}" for m in sorted(chosen, key=lambda m: m["day"])
     )
-    trimmed = (
-        f" The other meals {'that day' if not later else 'later in the week'} are a little "
-        "smaller to keep the week on target."
-        if remaining < extra
+    extra = (
+        " Other meals later in the week are a little smaller to keep the week on target."
+        if trimmed
         else ""
     )
-    draft = {
-        "rationale": ((plan.get("rationale") or "") + trimmed).strip()[:2000],
-        "made_by": plan.get("made_by"),
-        "reason": "change",
-        "change_note": note[:200],
-        "days": days,
-    }
-    await save(supabase, token, profile_id, week_start, "draft", draft)
+    await save_draft(supabase, token, profile_id, week_start, row, days, note, extra)
     return await get_week(supabase, token, profile_id, week_start, can_edit=True)

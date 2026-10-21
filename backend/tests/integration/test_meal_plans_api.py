@@ -85,6 +85,14 @@ def people():
             assert response.status_code == 200, response.text
         yield people
     finally:
+        # Test dishes go too (they'd otherwise stay in the household).
+        for person in people.values():
+            call(
+                "DELETE",
+                f"/rest/v1/foods?source=eq.custom&created_by=eq.{person['profile_id']}",
+                SECRET_KEY,
+                SECRET_KEY,
+            )
         for user_id in user_ids:
             call("DELETE", f"/auth/v1/admin/users/{user_id}", SECRET_KEY)
 
@@ -252,6 +260,92 @@ def test_only_own_plans_are_saved(people):
             "p_week_start": MONDAY.isoformat(),
             "p_status": "active",
             "p_plan": {"days": []},
+        },
+    )
+    assert status in (401, 403)
+
+
+def test_a_household_dish_is_saved_used_and_private(people):
+    a, b = people["a"], people["b"]
+    dish = {
+        "name": "Test moong chilla",
+        "role": "breakfast",
+        "serves": 2,
+        "ingredients": [
+            {"name": "Moong dal", "grams": 120, "food_id": "usda-174256"},
+            {"name": "Oil", "grams": 10, "food_id": "usda-172370"},
+            {"name": "Hing", "grams": 1},
+        ],
+    }
+    preview = client.post("/api/me/dishes/preview", json=dish, headers=a["headers"]).json()
+    assert preview["unmatched"] == ["Hing"] and 200 < preview["per_serving"]["kcal"] < 300
+    saved = client.post("/api/me/dishes", json=dish, headers=a["headers"])
+    assert saved.status_code == 200, saved.text
+    dish_id = saved.json()["id"]
+    assert dish_id.startswith("custom-")
+    # The whole household sees it (test users join the same household).
+    assert dish_id in [d["id"] for d in client.get("/api/me/dishes", headers=a["headers"]).json()]
+    assert dish_id in [d["id"] for d in client.get("/api/me/dishes", headers=b["headers"]).json()]
+    # Found by search when swapping breakfast.
+    plan = week_of(a)["active"]
+    breakfast = plan["days"][0]["meals"][0]
+    found = client.get(
+        f"/api/me/planned-meals/{breakfast['id']}/alternatives?today={TODAY.isoformat()}"
+        "&search=moong%20chilla",
+        headers=a["headers"],
+    ).json()
+    assert found and found[0]["id"] == dish_id and found[0]["custom"]
+    week = client.put(
+        f"/api/me/planned-meals/{breakfast['id']}/food?today={TODAY.isoformat()}",
+        json={"food_id": dish_id, "search": "moong chilla"},
+        headers=a["headers"],
+    ).json()
+    assert week["active"]["days"][0]["meals"][0]["items"][0]["food_id"] == dish_id
+    # Only whoever added it can remove it.
+    client.delete(f"/api/me/dishes/{dish_id}", headers=b["headers"])
+    assert dish_id in [d["id"] for d in client.get("/api/me/dishes", headers=a["headers"]).json()]
+    client.delete(f"/api/me/dishes/{dish_id}", headers=a["headers"])
+    assert dish_id not in [
+        d["id"] for d in client.get("/api/me/dishes", headers=a["headers"]).json()
+    ]
+
+
+def test_dishes_cannot_be_added_as_shared_foods(people):
+    status, _ = call(
+        "POST",
+        "/rest/v1/foods",
+        PUBLISHABLE_KEY,
+        people["b"]["token"],
+        {
+            "id": "custom-sneaky",
+            "name": "Sneaky",
+            "source": "usda",
+            "diet": "vegetarian",
+            "basis": "100g",
+            "kcal": 1,
+        },
+    )
+    assert status in (401, 403)
+
+
+def test_ingredient_search_and_an_empty_chat(people):
+    a = people["a"]
+    found = client.get("/api/ingredients?search=chickpea%20flour", headers=a["headers"]).json()
+    assert any("besan" in f["name"].lower() for f in found)
+    assert (
+        client.get(f"/api/me/meal-chat?today={TODAY.isoformat()}", headers=a["headers"]).json()
+        == []
+    )
+    status, _ = call(
+        "POST",
+        "/rest/v1/meal_chat_messages",
+        PUBLISHABLE_KEY,
+        people["b"]["token"],
+        {
+            "profile_id": a["profile_id"],
+            "week_start": MONDAY.isoformat(),
+            "role": "user",
+            "text": "x",
         },
     )
     assert status in (401, 403)

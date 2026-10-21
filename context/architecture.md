@@ -99,8 +99,11 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `GET /api/profiles/{id}/meal-plan?week_start=` | The week's meal plan (and your draft preview) with daily targets, reasons and planned totals; `generating` while the worker makes one; `missing` (e.g. `weight`) when a plan can't be made yet |
 | `POST /api/me/meal-plan/generate` | Make this week's meal plan from `today` (`new_week`: only if the week has none; `requested`: a preview if one exists) |
 | `POST /api/me/meal-plans/{id}/apply`, `DELETE /api/me/meal-plans/{id}` | Use the previewed draft; or discard it |
-| `GET /api/me/planned-meals/{id}/alternatives?today=`, `PUT /api/me/planned-meals/{id}/food?today=` | Swaps for a meal's main dish; make a swap (the meal is resized) |
+| `GET /api/me/planned-meals/{id}/alternatives?today=&item=&search=`, `PUT /api/me/planned-meals/{id}/food?today=` | Swaps for one dish in a meal (same kind, or a search of all dishes, your own included); make a swap (the meal is resized) |
 | `POST /api/me/meal-plan/eating-out` | Mark meals as eaten out: a preview with later days trimmed to keep the week on target |
+| `GET /api/me/meal-chat?today=`, `POST /api/me/meal-chat` | The week's chat; a message comes back with the reply and the week (with a preview if anything changed) |
+| `POST /api/me/dishes/draft`, `POST /api/me/dishes/preview`, `POST /api/me/dishes`, `GET /api/me/dishes`, `DELETE /api/me/dishes/{id}` | Your own dishes: the AI's recipe matched to ingredients; the numbers for an edited recipe; save; list the household's; remove one you added |
+| `GET /api/ingredients?search=` | USDA ingredients by name (per 100 g), to match a recipe's ingredient |
 | `GET /api/grocery-list?week_start=&from_day=[&profile_id=]` | The household's grocery list (or one person's) from `from_day` to Sunday |
 | `GET /api/jobs/{id}` | A job's status and result (household's jobs) |
 | `POST /api/me/jobs/{id}/retry` | Put your own failed job back in the queue |

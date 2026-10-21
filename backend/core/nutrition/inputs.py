@@ -13,7 +13,7 @@ from core.nutrition.targets import Body
 Select = Callable[[str, dict[str, str]], Awaitable[list[dict[str, Any]]]]
 
 FOOD_COLUMNS = (
-    "id,name,alias,role,diet,basis,serving_label,serving_g,countable,kcal,protein_g,"
+    "id,name,alias,source,role,diet,basis,serving_label,serving_g,countable,kcal,protein_g,"
     "carbs_g,fat_g,fibre_g,micros,ingredients"
 )
 STEP_DAYS = 14
@@ -69,7 +69,7 @@ async def load_inputs(
     profile = (
         await select(
             "profiles",
-            {"select": "sex,date_of_birth,height_cm,goals", "id": f"eq.{profile_id}"},
+            {"select": "sex,date_of_birth,height_cm,goals,household_id", "id": f"eq.{profile_id}"},
         )
     )[0]
     weight = await latest_weight(select, profile_id)
@@ -133,7 +133,20 @@ async def load_inputs(
         if meal["slot"] in ("lunch", "dinner") and meal.get("items")
     }
 
-    foods = await select("foods", {"select": FOOD_COLUMNS, "role": "not.is.null", "limit": "2000"})
+    # The shared databases plus this household's own dishes (the worker sees every
+    # household's, so it's filtered here too).
+    household = profile.get("household_id")
+    foods = await select(
+        "foods",
+        {
+            "select": FOOD_COLUMNS,
+            "role": "not.is.null",
+            "or": f"(household_id.is.null,household_id.eq.{household})"
+            if household
+            else "(household_id.is.null)",
+            "limit": "3000",
+        },
+    )
     return MealInputs(
         profile_id=profile_id,
         week_start=week_start,

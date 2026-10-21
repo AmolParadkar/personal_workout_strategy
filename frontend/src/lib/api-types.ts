@@ -952,7 +952,8 @@ export interface paths {
         };
         /**
          * Alternatives
-         * @description Swaps for a meal's main dish: same kind of dish, fits your diet and allergies.
+         * @description Swaps for one dish in a meal (`item`): the same kind of dish that fits your diet
+         *     and allergies; with `search`, any dish whose name matches (your own included).
          */
         get: operations["alternatives_api_me_planned_meals__meal_id__alternatives_get"];
         put?: never;
@@ -1024,6 +1025,134 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/me/meal-chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get Chat
+         * @description This week's chat about your meal plan.
+         */
+        get: operations["get_chat_api_me_meal_chat_get"];
+        put?: never;
+        /**
+         * Send Chat
+         * @description Ask for a change in your own words; changes come back as a preview to use or keep.
+         */
+        post: operations["send_chat_api_me_meal_chat_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/dishes/draft": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Draft Dish
+         * @description The AI's recipe for a dish, matched to the ingredient database, to check first.
+         */
+        post: operations["draft_dish_api_me_dishes_draft_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/dishes/preview": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Preview Dish
+         * @description The numbers for an edited recipe.
+         */
+        post: operations["preview_dish_api_me_dishes_preview_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/dishes": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Household Dishes
+         * @description Dishes your household has added.
+         */
+        get: operations["household_dishes_api_me_dishes_get"];
+        put?: never;
+        /**
+         * Save Dish
+         * @description Save a dish for your household; the planner, swaps and chat can then use it.
+         */
+        post: operations["save_dish_api_me_dishes_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/dishes/{dish_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Remove Dish
+         * @description Remove a dish you added (plans that use it keep it).
+         */
+        delete: operations["remove_dish_api_me_dishes__dish_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/ingredients": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Ingredients
+         * @description Ingredients (USDA, per 100 g) matching a name, to match a recipe's ingredient.
+         */
+        get: operations["ingredients_api_ingredients_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -1069,6 +1198,36 @@ export interface components {
             day: string;
             /** Title */
             title: string;
+        };
+        /** ChatMessage */
+        ChatMessage: {
+            /** Id */
+            id: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "user" | "assistant";
+            /** Text */
+            text: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Draft Plan Id */
+            draft_plan_id?: string | null;
+            /**
+             * Add Dishes
+             * @default []
+             */
+            add_dishes: string[];
+        };
+        /** ChatReply */
+        ChatReply: {
+            /** Messages */
+            messages: components["schemas"]["ChatMessage"][];
+            week: components["schemas"]["WeekMealPlan"];
         };
         /** ChecklistItem */
         ChecklistItem: {
@@ -1188,6 +1347,68 @@ export interface components {
             /** Cooking Minutes */
             cooking_minutes?: number | null;
         };
+        /** DishDraft */
+        DishDraft: {
+            /** Name */
+            name: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "breakfast" | "main" | "staple" | "salad" | "snack";
+            /** Serves */
+            serves: number;
+            /**
+             * Diet
+             * @enum {string}
+             */
+            diet: "vegetarian" | "eggetarian" | "non_vegetarian";
+            /** Ingredients */
+            ingredients: components["schemas"]["DishIngredient"][];
+            per_serving: components["schemas"]["Nutrients"];
+            /** Unmatched */
+            unmatched: string[];
+        };
+        /** DishIngredient */
+        DishIngredient: {
+            /** Name */
+            name: string;
+            /** Grams */
+            grams: number;
+            /** Food Id */
+            food_id?: string | null;
+            /** Food Name */
+            food_name?: string | null;
+            /**
+             * Approximate
+             * @default false
+             */
+            approximate: boolean;
+            /**
+             * Kcal
+             * @default 0
+             */
+            kcal: number;
+            /**
+             * Protein G
+             * @default 0
+             */
+            protein_g: number;
+        };
+        /** DishInput */
+        DishInput: {
+            /** Name */
+            name: string;
+            /**
+             * Role
+             * @enum {string}
+             */
+            role: "breakfast" | "main" | "staple" | "salad" | "snack";
+            /** Serves */
+            serves: number;
+            /** Ingredients */
+            ingredients: components["schemas"]["DishIngredient"][];
+        };
         /** DisplaySettings */
         DisplaySettings: {
             /** Show Weight */
@@ -1205,6 +1426,13 @@ export interface components {
             show_calorie_intake?: boolean | null;
             /** Show Calories Burned */
             show_calories_burned?: boolean | null;
+        };
+        /** DraftDish */
+        DraftDish: {
+            /** Name */
+            name: string;
+            /** Note */
+            note?: string | null;
         };
         /** EatingOut */
         EatingOut: {
@@ -1323,6 +1551,11 @@ export interface components {
              * @enum {string}
              */
             diet: "vegetarian" | "eggetarian" | "non_vegetarian";
+            /**
+             * Custom
+             * @default false
+             */
+            custom: boolean;
         };
         /** GenerateMealPlan */
         GenerateMealPlan: {
@@ -1449,6 +1682,17 @@ export interface components {
             saved: number;
             /** Skipped */
             skipped: components["schemas"]["SkippedSample"][];
+        };
+        /** IngredientOption */
+        IngredientOption: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Kcal */
+            kcal: number;
+            /** Protein G */
+            protein_g: number;
         };
         /** Job */
         Job: {
@@ -1862,6 +2106,16 @@ export interface components {
             /** Doing 75 Hard */
             doing_75_hard: boolean;
         };
+        /** SendChat */
+        SendChat: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Text */
+            text: string;
+        };
         /** ServiceConnection */
         ServiceConnection: {
             /**
@@ -1995,6 +2249,13 @@ export interface components {
         SwapMeal: {
             /** Food Id */
             food_id: string;
+            /**
+             * Item
+             * @default 0
+             */
+            item: number;
+            /** Search */
+            search?: string | null;
         };
         /** SyncRequest */
         SyncRequest: {
@@ -3998,6 +4259,8 @@ export interface operations {
         parameters: {
             query: {
                 today: string;
+                item?: number;
+                search?: string | null;
             };
             header?: {
                 authorization?: string | null;
@@ -4125,6 +4388,276 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["GroceryList"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    get_chat_api_me_meal_chat_get: {
+        parameters: {
+            query: {
+                today: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatMessage"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    send_chat_api_me_meal_chat_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SendChat"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ChatReply"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    draft_dish_api_me_dishes_draft_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DraftDish"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DishDraft"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    preview_dish_api_me_dishes_preview_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DishInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["DishDraft"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    household_dishes_api_me_dishes_get: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FoodOption"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    save_dish_api_me_dishes_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["DishInput"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FoodOption"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    remove_dish_api_me_dishes__dish_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                dish_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": unknown;
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    ingredients_api_ingredients_get: {
+        parameters: {
+            query: {
+                search: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["IngredientOption"][];
                 };
             };
             /** @description Validation Error */

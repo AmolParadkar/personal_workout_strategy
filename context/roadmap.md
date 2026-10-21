@@ -97,6 +97,8 @@ Built in two parts: plans (part 1), then doing the workouts and changing the pla
 - [x] Import USDA / IFCT into `foods` (USDA FoodData Central + the Indian Nutrient Databank, which is built on IFCT; part 1)
 - [x] Meal plan generation job, daily targets with reasons (part 1)
 - [x] [Nutrition Plan](pages/nutrition-plan.md): weekly view, change + preview (eating out), swaps, grocery list (part 1)
+- [x] Nutrition Plan round two: chat to change the plan (preview first), household dishes (AI recipe, ingredients matched to USDA), fuller and more varied meals, any-dish swaps with search, compact layout with overlays
+- [ ] Agentic chat: a short tool loop (search dishes with filters, read the plan, check a dish) and meaning-based dish search (`pgvector` + Supabase `gte-small` embeddings); food database and plan only; same preview step
 - [ ] [Plan for Today](pages/plan-for-today.md) meals: as recommended, manual, favourites
 - [ ] Food photo flow with confirmation questions
 

@@ -19,18 +19,26 @@ from core.nutrition.rules import Food, Portion
 from core.nutrition.targets import Body, Targets, daily_targets
 
 # Candidates shown to the LLM per kind (a fresh sample each week, for variety).
-SAMPLE = {"b": 24, "m": 32, "s": 16, "x": 12, "n": 18}
+SAMPLE = {"b": 22, "m": 28, "v": 22, "s": 14, "x": 12, "n": 16}
 KIND_LABELS = {
     "b": "Breakfast dishes",
-    "m": "Main dishes (curries, dals, meat, eggs, vegetables)",
+    "m": "Protein dishes (dals, beans, paneer, eggs, meat, fish)",
+    "v": "Vegetable dishes (sabzis)",
     "s": "Breads and rice",
     "x": "Salads and raitas",
     "n": "Snacks and fruit",
 }
-MAX_ANSWER_TOKENS = 900
+# Most times one dish appears in a week (staples like chapati and rice excepted).
+MAX_PER_WEEK = {"b": 2, "m": 2, "v": 2, "x": 2, "n": 3}
+MAX_ANSWER_TOKENS = 1100
 PROTEIN_SHORT = 0.9  # top up protein when a day is below 90% of its target
 MEAL_OVER = 1.2  # a protein add-on may take a meal at most 20% over its share
 PLAIN_STAPLE = re.compile(r"chapati|\broti\b|boiled rice|brown rice|phulka", re.IGNORECASE)
+PROTEIN_WORDS = re.compile(
+    r"\b(dal|daal|dhal|rajma|chole|chana|channa|lobia|moong|masoor|urad|arhar|toor|sambar|"
+    r"paneer|tofu|soya|sprout\w*|egg\w*|keema|chicken|mutton|fish|prawn|kadhi)\b",
+    re.IGNORECASE,
+)
 # Dishes getting more of their calories from fat than this aren't planned
 # (nuts, chosen on purpose, are the exception).
 MAX_FAT_SHARE = 0.55
@@ -46,6 +54,24 @@ def fat_share(food: Food) -> float:
 def protein_density(food: Food) -> float:
     kcal = float(food.get("kcal") or 0)
     return float(food.get("protein_g") or 0) / kcal if kcal else 0
+
+
+def main_kind(food: Food) -> str:
+    """'m' for a protein dish (dal, beans, paneer, eggs, meat), 'v' for a vegetable
+    dish (sabzi): lunch has one of each."""
+    pulses = sum(
+        float(i.get("amount") or 0)
+        for i in food.get("ingredients") or []
+        if i.get("group") == "Pulses" and i.get("unit") == "g"
+    )
+    if (
+        food["diet"] != "vegetarian"
+        or pulses >= 20
+        or protein_density(food) >= 0.05
+        or PROTEIN_WORDS.search(food["name"])
+    ):
+        return "m"
+    return "v"
 
 
 SYSTEM = (
@@ -72,6 +98,9 @@ class MealInputs:
     seed: str = ""
     # Mains from last week, used less this week.
     recent: set[str] = field(default_factory=set)
+    # From the chat: what they asked for this week, and words to leave out.
+    request: str = ""
+    extra_avoid: list[str] = field(default_factory=list)
 
     def days(self) -> list[date]:
         start = max(self.today, self.week_start)
@@ -90,16 +119,20 @@ class Candidates:
     def code_map(self) -> dict[str, Food]:
         return {f"{k}{n}": f for k, foods in self.by_kind.items() for n, f in enumerate(foods)}
 
+    def kind_of(self, food: Food) -> str:
+        return next(k for k, foods in self.by_kind.items() if food in foods)
+
 
 def candidates(inputs: MealInputs) -> Candidates:
-    avoid = rules.avoid_words(inputs.allergies, inputs.dislikes)
+    avoid = rules.avoid_words(inputs.allergies, [*inputs.dislikes, *inputs.extra_avoid])
     ok = [f for f in inputs.foods if rules.allowed(f, inputs.diet_type, avoid)]
 
     def role(*names: str) -> list[Food]:
         return [
             f
             for f in ok
-            if f.get("role") in names and (f.get("alias") or fat_share(f) <= MAX_FAT_SHARE)
+            if f.get("role") in names
+            and (f.get("alias") or f.get("source") == "custom" or fat_share(f) <= MAX_FAT_SHARE)
         ]
 
     # The smallest portion has to fit the meal: a 400 kcal dosa is too much for a
@@ -108,11 +141,13 @@ def candidates(inputs: MealInputs) -> Candidates:
         slots = inputs.slots()
         day_kcal = daily_targets(inputs.body).kcal
         shares = dict(zip(slots, rules.slot_kcal(day_kcal, slots), strict=True))
+        main = max(shares.get("lunch", 0), shares.get("dinner", 0))
         room = {
             "b": 1.1 * shares.get("breakfast", 0),
-            "m": 0.7 * max(shares.get("lunch", 0), shares.get("dinner", 0)),
-            "s": 0.6 * max(shares.get("lunch", 0), shares.get("dinner", 0)),
-            "x": 0.4 * max(shares.get("lunch", 0), shares.get("dinner", 0)),
+            "m": 0.6 * main,
+            "v": 0.45 * main,
+            "s": 0.6 * main,
+            "x": 0.35 * main,
             "n": 1.3 * shares.get("snack", shares.get("breakfast", 0)),
         }
     else:
@@ -122,10 +157,12 @@ def candidates(inputs: MealInputs) -> Candidates:
         smallest = rules.nutrients(food, rules.step(food))["kcal"]
         return kind not in room or not room[kind] or smallest <= room[kind]
 
+    mains = role("main")
     rng = random.Random(f"{inputs.profile_id}:{inputs.week_start}:{inputs.seed}")
     by_kind = {
         "b": role("breakfast"),
-        "m": role("main"),
+        "m": [f for f in mains if main_kind(f) == "m"],
+        "v": [f for f in mains if main_kind(f) == "v"],
         "s": role("staple"),
         "x": role("salad"),
         "n": role("snack", "fruit") + [f for f in role("protein") if f.get("alias")],
@@ -141,6 +178,8 @@ def candidates(inputs: MealInputs) -> Candidates:
         if kind in ("m", "b"):
             # Protein-rich dishes first.
             foods.sort(key=lambda f: protein_density(f) < PROTEIN_RICH)
+        # The household's own dishes always make the list.
+        foods.sort(key=lambda f: f.get("source") != "custom")
         by_kind[kind] = foods[: SAMPLE[kind]]
     return Candidates(by_kind=by_kind, protein=rules.protein_foods(ok, inputs.diet_type))
 
@@ -148,42 +187,72 @@ def candidates(inputs: MealInputs) -> Candidates:
 # --- Choosing dishes -------------------------------------------------------------------------
 
 Picks = dict[date, list[list[Food]]]
+# The order dishes sit in a meal: the main, then the staple (resized to fit),
+# then the vegetable dish and salad.
+ORDER = {"b": 0, "m": 0, "s": 1, "v": 2, "x": 3, "n": 4}
+
+
+class Rotation:
+    """Hands out dishes in turn, at most MAX_PER_WEEK times each, not repeating
+    the last few."""
+
+    def __init__(self, c: Candidates):
+        self.c = c
+        self.used: dict[str, int] = {}
+        self.turn = dict.fromkeys(c.by_kind, 0)
+
+    def take(self, kind: str, avoid: set[str] = frozenset(), pool=None) -> Food | None:
+        pool = pool if pool is not None else self.c.by_kind[kind]
+        if not pool:
+            return None
+        cap = MAX_PER_WEEK.get(kind)
+        for _ in range(len(pool)):
+            food = pool[self.turn[kind] % len(pool)]
+            self.turn[kind] += 1
+            if food["id"] in avoid or (cap and self.used.get(food["id"], 0) >= cap):
+                continue
+            self.used[food["id"]] = self.used.get(food["id"], 0) + 1
+            return food
+        # Everything's been used enough (few dishes fit): repeat the least used.
+        food = min(pool, key=lambda f: (f["id"] in avoid, self.used.get(f["id"], 0)))
+        self.used[food["id"]] = self.used.get(food["id"], 0) + 1
+        return food
+
+    def allow(self, kind: str, food: Food) -> bool:
+        cap = MAX_PER_WEEK.get(kind)
+        if cap and self.used.get(food["id"], 0) >= cap:
+            return False
+        self.used[food["id"]] = self.used.get(food["id"], 0) + 1
+        return True
+
+
+def shape(slot: str, foods: list[Food], c: Candidates) -> list[Food]:
+    return sorted(foods, key=lambda f: ORDER[c.kind_of(f)])
 
 
 def rules_picks(inputs: MealInputs, c: Candidates) -> Picks:
-    """Dishes chosen by rotation: no main twice within two days, lunch and dinner
-    differ, plain chapati or rice most days, a salad or raita with lunch."""
-    mains, breakfasts = c.by_kind["m"], c.by_kind["b"]
+    """Dishes chosen in turn: a protein dish, a vegetable dish, chapati or rice and
+    a raita or salad for lunch; a protein dish and chapati or rice (and a
+    vegetable dish when there are enough) for dinner; nothing more than twice a week."""
     staples = [f for f in c.by_kind["s"] if PLAIN_STAPLE.search(f["name"])] or c.by_kind["s"]
-    salads, snacks = c.by_kind["x"], c.by_kind["n"]
-    picks: Picks = {}
+    turn = Rotation(c)
     recent: list[str] = []
-    counters = {"m": 0, "b": 0, "s": 0, "x": 0, "n": 0}
-
-    def next_of(kind: str, pool: list[Food], avoid: set[str] = frozenset()) -> Food | None:
-        if not pool:
-            return None
-        for _ in range(len(pool)):
-            food = pool[counters[kind] % len(pool)]
-            counters[kind] += 1
-            if food["id"] not in avoid:
-                return food
-        return pool[0]
-
+    picks: Picks = {}
     for day in inputs.days():
         meals = []
         for slot in inputs.slots():
             if slot == "breakfast":
-                meals.append([f for f in [next_of("b", breakfasts)] if f])
+                foods = [turn.take("b")]
             elif slot in ("lunch", "dinner"):
-                main = next_of("m", mains, set(recent[-3:]))
+                main = turn.take("m", set(recent[-2:]))
                 if main:
                     recent.append(main["id"])
-                staple = next_of("s", staples)
-                side = next_of("x", salads) if slot == "lunch" else None
-                meals.append([f for f in (main, staple, side) if f])
+                foods = [main, turn.take("s", pool=staples), turn.take("v")]
+                if slot == "lunch":
+                    foods.append(turn.take("x"))
             else:
-                meals.append([f for f in [next_of("n", snacks)] if f])
+                foods = [turn.take("n")]
+            meals.append(shape(slot, [f for f in foods if f], c))
         picks[day] = meals
     return picks
 
@@ -194,11 +263,20 @@ class LlmMealWeek(BaseModel):
     days: dict[str, list[list[str]]]
 
 
+SHAPES = {
+    "breakfast": "1 b (optionally + 1 n fruit)",
+    "lunch": "1 m + 1 v + 1 s + 1 x",
+    "dinner": "1 m + 1 s (optionally + 1 v)",
+    "snack": "1 n",
+}
+
+
 def build_prompt(inputs: MealInputs, c: Candidates, targets: dict[date, Targets]) -> str:
     def line(code: str, f: Food) -> str:
         n = rules.nutrients(f, 1)
+        mine = " (their own dish)" if f.get("source") == "custom" else ""
         return (
-            f"{code} {rules.display_name(f)} ({f.get('serving_label') or 'serving'}, "
+            f"{code} {rules.display_name(f)}{mine} ({f.get('serving_label') or 'serving'}, "
             f"{n['kcal']:.0f} kcal, {n['protein_g']:.0f} g protein)"
         )
 
@@ -208,12 +286,6 @@ def build_prompt(inputs: MealInputs, c: Candidates, targets: dict[date, Targets]
         if foods
     )
     slots = inputs.slots()
-    shape = {
-        "breakfast": "1 b code (optionally 1 n fruit)",
-        "lunch": "1 m + 1 s (+ optionally 1 x)",
-        "dinner": "1 m + 1 s (+ optionally 1 x)",
-        "snack": "1 n code",
-    }
     days = "\n".join(
         f"{d.isoformat()} ({d.strftime('%A')}): {targets[d].kcal} kcal, "
         f"{targets[d].protein_g} g protein"
@@ -222,17 +294,23 @@ def build_prompt(inputs: MealInputs, c: Candidates, targets: dict[date, Targets]
     )
     cuisines = ", ".join(inputs.cuisines) or "Indian home cooking"
     cooking = f"{inputs.cooking_minutes} minutes" if inputs.cooking_minutes else "not given"
+    request = (
+        f"\nTheir request for this week (follow it): {inputs.request.strip()}\n"
+        if inputs.request.strip()
+        else ""
+    )
     return f"""Choose this week's meals.
 
 Cuisines they like: {cuisines}. Time to cook per day: {cooking}.
 Meals each day, in order: {", ".join(slots)}.
-Each meal is: {"; ".join(f"{s}: {shape[s]}" for s in dict.fromkeys(slots))}.
+Each meal is: {"; ".join(f"{s}: {SHAPES[s]}" for s in dict.fromkeys(slots))}.
 Days and targets:
 {days}
-
+{request}
 Portions are worked out afterwards, so just choose dishes. Favour dishes with more
-protein, vary the week (no main dish twice within two days; lunch and dinner differ),
-keep busy days simple, and prefer everyday home food over party dishes.
+protein and use their own dishes when they fit. Vary the week: no dish more than twice
+(chapati and rice excepted), lunch and dinner differ, and keep busy days simple.
+Prefer everyday home food over party dishes.
 
 {lists}
 
@@ -240,33 +318,44 @@ Return JSON: {{"note": "one sentence on how the week fits them",
 "days": {{"YYYY-MM-DD": [["codes for meal 1"], ["codes for meal 2"], ...]}}}}"""
 
 
+def _valid(slot: str, kinds: list[str]) -> bool:
+    count = kinds.count
+    if slot == "breakfast":
+        return count("b") == 1 and len(kinds) <= 2 and set(kinds) <= {"b", "n"}
+    if slot == "snack":
+        return kinds == ["n"]
+    return (
+        count("m") == 1
+        and count("s") == 1
+        and count("v") <= 1
+        and count("x") <= 1
+        and set(kinds) <= {"m", "s", "v", "x"}
+    )
+
+
 def llm_picks(inputs: MealInputs, c: Candidates, answer: LlmMealWeek, fallback: Picks) -> Picks:
-    """The LLM's choices where they're valid, the rules' choices elsewhere."""
+    """The LLM's choices where they're valid (and no dish more than twice a week),
+    the rules' choices elsewhere."""
     codes = c.code_map()
+    turn = Rotation(c)
     picks: Picks = {}
     for day in inputs.days():
         chosen = answer.days.get(day.isoformat()) or []
         meals = []
         for n, slot in enumerate(inputs.slots()):
             raw = chosen[n] if n < len(chosen) and isinstance(chosen[n], list) else []
-            foods = [codes[str(code)] for code in raw if str(code) in codes]
-            kinds = [k for code in raw for k in [str(code)[:1]] if str(code) in codes]
-            valid = (
-                (slot == "breakfast" and kinds.count("b") == 1 and len(foods) <= 2)
-                or (
-                    slot in ("lunch", "dinner")
-                    and kinds.count("m") == 1
-                    and kinds.count("s") == 1
-                    and kinds.count("x") <= 1
-                    and len(foods) <= 3
-                )
-                or (slot == "snack" and len(foods) == 1 and kinds == ["n"])
-            )
-            if valid:
-                # Main first, then staple, then the rest.
-                order = {"b": 0, "m": 0, "s": 1, "x": 2, "n": 3}
-                pairs = sorted(zip(kinds, foods, strict=True), key=lambda p: order[p[0]])
-                meals.append([f for _, f in pairs])
+            pairs = [(str(code)[:1], codes[str(code)]) for code in raw if str(code) in codes]
+            if _valid(slot, [k for k, _ in pairs]):
+                foods = []
+                for kind, food in pairs:
+                    if kind == "s" or turn.allow(kind, food):
+                        foods.append(food)
+                    else:
+                        # Used twice already: another dish of the same kind.
+                        swap = turn.take(kind)
+                        if swap:
+                            foods.append(swap)
+                meals.append(shape(slot, foods, c))
             else:
                 meals.append(fallback[day][n])
         picks[day] = meals
@@ -277,33 +366,38 @@ def llm_picks(inputs: MealInputs, c: Candidates, answer: LlmMealWeek, fallback: 
 
 
 def portions_for(slot: str, foods: list[Food]) -> list[Portion]:
+    """Lunch and dinner: the staple carries the size (the main if there's none);
+    breakfast and snacks: the first food. Everything else is one serving."""
     if not foods:
         return []
     if slot in ("lunch", "dinner"):
-        main, rest = foods[0], foods[1:]
-        staple = rest[0] if rest else None
-        out = [Portion(main, 1, flexible=staple is None)]
-        if staple:
-            out.append(Portion(staple, 1, flexible=True))
-        out += [Portion(f, 1) for f in rest[1:]]
-        return out
-    # Breakfast and snacks: the first food carries the size; extras are one serving.
+        staple = 1 if len(foods) > 1 and foods[1].get("role") == "staple" else None
+        return [
+            Portion(f, 1, flexible=(n == staple) or (staple is None and n == 0))
+            for n, f in enumerate(foods)
+        ]
     return [Portion(foods[0], 1, flexible=True)] + [Portion(f, 1) for f in foods[1:]]
 
 
 def size(slot: str, portions: list[Portion], target: float) -> list[Portion]:
     rules.size_meal(portions, target)
-    total = rules.meal_totals(portions)["kcal"]
-    if slot in ("lunch", "dinner") and portions and total < 0.85 * target:
-        # The staple alone can't fill the meal: a bigger helping of the main.
-        portions[0].servings = rules.snap(portions[0].food, 1.5, most=2)
-        rules.size_meal(portions, target)
-    if slot in ("lunch", "dinner") and portions and total > 1.15 * target:
-        # Even the smallest staple overshoots: drop the side, then a smaller main.
-        if len(portions) > 2 and portions[2].food.get("role") == "salad":
-            portions.pop(2)
-        portions[0].servings = rules.snap(portions[0].food, 0.5)
-        rules.size_meal(portions, target)
+    if slot in ("lunch", "dinner") and portions:
+        if rules.meal_totals(portions)["kcal"] < 0.85 * target:
+            # The staple alone can't fill the meal: a bigger helping of the main.
+            portions[0].servings = rules.snap(portions[0].food, 1.5, most=2)
+            rules.size_meal(portions, target)
+        # Even the smallest staple overshoots: drop the salad, then smaller sides,
+        # then a smaller main.
+        shrink = [p for p in portions if p.food.get("role") == "salad"]
+        sides = [p for p in portions[2:] if p.food.get("role") == "main"]
+        for p in shrink:
+            if rules.meal_totals(portions)["kcal"] > 1.15 * target:
+                portions.remove(p)
+                rules.size_meal(portions, target)
+        for p in [*sides, portions[0]]:
+            if rules.meal_totals(portions)["kcal"] > 1.15 * target:
+                p.servings = rules.snap(p.food, 0.5)
+                rules.size_meal(portions, target)
     if slot == "snack":
         for p in portions:
             p.servings = rules.snap(p.food, p.servings, most=3 if p.food.get("countable") else 1.5)

@@ -593,3 +593,63 @@ def test_dishes_say_what_the_portion_is_made_of():
     rajma = rules.item(FOODS[3], 1.5)
     assert rajma["made_with"] == "Made with about 60 g rajmah, 45 g onion"
     assert rules.item(FOODS[12], 1)["made_with"] is None  # a banana is just a banana
+
+
+# --- Your own dishes and the chat -------------------------------------------------------------
+
+from core.models.nutrition import DishIngredient  # noqa: E402
+from core.nutrition import chat, dishes  # noqa: E402
+
+
+def test_everyday_ingredients_match_their_usda_entries():
+    assert dishes.common_match("Atta") == ("usda-168893", False)
+    assert dishes.common_match("Paneer") == ("usda-172223", True)  # closest: queso fresco
+    assert dishes.common_match("Peanut butter")[0] == "usda-172470"
+    assert dishes.common_match("Basmati rice")[0] == "usda-168877"
+    assert dishes.common_match("Brown rice")[0] == "usda-169703"
+    assert dishes.common_match("Salt") is None
+
+
+def test_a_dishs_numbers_come_from_its_ingredients():
+    flour = food("usda-10", "Wheat flour", None, 340, 13, carbs=72, fat=2.5, basis="100g")
+    oil = food("usda-11", "Oil", None, 884, 0, carbs=0, fat=100, basis="100g")
+    chicken = food("usda-12", "Chicken", None, 120, 22.5, diet="non_vegetarian", basis="100g")
+    draft = dishes.compute(
+        "Roti and chicken",
+        "main",
+        2,
+        [
+            DishIngredient(name="Atta", grams=200, food_id="usda-10"),
+            DishIngredient(name="Oil", grams=10, food_id="usda-11"),
+            DishIngredient(name="Chicken", grams=200, food_id="usda-12"),
+            DishIngredient(name="Garam masala", grams=5),
+        ],
+        {f["id"]: f for f in (flour, oil, chicken)},
+    )
+    assert draft.per_serving.kcal == round((680 + 88.4 + 240) / 2)
+    assert draft.per_serving.protein_g == pytest.approx((26 + 45) / 2, abs=0.1)
+    assert draft.diet == "non_vegetarian" and draft.unmatched == ["Garam masala"]
+    assert draft.ingredients[0].kcal == 680
+
+
+def test_the_chat_prompt_shows_the_week_from_today():
+    days = [
+        {"day": "2026-10-20", "meals": [{"slot": "lunch", "name": "Old dal", "kind": "meal"}]},
+        {"day": "2026-10-22", "meals": [{"slot": "dinner", "name": "Rajma", "kind": "meal"},
+                                        {"slot": "lunch", "name": "x", "kind": "eating_out"}]},
+    ]  # fmt: skip
+    text = chat.prompt(days, date(2026, 10, 21), [], "no paneer", "vegetarian")
+    assert "Old dal" not in text and "dinner: Rajma; lunch: eating out" in text
+    assert "no paneer" in text and '"type": "replan"' in text
+
+
+def test_a_named_dish_goes_in_place_of_the_same_kind_of_dish():
+    plan = run(generate.build_plan(inputs(meals_per_day=3), None, None, "new_week"))
+    day = plan["days"][0]
+    foods = {f["id"]: f for f in FOODS}
+    lunch = day["meals"][1]
+    staple_before = lunch["items"][1]["food_id"]
+    other = foods["indb-S2"] if staple_before == "indb-S1" else foods["indb-S1"]
+    plans.replace_dish(day, 1, other, foods)
+    assert day["meals"][1]["items"][1]["food_id"] != staple_before  # the staple was swapped
+    assert day["meals"][1]["items"][0]["food_id"] == lunch["items"][0]["food_id"]

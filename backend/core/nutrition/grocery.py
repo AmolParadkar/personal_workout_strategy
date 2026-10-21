@@ -32,7 +32,7 @@ USDA_GROUPS = {
 }
 
 
-def _group(food: dict[str, Any]) -> str:
+def usda_group(food: dict[str, Any]) -> str:
     category = food.get("category") or ""
     if category == "Dairy and Egg Products":
         return "Eggs" if "egg" in food["name"].lower() else "Dairy"
@@ -122,7 +122,7 @@ async def grocery_list(
                 who[key].add(names[owner])
         else:
             grams = servings * float(food.get("serving_g") or 100)
-            key = (_group(food), rules.display_name(food), "g")
+            key = (usda_group(food), rules.display_name(food), "g")
             amounts[key] += grams
             who[key].add(names[owner])
 
