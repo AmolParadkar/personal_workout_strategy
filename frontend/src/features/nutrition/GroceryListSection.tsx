@@ -4,13 +4,13 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { ChipSelect } from '@/components/form';
 import { apiGet } from '@/lib/api';
 import { todayLocal } from '@/lib/dates';
-import { radius, spacing, useTheme } from '@/theme';
+import { spacing, useTheme } from '@/theme';
 
 import type { GroceryList } from './meals';
 
 type Who = 'everyone' | 'one';
 
-// The week's grocery list from today to Sunday: everyone's meal plans added up,
+// The week's grocery list (shown in an overlay) from today to Sunday: everyone's meal plans added up,
 // or just the person whose page this is.
 export function GroceryListSection({
   weekStart,
@@ -64,8 +64,7 @@ export function GroceryListSection({
   const withoutPlan = list?.people.filter((p) => !p.has_plan).map((p) => p.name) ?? [];
 
   return (
-    <View style={[styles.card, { borderColor: colors.border, backgroundColor: colors.surface }]}>
-      <Text style={[styles.heading, text]}>Grocery list</Text>
+    <View style={styles.wrapper}>
       <Text style={[styles.caption, muted]}>
         For meals from today to Sunday. Amounts are approximate; spices and staples you already have
         can be skipped.
@@ -111,15 +110,8 @@ export function GroceryListSection({
 }
 
 const styles = StyleSheet.create({
-  card: {
-    padding: spacing.md,
+  wrapper: {
     gap: spacing.sm,
-    borderRadius: radius.md,
-    borderWidth: 1,
-  },
-  heading: {
-    fontSize: 18,
-    fontWeight: '700',
   },
   group: {
     gap: 4,

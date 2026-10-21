@@ -104,10 +104,16 @@ class FoodOption(BaseModel):
     kcal: float
     protein_g: float
     diet: Literal["vegetarian", "eggetarian", "non_vegetarian"]
+    # One of the household's own dishes.
+    custom: bool = False
 
 
 class SwapMeal(BaseModel):
-    food_id: str = Field(min_length=1, max_length=40)
+    food_id: str = Field(min_length=1, max_length=60)
+    # Which dish in the meal (0: the first).
+    item: int = Field(default=0, ge=0, le=6)
+    # The search the dish was found with, if any.
+    search: str | None = Field(default=None, max_length=60)
 
 
 class EatingOut(BaseModel):
@@ -142,3 +148,78 @@ class GroceryList(BaseModel):
     from_day: date
     people: list[GroceryPerson]
     groups: list[GroceryGroup]
+
+
+# --- The household's own dishes ------------------------------------------------------
+
+DishRole = Literal["breakfast", "main", "staple", "salad", "snack"]
+
+
+class DishIngredient(BaseModel):
+    name: str = Field(min_length=1, max_length=80)
+    # For the whole recipe.
+    grams: float = Field(gt=0, le=5000)
+    # The ingredient database entry its nutrients come from (USDA); empty: not matched.
+    food_id: str | None = Field(default=None, max_length=40)
+    food_name: str | None = None
+    # The closest entry there is, not an exact one (e.g. paneer → ricotta).
+    approximate: bool = False
+    kcal: float = 0
+    protein_g: float = 0
+
+
+class DishDraft(BaseModel):
+    name: str
+    role: DishRole
+    serves: int
+    diet: Literal["vegetarian", "eggetarian", "non_vegetarian"]
+    ingredients: list[DishIngredient]
+    # For one serving, worked out from the matched ingredients.
+    per_serving: Nutrients
+    # Ingredients with no match (left out of the numbers).
+    unmatched: list[str]
+
+
+class DraftDish(BaseModel):
+    name: str = Field(min_length=2, max_length=80)
+    # Anything that helps, e.g. "my mother's recipe, no onion or garlic".
+    note: str | None = Field(default=None, max_length=300)
+
+
+class DishInput(BaseModel):
+    name: str = Field(min_length=2, max_length=80)
+    role: DishRole
+    serves: int = Field(ge=1, le=20)
+    ingredients: list[DishIngredient] = Field(min_length=1, max_length=30)
+
+
+class IngredientOption(BaseModel):
+    id: str
+    name: str
+    # Per 100 g.
+    kcal: float
+    protein_g: float
+
+
+# --- The week's chat about the meal plan ----------------------------------------------
+
+
+class ChatMessage(BaseModel):
+    id: str
+    role: Literal["user", "assistant"]
+    text: str
+    created_at: datetime
+    # A preview this reply made.
+    draft_plan_id: str | None = None
+    # Dishes the reply suggests adding to the database.
+    add_dishes: list[str] = []
+
+
+class SendChat(BaseModel):
+    today: date
+    text: str = Field(min_length=1, max_length=1000)
+
+
+class ChatReply(BaseModel):
+    messages: list[ChatMessage]
+    week: WeekMealPlan

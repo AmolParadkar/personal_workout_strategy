@@ -41,6 +41,14 @@ def week_start_of(day: date) -> date:
 
 # --- Who can eat what ---------------------------------------------------------------------
 
+# Words that make a dish non-vegetarian (as in scripts/import_foods.py).
+MEAT_WORDS = re.compile(
+    r"\b(chicken|mutton|lamb|beef|pork|veal|goat|turkey|duck|fish|prawns?|shrimps?|crab|"
+    r"lobster|squid|mackerel|pomfret|rohu|salmon|tuna|sardines?|bacon|ham|salami|"
+    r"sausages?|keema|meat|liver)\b",
+    re.IGNORECASE,
+)
+
 DIETS = {
     "vegetarian": {"vegetarian"},
     "eggetarian": {"vegetarian", "eggetarian"},
@@ -89,6 +97,47 @@ def food_text(food: Food) -> str:
     parts = [food.get("name") or "", food.get("alias") or ""]
     parts += [i.get("name") or "" for i in food.get("ingredients") or []]
     return " ".join(parts).lower()
+
+
+# Spellings that mean the same dish word (INDB writes "channa", people type "chole").
+SPELLINGS = [
+    {"chole", "chhole", "chana", "channa", "chickpea", "chickpeas", "kabuli"},
+    {"dal", "daal", "dhal"},
+    {"paratha", "parantha", "parotta"},
+    {"gobi", "gobhi", "cauliflower"},
+    {"aloo", "alu", "potato", "potatoes"},
+    {"bhindi", "okra", "ladyfinger"},
+    {"baingan", "brinjal", "eggplant", "aubergine"},
+    {"matar", "mutter", "peas"},
+    {"palak", "spinach"},
+    {"methi", "fenugreek"},
+    {"rajma", "rajmah", "kidney"},
+    {"sabzi", "sabji", "subzi", "subji"},
+    {"roti", "chapati", "chapatti", "phulka"},
+    {"chawal", "rice"},
+    {"khichdi", "khichri", "khitchdi"},
+    {"chilla", "cheela"},
+    {"dahi", "curd", "yogurt", "yoghurt"},
+    {"anda", "egg", "eggs"},
+    {"murgh", "chicken"},
+    {"machli", "fish"},
+    {"keema", "mince", "minced"},
+]
+_SPELLING = {word: group for group in SPELLINGS for word in group}
+
+
+def matches_search(food: Food, query: str, names_only: bool = False) -> bool:
+    """Every word of `query` appears in the food's name, plain name or (unless
+    `names_only`) ingredients, in any of its usual spellings."""
+    text = (
+        f"{food.get('name') or ''} {food.get('alias') or ''}".lower()
+        if names_only
+        else food_text(food)
+    )
+    return all(
+        any(variant in text for variant in _SPELLING.get(word, {word}))
+        for word in query.lower().split()
+    )
 
 
 def allowed(food: Food, diet_type: str | None, avoid: list[str]) -> bool:
