@@ -860,6 +860,170 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/profiles/{profile_id}/meal-plan": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Week Plan
+         * @description A person's meal plan for a week (active, plus a draft preview on your own).
+         */
+        get: operations["week_plan_api_profiles__profile_id__meal_plan_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/meal-plan/generate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate
+         * @description Make this week's meal plan (from `today` on). With reason `new_week` nothing
+         *     happens if the week already has one. Tried straight away; otherwise the Mac
+         *     worker makes it (`generating` is true until then). `missing` lists what's
+         *     needed first (e.g. a weigh-in).
+         */
+        post: operations["generate_api_me_meal_plan_generate_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/meal-plans/{plan_id}/apply": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Apply
+         * @description Use the previewed draft as the week's meal plan.
+         */
+        post: operations["apply_api_me_meal_plans__plan_id__apply_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/meal-plans/{plan_id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * Discard
+         * @description Throw away a draft (keep the current plan).
+         */
+        delete: operations["discard_api_me_meal_plans__plan_id__delete"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/planned-meals/{meal_id}/alternatives": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Alternatives
+         * @description Swaps for a meal's main dish: same kind of dish, fits your diet and allergies.
+         */
+        get: operations["alternatives_api_me_planned_meals__meal_id__alternatives_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/planned-meals/{meal_id}/food": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        /**
+         * Swap
+         * @description Swap a meal's main dish for one of its alternatives; the meal is resized.
+         */
+        put: operations["swap_api_me_planned_meals__meal_id__food_put"];
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/me/meal-plan/eating-out": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Eating Out
+         * @description Mark meals as eaten out: returns a preview with the rest of the week rebalanced.
+         */
+        post: operations["eating_out_api_me_meal_plan_eating_out_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/grocery-list": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Grocery List
+         * @description What the household's meal plans need from `from_day` to Sunday, added up
+         *     (or one person's, with `profile_id`).
+         */
+        get: operations["grocery_list_api_grocery_list_get"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -957,6 +1121,29 @@ export interface components {
             /** Can Edit */
             can_edit: boolean;
         };
+        /** DailyTargets */
+        DailyTargets: {
+            /** Kcal */
+            kcal: number;
+            /** Protein G */
+            protein_g: number;
+            /** Carbs G */
+            carbs_g: number;
+            /** Fat G */
+            fat_g: number;
+            /** Fibre G */
+            fibre_g: number | null;
+            /** Micros */
+            micros: {
+                [key: string]: number;
+            };
+            /** Reasons */
+            reasons: {
+                [key: string]: string;
+            };
+            /** Training Minutes */
+            training_minutes: number;
+        };
         /** DayChecklist */
         DayChecklist: {
             /**
@@ -1018,6 +1205,16 @@ export interface components {
             show_calorie_intake?: boolean | null;
             /** Show Calories Burned */
             show_calories_burned?: boolean | null;
+        };
+        /** EatingOut */
+        EatingOut: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /** Meal Ids */
+            meal_ids: string[];
         };
         /** EndChange */
         EndChange: {
@@ -1109,6 +1306,38 @@ export interface components {
             /** Image */
             image: string | null;
         };
+        /** FoodOption */
+        FoodOption: {
+            /** Id */
+            id: string;
+            /** Name */
+            name: string;
+            /** Serving Label */
+            serving_label: string | null;
+            /** Kcal */
+            kcal: number;
+            /** Protein G */
+            protein_g: number;
+            /**
+             * Diet
+             * @enum {string}
+             */
+            diet: "vegetarian" | "eggetarian" | "non_vegetarian";
+        };
+        /** GenerateMealPlan */
+        GenerateMealPlan: {
+            /**
+             * Today
+             * Format: date
+             */
+            today: string;
+            /**
+             * Reason
+             * @default requested
+             * @enum {string}
+             */
+            reason: "new_week" | "requested";
+        };
         /** GeneratePlan */
         GeneratePlan: {
             /**
@@ -1122,6 +1351,50 @@ export interface components {
              * @enum {string}
              */
             reason: "new_week" | "requested";
+        };
+        /** GroceryGroup */
+        GroceryGroup: {
+            /** Group */
+            group: string;
+            /** Items */
+            items: components["schemas"]["GroceryItem"][];
+        };
+        /** GroceryItem */
+        GroceryItem: {
+            /** Name */
+            name: string;
+            /** Amount */
+            amount: number | null;
+            /** Unit */
+            unit: string;
+            /** For People */
+            for_people: string[];
+        };
+        /** GroceryList */
+        GroceryList: {
+            /**
+             * Week Start
+             * Format: date
+             */
+            week_start: string;
+            /**
+             * From Day
+             * Format: date
+             */
+            from_day: string;
+            /** People */
+            people: components["schemas"]["GroceryPerson"][];
+            /** Groups */
+            groups: components["schemas"]["GroceryGroup"][];
+        };
+        /** GroceryPerson */
+        GroceryPerson: {
+            /** Profile Id */
+            profile_id: string;
+            /** Name */
+            name: string;
+            /** Has Plan */
+            has_plan: boolean;
         };
         /** HTTPValidationError */
         HTTPValidationError: {
@@ -1237,6 +1510,61 @@ export interface components {
              */
             date: string;
         };
+        /** MealDay */
+        MealDay: {
+            /**
+             * Day
+             * Format: date
+             */
+            day: string;
+            targets: components["schemas"]["DailyTargets"];
+            /** Meals */
+            meals: components["schemas"]["PlannedMeal"][];
+            totals: components["schemas"]["Nutrients"];
+        };
+        /** MealItem */
+        MealItem: {
+            /** Food Id */
+            food_id: string;
+            /** Name */
+            name: string;
+            /** Servings */
+            servings: number;
+            /** Unit */
+            unit: string;
+            /** Grams */
+            grams?: number | null;
+        };
+        /** MealPlan */
+        MealPlan: {
+            /** Id */
+            id: string;
+            /**
+             * Week Start
+             * Format: date
+             */
+            week_start: string;
+            /**
+             * Status
+             * @enum {string}
+             */
+            status: "draft" | "active" | "superseded";
+            /** Rationale */
+            rationale: string | null;
+            /** Made By */
+            made_by: string | null;
+            /** Reason */
+            reason: string | null;
+            /** Change Note */
+            change_note: string | null;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /** Days */
+            days: components["schemas"]["MealDay"][];
+        };
         /** MuscleSets */
         MuscleSets: {
             /** Muscle */
@@ -1253,6 +1581,38 @@ export interface components {
              * Format: date-time
              */
             created_at: string;
+        };
+        /** Nutrients */
+        Nutrients: {
+            /**
+             * Kcal
+             * @default 0
+             */
+            kcal: number;
+            /**
+             * Protein G
+             * @default 0
+             */
+            protein_g: number;
+            /**
+             * Carbs G
+             * @default 0
+             */
+            carbs_g: number;
+            /**
+             * Fat G
+             * @default 0
+             */
+            fat_g: number;
+            /** Fibre G */
+            fibre_g?: number | null;
+            /**
+             * Micros
+             * @default {}
+             */
+            micros: {
+                [key: string]: number;
+            };
         };
         /** Plan */
         Plan: {
@@ -1393,6 +1753,30 @@ export interface components {
             explanation: string | null;
             /** Items */
             items: components["schemas"]["PlanItem"][];
+        };
+        /** PlannedMeal */
+        PlannedMeal: {
+            /** Id */
+            id: string;
+            /**
+             * Slot
+             * @enum {string}
+             */
+            slot: "breakfast" | "lunch" | "dinner" | "snack";
+            /** Position */
+            position: number;
+            /**
+             * Kind
+             * @enum {string}
+             */
+            kind: "meal" | "eating_out";
+            /** Name */
+            name: string;
+            /** Items */
+            items: components["schemas"]["MealItem"][];
+            nutrients: components["schemas"]["Nutrients"];
+            /** Note */
+            note: string | null;
         };
         /** ProfileDetails */
         ProfileDetails: {
@@ -1605,6 +1989,11 @@ export interface components {
             /** Exercise Id */
             exercise_id: string;
         };
+        /** SwapMeal */
+        SwapMeal: {
+            /** Food Id */
+            food_id: string;
+        };
         /** SyncRequest */
         SyncRequest: {
             /**
@@ -1779,6 +2168,25 @@ export interface components {
              * Format: date-time
              */
             logged_at: string;
+        };
+        /** WeekMealPlan */
+        WeekMealPlan: {
+            /**
+             * Week Start
+             * Format: date
+             */
+            week_start: string;
+            active: components["schemas"]["MealPlan"] | null;
+            draft: components["schemas"]["MealPlan"] | null;
+            /** Generating */
+            generating: boolean;
+            /** Can Edit */
+            can_edit: boolean;
+            /**
+             * Missing
+             * @default []
+             */
+            missing: string[];
         };
         /** WeekPlan */
         WeekPlan: {
@@ -3435,6 +3843,286 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["WeekPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    week_plan_api_profiles__profile_id__meal_plan_get: {
+        parameters: {
+            query: {
+                week_start: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                profile_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeekMealPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    generate_api_me_meal_plan_generate_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["GenerateMealPlan"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeekMealPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    apply_api_me_meal_plans__plan_id__apply_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeekMealPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    discard_api_me_meal_plans__plan_id__delete: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                plan_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeekMealPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    alternatives_api_me_planned_meals__meal_id__alternatives_get: {
+        parameters: {
+            query: {
+                today: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                meal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["FoodOption"][];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    swap_api_me_planned_meals__meal_id__food_put: {
+        parameters: {
+            query: {
+                today: string;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                meal_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SwapMeal"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeekMealPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    eating_out_api_me_meal_plan_eating_out_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["EatingOut"];
+            };
+        };
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WeekMealPlan"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    grocery_list_api_grocery_list_get: {
+        parameters: {
+            query: {
+                week_start: string;
+                from_day: string;
+                profile_id?: string | null;
+            };
+            header?: {
+                authorization?: string | null;
+            };
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["GroceryList"];
                 };
             };
             /** @description Validation Error */

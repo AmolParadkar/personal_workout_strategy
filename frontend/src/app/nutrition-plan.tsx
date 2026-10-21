@@ -1,5 +1,5 @@
-import { PagePlaceholder } from '@/components/PagePlaceholder';
+import { NutritionPlanScreen } from '@/features/nutrition/NutritionPlanScreen';
 
 export default function Screen() {
-  return <PagePlaceholder page="nutritionPlan" />;
+  return <NutritionPlanScreen />;
 }

@@ -17,6 +17,10 @@ dev = [
     "ruff>=0.17.1",
     "uvicorn>=0.54.0",
 ]
+# Only for scripts/import_foods.py (reads the INDB spreadsheets); not deployed.
+import = [
+    "openpyxl>=3.1.5",
+]
 
 [tool.vercel]
 # Vercel runs this FastAPI app (api/main.py, variable `app`) as one function.

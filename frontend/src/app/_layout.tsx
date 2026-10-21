@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from '@/features/auth/AuthContext';
 import { ProfileProvider } from '@/features/profile/ProfileContext';
 import { WorkerNotice } from '@/features/jobs/WorkerNotice';
 import { useSyncConnectionsOnOpen } from '@/features/settings/syncOnOpen';
+import { useEnsureMealPlanOnOpen } from '@/features/nutrition/meals';
 import { useEnsureWeekPlanOnOpen } from '@/features/workouts/plans';
 import { maxContentWidth, spacing, ThemeProvider, useTheme } from '@/theme';
 
@@ -74,6 +75,7 @@ function AppFrame() {
   const { colors } = useTheme();
   useSyncConnectionsOnOpen();
   useEnsureWeekPlanOnOpen();
+  useEnsureMealPlanOnOpen();
   // Bumped by the Refresh button: re-mounting the page makes it load its data again.
   const [pageKey, setPageKey] = useState(0);
   const [notice, setNotice] = useState<{ text: string; problem: boolean } | null>(null);

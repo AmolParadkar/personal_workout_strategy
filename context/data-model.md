@@ -72,10 +72,10 @@ Used by: [Nutrition Plan](pages/nutrition-plan.md), [Plan for Today](pages/plan-
 
 | Table | Key fields | Purpose |
 |---|---|---|
-| `foods` | `name`, `source` (usda / ifct), `per_100g` nutrients (calories, protein, carbs, fat, micros) | Imported nutrition database. All nutrient numbers come from here. |
-| `meal_plans` | `profile_id`, `week_start`, `status` (draft / active / superseded), `job_id` | One plan per person per week. |
-| `daily_targets` | `meal_plan_id`, `date`, calories, protein, carbs, fat, `micros`, `reasons` | Targets with their one-line reasons. |
-| `planned_meals` | `meal_plan_id`, `date`, `slot` (breakfast / lunch / dinner / snack), `name`, `ingredients` (food_id + grams), `nutrients` | Recommended meals; also feed the grocery list. |
+| `foods` | `id` (`usda-<fdc id>` / `indb-<recipe code>`), `name`, `alias` (plain name for common foods, e.g. "Boiled eggs"), `source` (usda / indb), `category`, `role` (breakfast / main / staple / salad / snack / fruit / protein / drink / soup / sweet; empty: logging only), `diet` (vegetarian / eggetarian / non_vegetarian), `basis` (`100g` for USDA ingredients, `serving` for INDB dishes), `serving_label`, `serving_g`, `countable`, `kcal`, `protein_g`, `carbs_g`, `fat_g`, `fibre_g`, `micros`, `ingredients` (dishes: per serving, with grocery group) | Imported nutrition database (**built, M7**): 7,661 USDA foods + 932 Indian dishes. All nutrient numbers come from here. Read-only for signed-in users; written by `backend/scripts/import_foods.py`. |
+| `meal_plans` | `profile_id`, `week_start`, `status` (draft / active / superseded), `rationale`, `made_by`, `reason`, `change_note` | One active plan per person per week (**built, M7**); a draft is a preview (a new plan or an eating-out change). |
+| `daily_targets` | `meal_plan_id`, `profile_id`, `day`, `kcal`, `protein_g`, `carbs_g`, `fat_g`, `fibre_g`, `micros` (incl. `sodium_mg_max`), `reasons` (one line per target), `training_minutes` | Targets with their one-line reasons (**built, M7**). |
+| `planned_meals` | `meal_plan_id`, `profile_id`, `day`, `slot` (breakfast / lunch / dinner / snack), `position`, `kind` (meal / eating_out), `name`, `items` (food_id, name, servings, unit, grams), `nutrients` (worked out from `foods`), `note` | Recommended meals (**built, M7**); also feed the grocery list. Swaps update `name`, `items`, `nutrients`, `note`. |
 | `food_logs` | `profile_id`, `date`, `slot`, `method` (as_planned / photo / manual), `planned_meal_id`, `name`, `photo_path`, `nutrients` | What was actually eaten. |
 | `food_log_items` | `food_log_id`, `food_id`, `grams` | Ingredient breakdown behind each log (from the photo questions or manual entry). |
 | `favourite_meals` | `profile_id`, `name`, `items` (food_id + grams) | One-tap logging of repeated meals. |

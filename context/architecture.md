@@ -96,6 +96,12 @@ Nothing else. This keeps one data contract (see [Keeping data formats in sync](#
 | `POST /api/me/workout-plan/changes` | A change (day off, extra or shorter session, vacation, cheat meal, medical, something else): returns the week with a preview, or a message if it's for a later week |
 | `POST /api/me/plan-changes/{id}/end` | "I'm back" after a medical pause: previews the rest of the week, lighter |
 | `GET /api/me/core-lift-options?today=&search=` | Compound lifts you can do, for choosing core lifts |
+| `GET /api/profiles/{id}/meal-plan?week_start=` | The week's meal plan (and your draft preview) with daily targets, reasons and planned totals; `generating` while the worker makes one; `missing` (e.g. `weight`) when a plan can't be made yet |
+| `POST /api/me/meal-plan/generate` | Make this week's meal plan from `today` (`new_week`: only if the week has none; `requested`: a preview if one exists) |
+| `POST /api/me/meal-plans/{id}/apply`, `DELETE /api/me/meal-plans/{id}` | Use the previewed draft; or discard it |
+| `GET /api/me/planned-meals/{id}/alternatives?today=`, `PUT /api/me/planned-meals/{id}/food?today=` | Swaps for a meal's main dish; make a swap (the meal is resized) |
+| `POST /api/me/meal-plan/eating-out` | Mark meals as eaten out: a preview with later days trimmed to keep the week on target |
+| `GET /api/grocery-list?week_start=&from_day=[&profile_id=]` | The household's grocery list (or one person's) from `from_day` to Sunday |
 | `GET /api/jobs/{id}` | A job's status and result (household's jobs) |
 | `POST /api/me/jobs/{id}/retry` | Put your own failed job back in the queue |
 | `GET /api/worker-status` | Mac worker online (seen in 3 minutes), Ollama running, household jobs waiting |
@@ -147,7 +153,7 @@ Direct connectors ([M3b](roadmap.md#m3b--direct-connectors)) write to the same `
 |---|---|---|---|
 | `analyse_food_photo` | Plan for Today | Vercel first, then worker | Cloud Qwen vision (Ollama backup) |
 | `generate_workout_plan` | New week (app open), "Make a new plan"; later confirmed facts, disruptions | Vercel first (Groq, 25 s), then worker (Groq → Ollama → rules) | Cloud Qwen; rules always as the last resort ([how](pages/workout-plan.md#as-built-m6-part-1)) |
-| `generate_meal_plan` | Nutrition Plan, confirmed facts, disruptions | Vercel first, then worker | Cloud Qwen |
+| `generate_meal_plan` | New week (app open, after the workout plan), "Make a new plan"; later confirmed facts, disruptions | Vercel first (Groq, 25 s), then worker (Groq → Ollama → rules) | Cloud Qwen chooses dishes only; rules set targets, portions and every number ([how](pages/nutrition-plan.md#as-built-m7-part-1)) |
 | `extract_document_facts` | Personal Artifacts upload | **Worker only (local)** unless "Process in cloud now" | Ollama (Qwen vision) |
 | `analyse_progress_photo` | Progress | Open question: local or cloud | Qwen vision |
 | `find_exercise_video` | Exercise opened without a video (M5), new exercise in a plan (M6); monthly refresh | Worker | YouTube Data API + Qwen (comment rating) |
