@@ -372,6 +372,8 @@ class FakeSupabase:
             ]
         if table == "exercises":
             return LIBRARY
+        if table in ("plan_changes", "exercise_logs"):
+            return []
         raise AssertionError(table)
 
     async def rpc(self, function, args, token=None):
@@ -471,6 +473,8 @@ def test_worker_job_makes_and_saves_the_plan_even_without_an_llm():
     def run_fake(table):
         return {
             "workout_plans": [],
+            "plan_changes": [],
+            "exercise_logs": [],
             "profiles": [
                 {
                     "sex": "male",

@@ -10,6 +10,7 @@ import { ApiError, apiDelete, apiPost } from '@/lib/api';
 import { todayLocal } from '@/lib/dates';
 import { radius, spacing, useTheme } from '@/theme';
 
+import { ChangePanel } from './ChangePanel';
 import { Coverage } from './Coverage';
 import { dayLabel, type Plan, useWeekPlan, type WeekPlan, weekDays } from './plans';
 import { SessionCard } from './SessionCard';
@@ -63,6 +64,7 @@ export function WorkoutPlanScreen() {
         </Text>
 
         {error && <Text style={{ color: colors.alert }}>{error}</Text>}
+        {week?.message && <Text style={[styles.body, { color: colors.good }]}>{week.message}</Text>}
         {!week && !error && <ActivityIndicator color={colors.primary} />}
 
         {week?.generating && (
@@ -84,6 +86,16 @@ export function WorkoutPlanScreen() {
             ]}
           >
             <Text style={[styles.sectionTitle, text]}>New plan ready to preview</Text>
+            {week.changes
+              .filter((c) => c.status === 'pending')
+              .map((c) => (
+                <Text
+                  key={c.id}
+                  style={[styles.body, { color: colors.primary, fontWeight: '600' }]}
+                >
+                  For: {c.summary}
+                </Text>
+              ))}
             <Text style={[styles.body, muted]}>{week.draft.rationale}</Text>
             <Changes current={week.active} next={week.draft} />
             {week.draft.sessions.map((session) => (
@@ -123,9 +135,12 @@ export function WorkoutPlanScreen() {
             <Text style={[styles.caption, muted]}>
               {week.active.made_by === 'rules'
                 ? 'Made by the app’s rules (the AI wasn’t available).'
-                : 'Exercises chosen by AI from your equipment and settings.'}{' '}
+                : week.active.made_by === 'reused'
+                  ? 'Same exercises as last week (this 6-week block), with targets from what you lifted.'
+                  : 'Exercises chosen by AI from your equipment and settings.'}{' '}
               Tap a day to see its exercises.
             </Text>
+            {canEdit && !week.draft && <ChangePanel week={week} onChanged={setWeek} />}
             {days.map((day) => {
               const session = week.active!.sessions.find((s) => s.day === day);
               return session ? (

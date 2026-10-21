@@ -26,6 +26,7 @@ export type TrainingDraft = {
   minutes_per_session: string;
   location: NonNullable<Training['location']>[];
   experience: NonNullable<Training['experience']>[];
+  core_exercises: string[];
 };
 
 export type DietDraft = {
@@ -80,6 +81,7 @@ export function trainingDraft(settings: Settings): TrainingDraft {
     minutes_per_session: text(t.minutes_per_session),
     location: one(t.location),
     experience: one(t.experience),
+    core_exercises: t.core_exercises ?? [],
   };
 }
 
@@ -179,6 +181,7 @@ export function trainingUpdate(
       minutes_per_session: minutes,
       location: draft.location[0] ?? null,
       experience: draft.experience[0] ?? null,
+      core_exercises: draft.core_exercises,
     },
   };
 }
@@ -227,9 +230,13 @@ export function sourcesDraft(settings: Settings): SourcesDraft {
 
 export function sourcesUpdate(draft: SourcesDraft): Converted<Schemas['ProfileDetailsUpdate']> {
   const problems: string[] = [];
-  if (draft.data_sources_other.length > 200) problems.push('“Anything else” is limited to 200 characters.');
+  if (draft.data_sources_other.length > 200)
+    problems.push('“Anything else” is limited to 200 characters.');
   return {
     problems,
-    values: { data_sources: draft.data_sources, data_sources_other: orNull(draft.data_sources_other) },
+    values: {
+      data_sources: draft.data_sources,
+      data_sources_other: orNull(draft.data_sources_other),
+    },
   };
 }

@@ -103,9 +103,7 @@ export function WaterCard() {
             <Button
               key={ml}
               label={`+${ml} ml`}
-              onPress={() =>
-                change(() => apiPost<WaterDay>('/api/me/water', { ml, date: day }))
-              }
+              onPress={() => change(() => apiPost<WaterDay>('/api/me/water', { ml, date: day }))}
               disabled={busy}
             />
           ))}

@@ -10,7 +10,7 @@ from pydantic import BaseModel
 
 from core.jobs import JobContext, JobSpec, PermanentJobError, register
 from core.workouts.generate import build_plan
-from core.workouts.inputs import load_inputs, status_to_save
+from core.workouts.inputs import kept_sessions, load_inputs, merge_kept, status_to_save
 
 
 class PlanPayload(BaseModel):
@@ -25,13 +25,15 @@ async def run(payload: dict[str, Any], ctx: JobContext) -> dict[str, Any]:
     if ctx.db is None:
         raise PermanentJobError("Runs on the Mac worker only")
     job = PlanPayload.model_validate(payload)
-    inputs = await load_inputs(ctx.db.select, job.profile_id, job.week_start, job.today)
+    inputs = await load_inputs(ctx.db.select, job.profile_id, job.week_start, job.today, job.reason)
     status = await status_to_save(
         ctx.db.select, job.profile_id, job.week_start, job.status, job.reason
     )
     if status is None:
         return {"skipped": "The week already has a plan"}
     plan = await build_plan(inputs, ctx.http, ctx.llm, job.reason)
+    kept = await kept_sessions(ctx.db.select, job.profile_id, job.week_start, job.today)
+    plan = merge_kept(kept, plan)
     plan_id = await ctx.db.rpc(
         "save_workout_plan",
         {

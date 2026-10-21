@@ -12,13 +12,13 @@ from core.models.settings import (
     ProfileSettings,
     TrainingPreferences,
 )
-from core.supabase import SupabaseClient
+from core.supabase import InvalidValueError, SupabaseClient
 
 # One request fetches the profile and its three one-to-one settings rows.
 SETTINGS_SELECT = (
     "id,user_id,display_name,date_of_birth,sex,height_cm,goals,goals_notes,goal_metric,"
     "injuries_notes,water_target_ml,data_sources,data_sources_other,onboarded_at,"
-    "training_preferences(equipment,available_days,minutes_per_session,location,experience),"
+    "training_preferences(equipment,available_days,minutes_per_session,location,experience,core_exercises),"
     "diet_preferences(diet_type,cuisines,allergies,dislikes,meals_per_day,cooking_minutes),"
     "display_settings(show_weight,show_calorie_intake,show_calories_burned)"
 )
@@ -79,6 +79,14 @@ async def update_own_section(
 ) -> ProfileSettings:
     """Save one section of the signed-in person's settings; only fields sent are changed."""
     values = changes.model_dump(mode="json", exclude_unset=True)
+    if values.get("core_exercises"):
+        found = await supabase.select(
+            "exercises",
+            {"select": "id", "id": f"in.({','.join(values['core_exercises'])})"},
+            token,
+        )
+        if len(found) != len(values["core_exercises"]):
+            raise InvalidValueError("Unknown exercise in core lifts")
     if values:
         if section == "profile":
             await supabase.update("profiles", {"user_id": f"eq.{user_id}"}, values, token)
