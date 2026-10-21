@@ -7,6 +7,7 @@ from api.routes import (
     exercises,
     health_data,
     jobs,
+    nutrition,
     profiles,
     settings,
     seventy_five_hard,
@@ -35,6 +36,7 @@ app.include_router(connections.router)
 app.include_router(jobs.router)
 app.include_router(exercises.router)
 app.include_router(workouts.router)
+app.include_router(nutrition.router)
 
 
 @app.exception_handler(NotSignedInError)

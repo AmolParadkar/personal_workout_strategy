@@ -94,9 +94,9 @@ Built in two parts: plans (part 1), then doing the workouts and changing the pla
 
 ## M7 — Nutrition
 
-- [ ] Import USDA / IFCT into `foods`
-- [ ] Meal plan generation job, daily targets with reasons
-- [ ] [Nutrition Plan](pages/nutrition-plan.md): weekly view, change + preview, swaps, grocery list
+- [x] Import USDA / IFCT into `foods` (USDA FoodData Central + the Indian Nutrient Databank, which is built on IFCT; part 1)
+- [x] Meal plan generation job, daily targets with reasons (part 1)
+- [x] [Nutrition Plan](pages/nutrition-plan.md): weekly view, change + preview (eating out), swaps, grocery list (part 1)
 - [ ] [Plan for Today](pages/plan-for-today.md) meals: as recommended, manual, favourites
 - [ ] Food photo flow with confirmation questions
 

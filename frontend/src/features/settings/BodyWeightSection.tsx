@@ -10,7 +10,14 @@ type Weight = Schemas['WeightSummary'];
 
 // Latest body weight, plus a box to log today's. Weights from Apple Health
 // arrive through the Shortcut. View-only on the other person's profile.
-export function BodyWeightSection({ profileId }: { profileId: string }) {
+export function BodyWeightSection({
+  profileId,
+  onSaved,
+}: {
+  profileId: string;
+  // Called after a weigh-in is saved (e.g. to make a meal plan that needed it).
+  onSaved?: () => void;
+}) {
   const { colors } = useTheme();
   const [loaded, setLoaded] = useState<{ profileId: string; weight: Weight } | null>(null);
   const [kg, setKg] = useState('');
@@ -45,6 +52,7 @@ export function BodyWeightSection({ profileId }: { profileId: string }) {
       setLoaded({ profileId, weight: updated });
       setKg('');
       setMessage({ text: 'Saved.', isError: false });
+      onSaved?.();
     } catch (e) {
       setMessage({ text: e instanceof ApiError ? e.message : 'Couldn’t save.', isError: true });
     } finally {

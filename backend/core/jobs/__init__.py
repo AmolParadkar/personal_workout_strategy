@@ -68,4 +68,10 @@ def register(spec: JobSpec) -> JobSpec:
 
 
 # Imported for their register() calls.
-from core.jobs import exercise_guide, exercise_video, test_echo, workout_plan  # noqa: E402, F401
+from core.jobs import (  # noqa: E402, F401
+    exercise_guide,
+    exercise_video,
+    meal_plan,
+    test_echo,
+    workout_plan,
+)

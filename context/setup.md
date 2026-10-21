@@ -130,6 +130,8 @@ Withings, Oura, Whoop and Polar each need a developer app (once, Amol): [data-so
 
 ## Exercise library
 
+The food database (M7) is imported once with `cd backend && uv run --group import python -m scripts.import_foods` (uses `SUPABASE_SECRET_KEY`; the `import` group adds `openpyxl` for the INDB spreadsheets and isn't deployed). It downloads USDA FoodData Central (SR Legacy 2018 and Foundation Foods 2026-04, public domain) and the [Indian Nutrient Databank](https://github.com/lindsayjaacks/Indian-Nutrient-Databank-INDB-) at a pinned commit (`INDB_COMMIT`), caches them in the temp folder, and upserts everything, so running it again is safe. Credit: USDA FoodData Central; Vijayakumar et al., *Current Developments in Nutrition* (2024), built on the Indian Food Composition Tables (ICMR-NIN).
+
 The library (876 exercises from [free-exercise-db](https://github.com/yuhonas/free-exercise-db), public domain) is imported once with `cd backend && uv run python -m scripts.import_exercises` (uses `SUPABASE_SECRET_KEY`). Running it again updates the source fields and keeps guides and videos. To take a newer version of the database, change `COMMIT` in `backend/scripts/import_exercises.py` and run it again.
 
 ## Mac worker
