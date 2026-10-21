@@ -181,7 +181,34 @@ def item(food: Food, servings: float) -> dict[str, Any]:
         "servings": servings,
         "unit": unit_label(food, servings),
         "grams": grams,
+        "made_with": made_with(food, servings),
     }
+
+
+# Ingredient groups that say what a dish is made of (not spices or water).
+MAIN_GROUPS = {
+    "Grains and flours", "Pulses", "Leafy greens", "Vegetables", "Roots and tubers",
+    "Fruits", "Dairy", "Eggs", "Meat and fish", "Nuts and seeds", "Oils and fats", "Bakery",
+}  # fmt: skip
+
+
+def made_with(food: Food, servings: float, most: int = 3) -> str | None:
+    """A dish's main raw ingredients for the planned amount, so the portion can
+    be checked against home cooking, e.g. "about 110 g moong dal, 130 g potato"."""
+    parts = [
+        i
+        for i in food.get("ingredients") or []
+        if i.get("unit") in ("g", "ml") and i.get("group") in MAIN_GROUPS
+    ]
+    totals: dict[tuple[str, str], float] = {}
+    for i in parts:
+        key = (i["name"], i["unit"])
+        totals[key] = totals.get(key, 0) + float(i["amount"]) * servings
+    biggest = sorted(totals.items(), key=lambda kv: -kv[1])[:most]
+    shown = [
+        f"{round(amount / 5) * 5 or 1:g} {unit} {name.lower()}" for (name, unit), amount in biggest
+    ]
+    return f"Made with about {', '.join(shown)}" if shown else None
 
 
 @dataclass

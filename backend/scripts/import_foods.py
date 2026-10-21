@@ -184,6 +184,8 @@ ROLE_KCAL = {
     "breakfast": (60, 700), "main": (60, 700), "staple": (50, 600), "salad": (20, 400),
     "snack": (30, 450), "soup": (20, 400), "drink": (0, 400), "sweet": (50, 500),
 }  # fmt: skip
+# More than this in one "piece" means the piece label can't be trusted.
+PIECE_KCAL_MAX = 250
 UNCOUNTABLE = {
     "bowl", "plate", "cup", "glass", "tall glass", "small bowl", "soup bowl", "dish",
     "tablespoon", "jar", "curry bowl", "katori", "souffle dish", "tea cup", "mug", "serving",
@@ -376,6 +378,10 @@ def indb_rows() -> list[dict[str, Any]]:
         fat = number(n.get("unit_serving_fat_g")) or 0
         unit = str(n.get("servings_unit") or "serving").strip().lower()
         countable = unit not in UNCOUNTABLE
+        if countable and kcal > PIECE_KCAL_MAX:
+            # INDB's "piece" is often a whole recipe portion (a 450 kcal "biscuit",
+            # a 350 kcal "cheela" made from 55 g of dal): plan it as servings instead.
+            countable, unit = False, "serving"
         # Data checks: macros add up to the calories (within 20%), and one serving
         # is a plausible amount for its role (small countable items may be light).
         atwater = 4 * protein + 4 * carbs + 9 * fat

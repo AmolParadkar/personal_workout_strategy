@@ -26,6 +26,9 @@ class MealItem(BaseModel):
     # e.g. "2 chapatis", "1 bowl", "100 g"
     unit: str
     grams: float | None = None
+    # Dishes: the main raw ingredients for this amount, e.g. "Made with about 110 g
+    # green gram, 130 g potato, 20 g oil".
+    made_with: str | None = None
 
 
 class PlannedMeal(BaseModel):

@@ -1534,6 +1534,8 @@ export interface components {
             unit: string;
             /** Grams */
             grams?: number | null;
+            /** Made With */
+            made_with?: string | null;
         };
         /** MealPlan */
         MealPlan: {
