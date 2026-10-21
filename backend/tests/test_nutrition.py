@@ -587,3 +587,9 @@ def test_protein_add_ons_keep_each_meal_near_its_share():
         for meal, share in zip(day["meals"], shares, strict=True):
             if meal["note"]:
                 assert meal["nutrients"]["kcal"] <= generate.MEAL_OVER * share + 1
+
+
+def test_dishes_say_what_the_portion_is_made_of():
+    rajma = rules.item(FOODS[3], 1.5)
+    assert rajma["made_with"] == "Made with about 60 g rajmah, 45 g onion"
+    assert rules.item(FOODS[12], 1)["made_with"] is None  # a banana is just a banana

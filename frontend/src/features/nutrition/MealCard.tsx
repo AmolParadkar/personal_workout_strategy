@@ -87,9 +87,12 @@ export function MealCard({
         <Text style={[styles.name, text]}>Eating out</Text>
       ) : (
         meal.items.map((item, n) => (
-          <View key={`${item.food_id}-${n}`} style={styles.item}>
-            <Text style={[styles.name, text, n > 0 && styles.secondary]}>{item.name}</Text>
-            <Text style={[styles.body, muted]}>{item.unit}</Text>
+          <View key={`${item.food_id}-${n}`}>
+            <View style={styles.item}>
+              <Text style={[styles.name, text, n > 0 && styles.secondary]}>{item.name}</Text>
+              <Text style={[styles.body, muted]}>{item.unit}</Text>
+            </View>
+            {item.made_with && <Text style={[styles.caption, muted]}>{item.made_with}</Text>}
           </View>
         ))
       )}
