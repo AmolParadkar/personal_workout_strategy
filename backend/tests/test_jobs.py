@@ -163,8 +163,46 @@ def test_worker_beats_requeues_stuck_jobs_and_drains_the_queue(monkeypatch):
         await worker.run(settings(), asyncio.Event(), once=True)
 
     run(go())
-    assert [job_id for job_id, _ in db.updates] == ["a", "b"]
+    assert sorted(job_id for job_id, _ in db.updates) == ["a", "b"]
     assert db.heartbeats == 1 and db.requeued == 1
+
+
+def test_worker_runs_jobs_side_by_side(monkeypatch):
+    async def slow(payload, ctx):
+        await asyncio.sleep(0.3)
+        return {}
+
+    monkeypatch.setitem(JOBS, "slow", JobSpec(type="slow", handler=slow))
+    db = FakeDb([job(id=str(n), type="slow") for n in range(3)])
+    monkeypatch.setattr(worker, "WorkerDb", lambda *args: db)
+
+    async def go():
+        started = asyncio.get_running_loop().time()
+        await worker.run(settings(), asyncio.Event(), once=True)
+        return asyncio.get_running_loop().time() - started
+
+    elapsed = run(go())
+    assert len(db.updates) == 3 and all(v["status"] == "done" for _, v in db.updates)
+    assert elapsed < 0.8  # three 0.3 s jobs at once, not 0.9 s one after another
+
+
+def test_worker_takes_at_most_its_limit_at_once(monkeypatch):
+    active = 0
+    peak = 0
+
+    async def counted(payload, ctx):
+        nonlocal active, peak
+        active += 1
+        peak = max(peak, active)
+        await asyncio.sleep(0.05)
+        active -= 1
+        return {}
+
+    monkeypatch.setitem(JOBS, "counted", JobSpec(type="counted", handler=counted))
+    db = FakeDb([job(id=str(n), type="counted") for n in range(7)])
+    monkeypatch.setattr(worker, "WorkerDb", lambda *args: db)
+    run(worker.run(settings(max_parallel_jobs=2), asyncio.Event(), once=True))
+    assert len(db.updates) == 7 and peak == 2
 
 
 # --- Vercel first, then queue -----------------------------------------------------

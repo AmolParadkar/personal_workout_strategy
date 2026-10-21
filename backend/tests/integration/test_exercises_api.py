@@ -50,8 +50,17 @@ def person():
         call("DELETE", f"/auth/v1/admin/users/{user['id']}", SECRET_KEY)  # their jobs go too
         guide_and_video = {
             k: before[0][k]
-            for k in ("about", "form_cues", "precautions", "guide_written_at", "video_checked_at")
+            for k in (
+                "about",
+                "form_cues",
+                "precautions",
+                "guide_written_at",
+                "video_id",
+                "video_title",
+                "video_checked_at",
+            )
         }
+        call("DELETE", f"/rest/v1/video_feedback?exercise_id=eq.{EXERCISE}", SECRET_KEY)
         call("PATCH", f"/rest/v1/exercises?id=eq.{EXERCISE}", SECRET_KEY, body=guide_and_video)
 
 
@@ -120,3 +129,69 @@ def test_library_is_read_only_from_the_website(person):
 def test_signed_out_visitors_see_nothing():
     status, rows = call("GET", "/rest/v1/exercises?select=id&limit=1", PUBLISHABLE_KEY)
     assert status in (401, 403) or rows == []
+
+
+def test_misspelt_search_suggests_close_names(person):
+    exact = client.get("/api/exercises?search=squat barbell", headers=person["headers"]).json()
+    assert any(e["name"] == "Barbell Squat" for e in exact["items"])
+    typo = client.get("/api/exercises?search=sqaut", headers=person["headers"]).json()
+    assert typo["items"] == [] and len(typo["suggestions"]) == 5
+    assert all("squat" in s["name"].lower() for s in typo["suggestions"])
+    plank = client.get("/api/exercises?search=plnk", headers=person["headers"]).json()
+    assert plank["suggestions"][0]["name"] == "Plank"
+    nothing = client.get("/api/exercises?search=zzzzqqq", headers=person["headers"]).json()
+    assert nothing["items"] == [] and nothing["suggestions"] == []
+
+
+def test_video_feedback_rules(person):
+    # Give the test exercise a known video to judge.
+    video = {
+        "video_id": "testVideo01",
+        "video_title": "Test video",
+        "video_checked_at": "2026-10-21T00:00:00Z",
+    }
+    call("PATCH", f"/rest/v1/exercises?id=eq.{EXERCISE}", SECRET_KEY, body=video)
+    url = f"/api/exercises/{EXERCISE}/video-feedback"
+
+    no_reason = client.post(
+        url, json={"video_id": "testVideo01", "verdict": "wrong"}, headers=person["headers"]
+    )
+    assert no_reason.status_code == 422
+    stale = client.post(
+        url, json={"video_id": "otherVideo1", "verdict": "right"}, headers=person["headers"]
+    )
+    assert stale.status_code == 409
+
+    right = client.post(
+        url, json={"video_id": "testVideo01", "verdict": "right"}, headers=person["headers"]
+    )
+    assert right.status_code == 200 and right.json()["video"]["confirmed"] is True
+
+    wrong = client.post(
+        url,
+        json={"video_id": "testVideo01", "verdict": "wrong", "reason": "Shows a different curl"},
+        headers=person["headers"],
+    )
+    assert wrong.status_code == 200
+    detail = wrong.json()
+    assert detail["video_status"] == "preparing" and detail["videos_rejected"] == 1
+    assert detail["video"]["confirmed"] is False  # the latest verdict counts
+
+
+def test_feedback_is_only_given_as_yourself(person):
+    _, profiles = call("GET", "/rest/v1/profiles?select=id&limit=2", SECRET_KEY)
+    _, mine = call("GET", "/rest/v1/profiles?select=id", PUBLISHABLE_KEY, person["token"])
+    someone_else = next(p["id"] for p in profiles if p["id"] != mine[0]["id"])
+    status, _ = call(
+        "POST",
+        "/rest/v1/video_feedback",
+        PUBLISHABLE_KEY,
+        person["token"],
+        {
+            "exercise_id": EXERCISE,
+            "profile_id": someone_else,
+            "video_id": "testVideo01",
+            "verdict": "right",
+        },
+    )
+    assert status in (401, 403)

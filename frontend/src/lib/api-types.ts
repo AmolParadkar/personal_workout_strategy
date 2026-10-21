@@ -577,6 +577,27 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/exercises/{exercise_id}/video-feedback": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Video Feedback
+         * @description "Is this the right video?" Yes keeps it (no monthly refresh); no, with a
+         *     reason, searches again straight away, avoiding rejected videos.
+         */
+        post: operations["video_feedback_api_exercises__exercise_id__video_feedback_post"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/health": {
         parameters: {
             query?: never;
@@ -748,6 +769,11 @@ export interface components {
             guide_error?: string | null;
             /** Video Error */
             video_error?: string | null;
+            /**
+             * Videos Rejected
+             * @default 0
+             */
+            videos_rejected: number;
         };
         /** ExerciseList */
         ExerciseList: {
@@ -755,6 +781,11 @@ export interface components {
             items: components["schemas"]["ExerciseSummary"][];
             /** Has More */
             has_more: boolean;
+            /**
+             * Suggestions
+             * @default []
+             */
+            suggestions: components["schemas"]["ExerciseSummary"][];
         };
         /** ExerciseSummary */
         ExerciseSummary: {
@@ -1170,6 +1201,26 @@ export interface components {
             url: string;
             /** Thumbnail */
             thumbnail: string;
+            /**
+             * Confirmed
+             * @default false
+             */
+            confirmed: boolean;
+        };
+        /**
+         * VideoFeedback
+         * @description "Is this the right video?" Yes, or no with a reason (which guides the next search).
+         */
+        VideoFeedback: {
+            /** Video Id */
+            video_id: string;
+            /**
+             * Verdict
+             * @enum {string}
+             */
+            verdict: "right" | "wrong";
+            /** Reason */
+            reason?: string | null;
         };
         /** WaterDay */
         WaterDay: {
@@ -2300,6 +2351,43 @@ export interface operations {
             cookie?: never;
         };
         requestBody?: never;
+        responses: {
+            /** @description Successful Response */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ExerciseDetail"];
+                };
+            };
+            /** @description Validation Error */
+            422: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HTTPValidationError"];
+                };
+            };
+        };
+    };
+    video_feedback_api_exercises__exercise_id__video_feedback_post: {
+        parameters: {
+            query?: never;
+            header?: {
+                authorization?: string | null;
+            };
+            path: {
+                exercise_id: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["VideoFeedback"];
+            };
+        };
         responses: {
             /** @description Successful Response */
             200: {

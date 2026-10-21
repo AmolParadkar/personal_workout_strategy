@@ -5,14 +5,20 @@ import { spacing, useTheme } from '@/theme';
 
 import { bodyMapData } from './muscles';
 
-// The package gives every muscle shape a tap handler, which the web version of
-// react-native-svg passes on to the page as an unknown attribute. Harmless (the
-// map isn't tappable, and production builds don't warn), so drop just that dev
-// warning; LogBox.ignoreLogs doesn't reach the web overlay.
+// The package gives every muscle shape a tap handler and `accessible={true}`,
+// which the web version of react-native-svg passes on to the page as invalid
+// attributes. Harmless (the map isn't tappable, it's labelled as one image
+// below, and production builds don't warn), so drop just those two dev
+// warnings; LogBox.ignoreLogs doesn't reach the web overlay.
 if (__DEV__ && Platform.OS === 'web') {
   const showError = console.error;
+  const fromBodyMap = (args: unknown[]) =>
+    typeof args[0] === 'string' &&
+    (args[0].startsWith('Unknown event handler property') ||
+      (args[0].startsWith('Received `%s` for a non-boolean attribute') &&
+        args.includes('accessible')));
   console.error = (...args: unknown[]) => {
-    if (typeof args[0] === 'string' && args[0].startsWith('Unknown event handler property')) return;
+    if (fromBodyMap(args)) return;
     showError(...args);
   };
 }
@@ -46,8 +52,8 @@ export function BodyMap({
     <View style={styles.wrapper}>
       <View
         style={styles.bodies}
-        accessible
-        accessibilityLabel={`Muscles worked. Primary: ${primary.join(', ') || 'none'}. Secondary: ${secondary.join(', ') || 'none'}.`}
+        role="img"
+        aria-label={`Muscles worked. Primary: ${primary.join(', ') || 'none'}. Secondary: ${secondary.join(', ') || 'none'}.`}
       >
         <View style={styles.side}>
           <Body {...common} side="front" />

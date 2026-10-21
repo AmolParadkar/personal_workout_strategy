@@ -35,12 +35,13 @@ def run(coroutine):
 
 
 class FakeDb:
-    def __init__(self, rows):
+    def __init__(self, rows, feedback=()):
         self.rows = rows
+        self.feedback = list(feedback)
         self.updates = []
 
     async def select(self, table, params):
-        return self.rows
+        return self.feedback if table == "video_feedback" else self.rows
 
     async def update(self, table, filters, values):
         self.updates.append(values)
@@ -178,16 +179,14 @@ def youtube(request):
                 "statistics": stats,
             }
 
-        return httpx2.Response(
-            200,
-            json={
-                "items": [
-                    item("vidShort01", "PT50S", 900_000, 40_000),
-                    item("vidLong001", "PT3M30S", 5_000_000, 90_000),  # over 3 minutes
-                    item("vidQuiet01", "PT2M10S", 1_200, 10),
-                ]
-            },
-        )
+        everything = [
+            item("vidShort01", "PT50S", 900_000, 40_000),
+            item("vidLong001", "PT3M30S", 5_000_000, 90_000),  # over 3 minutes
+            item("vidQuiet01", "PT2M10S", 1_200, 10),
+        ]
+        # Like YouTube: only the videos asked for.
+        asked = request.url.params["id"].split(",")
+        return httpx2.Response(200, json={"items": [i for i in everything if i["id"] in asked]})
     if path.endswith("/commentThreads"):
         if request.url.params["videoId"] == "vidQuiet01":
             return httpx2.Response(
@@ -196,7 +195,12 @@ def youtube(request):
         text = {"snippet": {"topLevelComment": {"snippet": {"textDisplay": "This fixed my form!"}}}}
         return httpx2.Response(200, json={"items": [text]})
     if "groq" in request.url.host:
-        ratings = {"ratings": [{"video_id": "vidShort01", "positive": 0.9}]}
+        ratings = {
+            "ratings": [
+                {"video_id": "vidShort01", "relevance": 0.95, "positive": 0.9},
+                {"video_id": "vidQuiet01", "relevance": 0.9, "positive": 0.5},
+            ]
+        }
         return groq_reply(json.dumps(ratings))
     return httpx2.Response(404)
 
@@ -210,7 +214,7 @@ def test_video_job_picks_the_best_short_video_and_saves_it():
             return await exercise_video.run({"exercise_id": "Barbell_Squat"}, ctx)
 
     result = run(go())
-    assert result == {"exercise_id": "Barbell_Squat", "video_id": "vidShort01", "considered": 2}
+    assert (result["video_id"], result["considered"]) == ("vidShort01", 2)
     [saved] = db.updates
     assert saved["video_id"] == "vidShort01" and saved["video_duration_seconds"] == 50
     assert saved["video_checked_at"]
@@ -225,7 +229,8 @@ def test_no_suitable_video_is_remembered_so_it_isnt_searched_daily():
             return await exercise_video.run({"exercise_id": "X"}, ctx)
 
     assert run(go())["video_id"] is None
-    assert db.updates == [{"video_checked_at": db.updates[0]["video_checked_at"]}]
+    [saved] = db.updates
+    assert saved["video_checked_at"] and saved["video_id"] is None
 
 
 def test_used_up_quota_is_retried_later_and_missing_key_is_permanent():
@@ -286,18 +291,26 @@ def test_search_text_cant_break_the_filter():
 
 
 class FakeSupabase:
-    def __init__(self, row, queued_types=(), failed_jobs=()):
+    def __init__(self, row, queued_types=(), failed_jobs=(), feedback=()):
         self.row = row
         self.queued_types = list(queued_types)
         self.failed_jobs = list(failed_jobs)
+        self.feedback = list(feedback)
+        self.feedback_saved = []
         self.inserted = []
 
     async def select(self, table, params, token):
         if table == "exercises":
             return [self.row]
+        if table == "video_feedback":
+            return self.feedback
         return [{"type": t, "status": "pending"} for t in self.queued_types] + self.failed_jobs
 
     async def insert(self, table, values, token, returning="*"):
+        if table == "video_feedback":
+            self.feedback_saved.append(values)
+            self.feedback.insert(0, values)
+            return [{"id": "f"}]
         self.inserted.append(values["type"])
         return [{"id": "j", "status": "pending", "attempts": 0, **values}]
 
@@ -342,3 +355,169 @@ def test_a_failed_job_is_shown_and_not_requeued_for_a_day():
     later = FakeSupabase(row, failed_jobs=[old])
     run(exercises.prepare(later, "t", "profile", "Barbell_Squat"))
     assert later.inserted == ["find_exercise_video"]
+
+
+# --- "Is this the right video?" ------------------------------------------------------
+
+REJECTED = {
+    "video_id": "vidShort01",
+    "video_title": "How to vidShort01",
+    "reason": "This is a front squat, not a back squat",
+}
+
+
+def feedback_world(searched: list, rating_prompt: list, relevance: dict[str, float]):
+    """YouTube and Groq stand-ins that record what the job asked for."""
+
+    def handler(request):
+        if "groq" in request.url.host:
+            body = json.loads(request.content)
+            prompt = body["messages"][1]["content"]
+            if "Write a better YouTube search query" in prompt:
+                plan = {
+                    "query": "barbell back squat high bar tutorial",
+                    "requirements": ["Bar on the upper back"],
+                }
+                return groq_reply(json.dumps(plan))
+            rating_prompt.append(prompt)
+            ratings = [
+                {"video_id": vid, "relevance": rel, "positive": 0.5}
+                for vid, rel in relevance.items()
+            ]
+            return groq_reply(json.dumps({"ratings": ratings}))
+        if request.url.path.endswith("/search"):
+            searched.append(request.url.params["q"])
+        return youtube(request)
+
+    return handler
+
+
+def test_a_rejected_video_is_never_chosen_again_and_the_reason_shapes_the_search():
+    db = FakeDb([{"id": "Barbell_Squat", "name": "Barbell Squat"}], feedback=[REJECTED])
+    searched, prompts = [], []
+
+    async def go():
+        handler = feedback_world(searched, prompts, {"vidQuiet01": 0.9})
+        async with client(handler) as http:
+            ctx = JobContext("mac", 1, http, db=db, llm=GROQ_ONLY, youtube_api_key="yt")
+            return await exercise_video.run({"exercise_id": "Barbell_Squat"}, ctx)
+
+    result = run(go())
+    assert searched == ["barbell back squat high bar tutorial"]
+    assert "Bar on the upper back" in prompts[0]
+    assert result["video_id"] == "vidQuiet01" and result["rejected_before"] == 1
+    assert db.updates[0]["video_id"] == "vidQuiet01"
+
+
+def test_videos_that_dont_teach_the_exercise_are_dropped():
+    db = FakeDb([{"id": "Barbell_Squat", "name": "Barbell Squat"}])
+
+    async def go():
+        handler = feedback_world([], [], {"vidShort01": 0.2, "vidQuiet01": 0.3})
+        async with client(handler) as http:
+            ctx = JobContext("mac", 1, http, db=db, llm=GROQ_ONLY, youtube_api_key="yt")
+            return await exercise_video.run({"exercise_id": "Barbell_Squat"}, ctx)
+
+    assert run(go())["video_id"] is None
+    assert db.updates[0]["video_id"] is None  # the old (maybe rejected) video is cleared
+
+
+def test_without_an_llm_the_reasons_still_become_requirements():
+    plan = run(
+        exercise_video.plan_search(
+            JobContext("mac", 1, None),  # type: ignore[arg-type]
+            {"name": "Barbell Squat"},
+            [REJECTED],
+        )
+    )
+    assert plan.query == "Barbell Squat exercise how to proper form"
+    assert plan.requirements == ["This is a front squat, not a back squat"]
+
+
+def squat_with_video(**extra):
+    return {
+        **SQUAT,
+        "images": [],
+        "guide_written_at": NOW.isoformat(),
+        "video_id": "vidShort01",
+        "video_title": "How to vidShort01",
+        "video_checked_at": datetime.now(UTC).isoformat(),
+        **extra,
+    }
+
+
+def test_wrong_video_needs_a_reason():
+    with pytest.raises(ValidationError, match="Say why"):
+        exercises.VideoFeedback(video_id="vidShort01", verdict="wrong", reason="  ")
+    ok = exercises.VideoFeedback(video_id="vidShort01", verdict="right", reason="")
+    assert ok.reason is None
+
+
+def test_wrong_video_feedback_is_saved_and_searches_again_straight_away():
+    failed = {
+        "type": "find_exercise_video",
+        "status": "failed",
+        "last_error": "x",
+        "finished_at": datetime.now(UTC).isoformat(),
+    }
+    supabase = FakeSupabase(squat_with_video(), failed_jobs=[failed])
+    body = exercises.VideoFeedback(
+        video_id="vidShort01", verdict="wrong", reason="Front squat, not back"
+    )
+    detail = run(exercises.give_video_feedback(supabase, "t", "profile", "Barbell_Squat", body))
+    assert supabase.feedback_saved[0]["reason"] == "Front squat, not back"
+    assert supabase.feedback_saved[0]["video_title"] == "How to vidShort01"
+    assert supabase.inserted == ["find_exercise_video"]  # even though one failed today
+    assert detail.video_status == "preparing" and detail.videos_rejected == 1
+
+
+def test_right_video_is_confirmed_and_not_refreshed_monthly():
+    supabase = FakeSupabase(squat_with_video())
+    body = exercises.VideoFeedback(video_id="vidShort01", verdict="right")
+    detail = run(exercises.give_video_feedback(supabase, "t", "profile", "Barbell_Squat", body))
+    assert detail.video.confirmed and supabase.inserted == []
+    old = (datetime.now(UTC) - timedelta(days=40)).isoformat()
+    stale = FakeSupabase(squat_with_video(video_checked_at=old), feedback=supabase.feedback)
+    run(exercises.prepare(stale, "t", "profile", "Barbell_Squat"))
+    assert stale.inserted == []  # confirmed: no monthly search
+
+
+def test_feedback_on_a_video_that_has_since_changed_is_refused():
+    supabase = FakeSupabase(squat_with_video(video_id="vidQuiet01"))
+    body = exercises.VideoFeedback(video_id="vidShort01", verdict="right")
+    with pytest.raises(exercises.VideoChangedError):
+        run(exercises.give_video_feedback(supabase, "t", "profile", "Barbell_Squat", body))
+
+
+class SearchSupabase:
+    def __init__(self, rows, suggestions=()):
+        self.rows = rows
+        self.suggestions = list(suggestions)
+        self.params = None
+        self.rpc_args = None
+
+    async def select(self, table, params, token):
+        self.params = params
+        return self.rows
+
+    async def rpc(self, function, args, token=None):
+        self.rpc_args = args
+        return self.suggestions
+
+
+def test_search_words_match_in_any_order():
+    supabase = SearchSupabase([{"id": "Barbell_Squat", "name": "Barbell Squat", "images": []}])
+    run(exercises.list_exercises(supabase, "t", "squat  barbell", None, None, 0))
+    assert supabase.params["and"] == "(name.ilike.*squat*,name.ilike.*barbell*)"
+
+
+def test_no_results_shows_the_5_closest_names_instead():
+    close = [
+        {"id": "Barbell_Squat", "name": "Barbell Squat", "images": ["a.jpg"], "similarity": 0.4}
+    ]
+    supabase = SearchSupabase([], suggestions=close)
+    result = run(exercises.list_exercises(supabase, "t", "sqaut", "quadriceps", None, 0))
+    assert result.items == [] and result.suggestions[0].name == "Barbell Squat"
+    assert result.suggestions[0].image == "a.jpg"
+    assert supabase.rpc_args["p_query"] == "sqaut" and supabase.rpc_args["p_muscle"] == "quadriceps"
+    assert supabase.rpc_args["p_limit"] == 5

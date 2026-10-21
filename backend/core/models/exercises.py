@@ -1,9 +1,9 @@
 """The exercise library as the website sees it."""
 
 from datetime import datetime
-from typing import Literal
+from typing import Annotated, Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 # Muscle names used by the library (free-exercise-db).
 Muscle = Literal[
@@ -46,6 +46,8 @@ class ExerciseSummary(BaseModel):
 class ExerciseList(BaseModel):
     items: list[ExerciseSummary]
     has_more: bool
+    # When a search finds nothing: the 5 closest names, shown as the results.
+    suggestions: list[ExerciseSummary] = []
 
 
 class Video(BaseModel):
@@ -56,6 +58,8 @@ class Video(BaseModel):
     views: int | None
     url: str
     thumbnail: str
+    # Someone said "Yes, this is the right video": kept, not refreshed monthly.
+    confirmed: bool = False
 
 
 class ExerciseDetail(BaseModel):
@@ -79,3 +83,24 @@ class ExerciseDetail(BaseModel):
     video_status: PartStatus
     guide_error: str | None = None
     video_error: str | None = None
+    # Videos people said were wrong for this exercise (never chosen again).
+    videos_rejected: int = 0
+
+
+class VideoFeedback(BaseModel):
+    """ "Is this the right video?" Yes, or no with a reason (which guides the next search)."""
+
+    video_id: str = Field(pattern=r"^[A-Za-z0-9_-]{6,20}$")
+    verdict: Literal["right", "wrong"]
+    reason: Annotated[str, Field(min_length=3, max_length=300)] | None = None
+
+    @field_validator("reason", mode="before")
+    @classmethod
+    def blank_is_none(cls, value: object) -> object:
+        return value.strip() or None if isinstance(value, str) else value
+
+    @model_validator(mode="after")
+    def wrong_needs_a_reason(self) -> "VideoFeedback":
+        if self.verdict == "wrong" and not self.reason:
+            raise ValueError("Say why it's the wrong video, so the next search can do better")
+        return self
